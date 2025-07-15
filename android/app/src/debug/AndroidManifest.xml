@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fixed: Updated minSdkVersion from 21 to 26 for ArcGIS Maps SDK compatibility -->
+    <uses-sdk android:minSdkVersion="26" />
+    
+    <!-- Allows Flutter to debug your application -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>
