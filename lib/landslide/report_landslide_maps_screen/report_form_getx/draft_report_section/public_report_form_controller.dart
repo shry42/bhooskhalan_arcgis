@@ -413,110 +413,151 @@ Future<void> fetchLocationFromCoordinates() async {
       final double lat = double.parse(latitudeController.text);
       final double lng = double.parse(longitudeController.text);
       
-      print('🔍 Fetching location for: $lat, $lng using native geocoding');
+      print('🔍 Fetching location for: $lat, $lng using Google Maps API');
       
-      await setLocaleIdentifier("en_IN");
+      const String apiKey = 'AIzaSyDqsbgwAMnmxWdIFkcjPIHak9UvLPCXp_4';
       
-      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
+      final String url = 'https://maps.googleapis.com/maps/api/geocode/json'
+          '?latlng=$lat,$lng'
+          '&key=$apiKey'
+          '&language=en'
+          '&region=IN';
       
-      if (placemarks.isNotEmpty) {
-        final placemark = placemarks.first;
-        print('📍 Raw placemark: ${placemark.toString()}');
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('📍 Raw Google API response: ${json.encode(data)}');
         
-        bool populated = false;
-        List<String> populatedFields = [];
-        
-        // Extract and set state
-        if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
-          String state = _cleanLocationName(placemark.administrativeArea!);
-          stateController.text = state;
-          populatedFields.add('State: $state');
-          populated = true;
-          isLocationAutoPopulated.value = true; // Mark as auto-populated
-          print('✅ State set: $state');
-        }
-        
-        // Extract and set district from locality/subLocality (as per your requirement)
-        String? district;
-        if (placemark.locality != null && placemark.locality!.isNotEmpty) {
-          district = _cleanLocationName(placemark.locality!);
-        } else if (placemark.subLocality != null && placemark.subLocality!.isNotEmpty) {
-          district = _cleanLocationName(placemark.subLocality!);
-        } else if (placemark.subAdministrativeArea != null && placemark.subAdministrativeArea!.isNotEmpty) {
-          // Fallback to subAdministrativeArea if locality is not available
-          district = _cleanLocationName(placemark.subAdministrativeArea!);
-        }
-        
-        if (district != null && district.isNotEmpty) {
-          districtController.text = district;
-          populatedFields.add('District: $district');
-          populated = true;
-          print('✅ District set: $district');
-        }
-        
-        // NOTE: Subdivision/Taluk and Village are manual entry only
-        // Removed auto-population for these fields as per requirement
-        
-        if (populated) {
-          Get.snackbar(
-            'Location Found',
-            populatedFields.join('\n') + '\n\nSubdivision and Village can be entered manually.',
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-            duration: const Duration(seconds: 4),
-            maxWidth: Get.width * 0.9,
-          );
+        if (data['status'] == 'OK' && data['results'] != null && data['results'].isNotEmpty) {
+          
+          String? state, district;
+          List<String> populatedFields = [];
+          
+          // Parse all results to find best components
+          for (var result in data['results']) {
+            final components = result['address_components'] as List;
+            
+            for (var component in components) {
+              final types = component['types'] as List;
+              final longName = component['long_name'] as String;
+              
+              // Extract STATE
+              if (types.contains('administrative_area_level_1') && state == null) {
+                state = _cleanLocationName(longName);
+              }
+              
+              // Extract DISTRICT (smart fallback with Presidency Division handling)
+              if (district == null) {
+                // Priority 1: Use administrative_area_level_3 if it's a proper district
+                if (types.contains('administrative_area_level_3') && !_isDivision(longName)) {
+                  district = _cleanLocationName(longName);
+                }
+                // Priority 2: Use locality if it seems like a district
+                else if (types.contains('locality') && _seemsLikeDistrict(longName)) {
+                  district = _cleanLocationName(longName);
+                }
+                // Priority 3: Use administrative_area_level_2 only if not a division
+                else if (types.contains('administrative_area_level_2') && !_isDivision(longName)) {
+                  district = _cleanLocationName(longName);
+                }
+              }
+            }
+          }
+          
+          // Set found values
+          bool populated = false;
+          
+          if (state != null && state.isNotEmpty) {
+            stateController.text = state;
+            populatedFields.add('State: $state');
+            populated = true;
+            print('✅ State set: $state');
+          }
+          
+          if (district != null && district.isNotEmpty) {
+            districtController.text = district;
+            populatedFields.add('District: $district');
+            populated = true;
+            print('✅ District set: $district');
+          }
+          
+          if (populated) {
+            isLocationAutoPopulated.value = true;
+            Get.snackbar(
+              'Location Found',
+              populatedFields.join('\n'),
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.BOTTOM,
+              duration: const Duration(seconds: 4),
+            );
+          } else {
+            isLocationAutoPopulated.value = false;
+            _showLocationNotFound();
+          }
         } else {
-          isLocationAutoPopulated.value = false; // Enable dropdowns
-          _showLocationNotFound();
+          isLocationAutoPopulated.value = false;
+          _showLocationError('No results found');
         }
-        
       } else {
-        print('❌ No placemarks found for coordinates');
-        isLocationAutoPopulated.value = false; // Enable dropdowns
-        _showLocationNotFound();
+        isLocationAutoPopulated.value = false;
+        _showLocationError('API request failed');
       }
     }
   } catch (e) {
-    print('❌ Geocoding error: $e');
-    isLocationAutoPopulated.value = false; // Enable dropdowns
+    isLocationAutoPopulated.value = false;
     _showLocationError(e.toString());
   }
 }
 
-// Helper method to clean location names
+// Check if name is an administrative division
+bool _isDivision(String name) {
+  String lower = name.toLowerCase();
+  return lower.contains('division') || lower.contains('presidency') || 
+         lower.contains('region') || lower.contains('zone');
+}
+
+// Check if name seems like a district
+bool _seemsLikeDistrict(String name) {
+  String lower = name.toLowerCase();
+  return lower.contains('district') || lower.contains('parganas') || 
+         (lower.contains('north') || lower.contains('south') || 
+          lower.contains('east') || lower.contains('west')) &&
+         !lower.contains('ward') && !lower.contains('road');
+}
+
+// Clean location names
 String _cleanLocationName(String name) {
   return name
-      .replaceAll(' District', '')
-      .replaceAll(' State', '')
-      .replaceAll(' Union Territory', '')
+      .replaceAll(RegExp(r'\s+(District|Division|State|Taluk|Block)$', caseSensitive: false), '')
       .trim();
 }
 
-// Show location not found message
+// Error handling methods
 void _showLocationNotFound() {
   Get.snackbar(
-    'Location Details Not Available',
-    'Could not fetch detailed location information for this area. Please enter State and District manually.',
+    'Location Not Found',
+    'Could not fetch location details. Please enter manually.',
     backgroundColor: Colors.orange,
     colorText: Colors.white,
     snackPosition: SnackPosition.BOTTOM,
-    duration: const Duration(seconds: 4),
+    duration: const Duration(seconds: 3),
   );
 }
 
-// Show location error message
 void _showLocationError(String error) {
   Get.snackbar(
-    'Location Fetch Error',
-    'Failed to get location details: $error\nPlease enter manually.',
+    'Location Error',
+    'Failed to get location: $error',
     backgroundColor: Colors.red,
     colorText: Colors.white,
     snackPosition: SnackPosition.BOTTOM,
-    duration: const Duration(seconds: 4),
+    duration: const Duration(seconds: 3),
   );
 }
+
+
 // SETUP METHODS
   void setCoordinates(double latitude, double longitude) {
     latitudeController.text = latitude.toStringAsFixed(7);
