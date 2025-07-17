@@ -37,7 +37,7 @@ class LandslideReportingScreen extends StatelessWidget {
         backgroundColor: primaryColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
+          onPressed: () => Navigator.of(context).pop(),
         ),
     title: Obx(() => Text(
   controller.isDraftMode.value 
@@ -2695,116 +2695,159 @@ Container(
   }
 
   // Helper widgets
-  Widget _buildSectionCard({
-    required String title, 
-    required List<Widget> children,
-    required Color primaryColor,
-    required Color cardColor,
-    required Color textColor,
-  }) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      color: cardColor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _labelText(String text, Color textColor) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: textColor,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    bool readOnly = false,
-    int maxLines = 1,
-    bool hasInfoIcon = false,
-    VoidCallback? onInfoTap,
-    String? Function(String?)? validator,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            readOnly: readOnly,
-            maxLines: maxLines,
-            decoration: InputDecoration(
-              labelText: label,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-            validator: validator,
-          ),
-        ),
-        
-        if (hasInfoIcon)
+Widget _buildSectionCard({
+  required String title, 
+  required List<Widget> children,
+  required Color primaryColor,
+  required Color cardColor,
+  required Color textColor,
+}) {
+  return Card(
+    elevation: 2,
+    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    color: cardColor,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Padding(
-            padding: const EdgeInsets.only(left: 8.0, top: 12.0),
-            child: InkWell(
-              onTap: onInfoTap,
-              child: const Icon(
-                Icons.info_outline,
-                color: Colors.blue,
-                size: 24,
-              ),
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: title.contains('*') 
+                    ? _buildLabelWithRedAsterisk(title, textColor)
+                    : Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                ),
+              ],
             ),
           ),
-      ],
+          ...children,
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildLabelWithRedAsterisk(String text, Color textColor) {
+  if (text.contains('*')) {
+    List<String> parts = text.split('*');
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: parts[0],
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+          TextSpan(
+            text: '*',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.red,
+            ),
+          ),
+          if (parts.length > 1)
+            TextSpan(
+              text: parts[1],
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            ),
+        ],
+      ),
     );
   }
+  
+  return Text(
+    text,
+    style: TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      color: textColor,
+    ),
+  );
+}
 
+Widget _labelText(String text, Color textColor) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8.0),
+    child: _buildLabelWithRedAsterisk(text, textColor),
+  );
+}
+
+Widget _buildTextField({
+  required String label,
+  required TextEditingController controller,
+  TextInputType keyboardType = TextInputType.text,
+  bool readOnly = false,
+  int maxLines = 1,
+  bool hasInfoIcon = false,
+  VoidCallback? onInfoTap,
+  String? Function(String?)? validator,
+}) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(
+        child: TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          readOnly: readOnly,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            label: label.contains('*') ? _buildLabelWithRedAsterisk(label, Colors.black87) : null,
+            labelText: label.contains('*') ? null : label,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+          validator: validator,
+        ),
+      ),
+      
+      if (hasInfoIcon)
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0, top: 12.0),
+          child: InkWell(
+            onTap: onInfoTap,
+            child: const Icon(
+              Icons.info_outline,
+              color: Colors.blue,
+              size: 24,
+            ),
+          ),
+        ),
+    ],
+  );
+}
   Widget _buildDropdown({
     required String? value,
     required List<String> items,
@@ -2993,73 +3036,70 @@ Container(
     );
   }
 
-  Widget _buildHierarchicalCheckbox({
-    required String title,
-    required bool value,
-    required Function(bool?) onChanged,
-    required List<Widget> subItems,
-    bool isRequired = false,
-    required Color primaryColor,
-    required Color textColor,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () => onChanged(!value),
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: value ? primaryColor : Colors.transparent,
-                  border: Border.all(
-                    color: value ? primaryColor : Colors.grey,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(4),
+Widget _buildHierarchicalCheckbox({
+  required String title,
+  required bool value,
+  required Function(bool?) onChanged,
+  required List<Widget> subItems,
+  bool isRequired = false,
+  required Color primaryColor,
+  required Color textColor,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          GestureDetector(
+            onTap: () => onChanged(!value),
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: value ? primaryColor : Colors.transparent,
+                border: Border.all(
+                  color: value ? primaryColor : Colors.grey,
+                  width: 2,
                 ),
-                child: value
-                    ? const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 16,
-                      )
-                    : null,
+                borderRadius: BorderRadius.circular(4),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: value ? primaryColor : textColor,
-                  fontWeight: value ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ),
-            if (isRequired)
-              const Text(
-                ' *',
-                style: TextStyle(color: Colors.red, fontSize: 16),
-              ),
-          ],
-        ),
-        if (value && subItems.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.only(left: 36.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: subItems,
+              child: value
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 16,
+                    )
+                  : null,
             ),
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: title.contains('*') 
+              ? _buildLabelWithRedAsterisk(title, value ? primaryColor : textColor)
+              : Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: value ? primaryColor : textColor,
+                    fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+          ),
         ],
+      ),
+      if (value && subItems.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.only(left: 36.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: subItems,
+          ),
+        ),
       ],
-    );
-  }
+    ],
+  );
+}
 
   Widget _buildSubCheckbox({
     required String title,

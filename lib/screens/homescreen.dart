@@ -90,6 +90,9 @@ ProfileController  profileController = Get.put(ProfileController());
   }
 
 Widget _buildCard(_HomeCardItem item) {
+  // Check if this is forecast bulletin or recent news card
+  bool needsImageFix = item.title == 'forecast_bulletin'.tr || item.title == 'recent_news'.tr;
+  
   return Card(
     elevation: 4,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -109,23 +112,34 @@ Widget _buildCard(_HomeCardItem item) {
         else if(item.title == 'all_reports'.tr){
           Get.to(()=>AllReportsScreenArcGIS());
         }
-        
       },
       borderRadius: BorderRadius.circular(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
+            flex: needsImageFix ? 3 : 1,
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.asset(
-                item.imagePath,
-                fit: BoxFit.cover,
-              ),
+              child: needsImageFix 
+                ? Container(
+                    width: double.infinity,
+                    child: Image.asset(
+                      item.imagePath,
+                      fit: BoxFit.contain,
+                    ),
+                  )
+                : Image.asset(
+                    item.imagePath,
+                    fit: BoxFit.cover,
+                  ),
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(
+              vertical: needsImageFix ? 8 : 12,
+              horizontal: needsImageFix ? 4 : 0,
+            ),
             alignment: Alignment.center,
             decoration: const BoxDecoration(
               color: Colors.blue,
@@ -139,6 +153,8 @@ Widget _buildCard(_HomeCardItem item) {
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
+              maxLines: needsImageFix ? 2 : null,
+              overflow: needsImageFix ? TextOverflow.ellipsis : null,
             ),
           ),
         ],
@@ -146,7 +162,6 @@ Widget _buildCard(_HomeCardItem item) {
     ),
   );
 }
-
 }
 
 class _HomeCardItem {

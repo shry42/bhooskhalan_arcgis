@@ -48,6 +48,8 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
   FeatureLayer? _districtBoundaryLayer;
   FeatureLayer? _stateBoundaryLayer;
   FeatureLayer? _shortrangeForecastLayer;
+
+  
   
   // Flag to track if susceptibility layers are loaded
   bool _susceptibilityLayersLoaded = false;
@@ -458,47 +460,62 @@ Future<Renderer> _createForecastRenderer() async {
   }
 }
   // Updated method to properly load ImageServer as RasterLayer
-  Future<void> _loadSusceptibilityLayer() async {
-    try {
-      _hideAllLayersExcept('susceptibility');
+Future<void> _loadSusceptibilityLayer() async {
+  try {
+    _hideAllLayersExcept('susceptibility');
+    
+    if (_susceptibilityLayer == null) {
+      print('🔍 Loading Susceptibility layer from GSI ImageServer');
       
-      if (_susceptibilityLayer == null) {
-        print('🔍 Loading Susceptibility layer from GSI ImageServer');
-        
-        // Create ImageServiceRaster from the GSI ImageServer URL
-        final susceptibilityImageServiceUrl = Uri.parse('https://bhusanket.gsi.gov.in/gisserver/rest/services/GSI/Susceptibility/ImageServer');
-        final imageServiceRaster = ImageServiceRaster(uri: susceptibilityImageServiceUrl);
-        
-        // Create RasterLayer from the ImageServiceRaster
-        _susceptibilityLayer = RasterLayer.withRaster(imageServiceRaster);
-        
-        // Configure the layer properties
-        _susceptibilityLayer!.opacity = 0.7; // Make it semi-transparent
-        
-        // Add layer to map first
-        _map.operationalLayers.add(_susceptibilityLayer!);
-        
-        // Load the layer
-        await _susceptibilityLayer!.load();
-        
-        print('✅ Successfully loaded Susceptibility layer as RasterLayer');
-      }
+      // Create ImageServiceRaster from the GSI ImageServer URL
+      final susceptibilityImageServiceUrl = Uri.parse('https://bhusanket.gsi.gov.in/gisserver/rest/services/GSI/Susceptibility/ImageServer');
+      final imageServiceRaster = ImageServiceRaster(uri: susceptibilityImageServiceUrl);
       
-      setState(() {
-        _susceptibilityLayer!.isVisible = true;
-        _currentActiveLayer = 'susceptibility';
-      });
+      // Create RasterLayer from the ImageServiceRaster
+      _susceptibilityLayer = RasterLayer.withRaster(imageServiceRaster);
       
-      _showError('Susceptibility layer enabled');
+      // Create colormap for susceptibility values 0-3
+      final colors = <Color>[];
+      // Value 0: Transparent (NoData areas)
+      colors.add(Colors.transparent);
+      // Value 1: Yellow (Low susceptibility)
+      colors.add(Colors.yellow);
+      // Value 2: Green (Medium susceptibility)  
+      colors.add(Colors.green);
+      // Value 3: Red (High susceptibility)
+      colors.add(Colors.red);
       
-    } catch (e) {
-      _showError('Failed to load Susceptibility layer: $e');
-      print('❌ Susceptibility layer loading error: $e');
+      // Create and apply the colormap renderer
+      final colormapRenderer = ColormapRenderer.withColors(colors);
+      _susceptibilityLayer!.renderer = colormapRenderer;
       
-      // Fallback: Try with rendering rule approach
-      await _loadSusceptibilityLayerWithRenderingRule();
+      // Configure the layer properties
+      _susceptibilityLayer!.opacity = 0.7; // Make it semi-transparent
+      
+      // Add layer to map first
+      _map.operationalLayers.add(_susceptibilityLayer!);
+      
+      // Load the layer
+      await _susceptibilityLayer!.load();
+      
+      print('✅ Successfully loaded Susceptibility layer as RasterLayer');
     }
+    
+    setState(() {
+      _susceptibilityLayer!.isVisible = true;
+      _currentActiveLayer = 'susceptibility';
+    });
+    
+    _showError('Susceptibility layer enabled');
+    
+  } catch (e) {
+    _showError('Failed to load Susceptibility layer: $e');
+    print('❌ Susceptibility layer loading error: $e');
+    
+    // Fallback: Try with rendering rule approach
+    await _loadSusceptibilityLayerWithRenderingRule();
   }
+}
 
   // Load National Landslide Inventory Layer with correct URL
   Future<void> _loadLandslideInventoryLayer() async {

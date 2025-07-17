@@ -116,6 +116,15 @@ class AppTranslations extends Translations {
       'otp_sent': 'OTP Sent',
       'otp_sent_to_email': 'OTP has been sent to your email',
       'enter_valid_otp': 'Enter a valid OTP',
+
+      //
+      'security_check_progress': 'Performing security checks...',
+'security_warning_title': 'Security Warning',
+'security_warning_message': 'This application cannot run on rooted devices or devices with developer mode enabled for security reasons.',
+'security_check_failed': 'Security check failed. Please ensure you are using a standard device configuration.',
+'security_instruction': 'Please use this application on a standard device configuration.',
+'retry_button': 'Retry',
+'exit_button': 'Exit Application',
       
     },
     'hi_IN': {
@@ -231,6 +240,15 @@ class AppTranslations extends Translations {
       'otp_sent': 'ओटीपी भेजा गया',
       'otp_sent_to_email': 'आपके ईमेल पर ओटीपी भेजा गया है',
       'enter_valid_otp': 'वैध ओटीपी दर्ज करें',
+
+      //
+      'security_check_progress': 'सुरक्षा जांच की जा रही है...',
+'security_warning_title': 'सुरक्षा चेतावनी',
+'security_warning_message': 'यह एप्लिकेशन रूटेड डिवाइस या डेवलपर मोड सक्षम डिवाइस पर सुरक्षा कारणों से नहीं चल सकता।',
+'security_check_failed': 'सुरक्षा जांच असफल। कृपया सुनिश्चित करें कि आप मानक डिवाइस कॉन्फ़िगरेशन का उपयोग कर रहे हैं।',
+'security_instruction': 'कृपया इस एप्लिकेशन का उपयोग मानक डिवाइस कॉन्फ़िगरेशन पर करें।',
+'retry_button': 'पुनः प्रयास करें',
+'exit_button': 'एप्लिकेशन बंद करें',
     },
   };
 }

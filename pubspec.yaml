@@ -55,6 +55,7 @@ dependencies:
   http_certificate_pinning: ^3.0.1
   geocoding: ^4.0.0
   connectivity_plus: ^6.1.4
+  device_info_plus: ^11.5.0
 
 
 

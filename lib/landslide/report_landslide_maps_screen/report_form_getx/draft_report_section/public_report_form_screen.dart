@@ -23,6 +23,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
     final Color textColor = const Color(0xFF2C3E50);
     final Color hintColor = const Color(0xFF7F8C8D);
 
+ 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -30,7 +31,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
         backgroundColor: primaryColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
+          onPressed: () => Navigator.of(context).pop(),
         ),
      title: Obx(() => Text(
   controller.isDraftMode.value 
@@ -230,7 +231,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                   
                   // Occurrence Information Section
                   _buildSectionCard(
-                    title: 'Occurrence of Landslide (Date & Time) *',
+                   title: 'Occurrence of Landslide (Date & Time) *',
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
@@ -1172,95 +1173,138 @@ _buildSectionCard(
   }
 
   // Helper widgets
-  Widget _buildSectionCard({
-    required String title, 
-    required List<Widget> children,
-    required Color primaryColor,
-    required Color cardColor,
-    required Color textColor,
-  }) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      color: cardColor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+Widget _buildSectionCard({
+  required String title, 
+  required List<Widget> children,
+  required Color primaryColor,
+  required Color cardColor,
+  required Color textColor,
+}) {
+  return Card(
+    elevation: 2,
+    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    color: cardColor,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: title.contains('*') 
+                    ? _buildLabelWithRedAsterisk(title, textColor)
+                    : Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildLabelWithRedAsterisk(String text, Color textColor) {
+  if (text.contains('*')) {
+    List<String> parts = text.split('*');
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: parts[0],
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+          TextSpan(
+            text: '*',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.red,
+            ),
+          ),
+          if (parts.length > 1)
+            TextSpan(
+              text: parts[1],
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: textColor,
               ),
             ),
-            ...children,
-          ],
-        ),
+        ],
       ),
     );
   }
+  
+  return Text(
+    text,
+    style: TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      color: textColor,
+    ),
+  );
+}
 
-  Widget _labelText(String text, Color textColor) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: textColor,
-        ),
-      ),
-    );
-  }
 
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    bool readOnly = false,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      readOnly: readOnly,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
+Widget _labelText(String text, Color textColor) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8.0),
+    child: _buildLabelWithRedAsterisk(text, textColor),
+  );
+}
+
+Widget _buildTextField({
+  required String label,
+  required TextEditingController controller,
+  TextInputType keyboardType = TextInputType.text,
+  bool readOnly = false,
+  int maxLines = 1,
+  String? Function(String?)? validator,
+}) {
+  return TextFormField(
+    controller: controller,
+    keyboardType: keyboardType,
+    readOnly: readOnly,
+    maxLines: maxLines,
+    decoration: InputDecoration(
+      label: label.contains('*') ? _buildLabelWithRedAsterisk(label, Colors.black87) : null,
+      labelText: label.contains('*') ? null : label,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
       ),
-      validator: validator,
-    );
-  }
+    ),
+    validator: validator,
+  );
+}
 
   Widget _buildReadOnlyField({
     required String label,

@@ -889,30 +889,102 @@ Future<void> _recenterToIndia() async {
   }
 
   // Updated method to properly load ImageServer as RasterLayer
-  Future<void> _loadSusceptibilityLayer() async {
+Future<void> _loadSusceptibilityLayer() async {
+  try {
+    _hideAllLayersExcept('susceptibility');
+    
+    if (_susceptibilityLayer == null) {
+      print('🔍 Loading Susceptibility layer from GSI ImageServer');
+      
+      // Create ImageServiceRaster from the GSI ImageServer URL
+      final susceptibilityImageServiceUrl = Uri.parse('https://bhusanket.gsi.gov.in/gisserver/rest/services/GSI/Susceptibility/ImageServer');
+      final imageServiceRaster = ImageServiceRaster(uri: susceptibilityImageServiceUrl);
+      
+      // Create RasterLayer from the ImageServiceRaster
+      _susceptibilityLayer = RasterLayer.withRaster(imageServiceRaster);
+      
+      // Create colormap for susceptibility values 0-3
+      final colors = <Color>[];
+      // Value 0: Transparent (NoData areas)
+      colors.add(Colors.transparent);
+      // Value 1: Yellow (Low susceptibility)
+      colors.add(Colors.yellow);
+      // Value 2: Green (Medium susceptibility)  
+      colors.add(Colors.green);
+      // Value 3: Red (High susceptibility)
+      colors.add(Colors.red);
+      
+      // Create and apply the colormap renderer
+      final colormapRenderer = ColormapRenderer.withColors(colors);
+      _susceptibilityLayer!.renderer = colormapRenderer;
+      
+      // Configure the layer properties
+      _susceptibilityLayer!.opacity = 0.7; // Make it semi-transparent
+      
+      // Add layer to map first
+      _map.operationalLayers.add(_susceptibilityLayer!);
+      
+      // Load the layer
+      await _susceptibilityLayer!.load();
+      
+      print('✅ Successfully loaded Susceptibility layer as RasterLayer');
+    }
+    
+    setState(() {
+      _susceptibilityLayer!.isVisible = true;
+      _currentActiveLayer = 'susceptibility';
+    });
+    
+    _showError('Susceptibility layer enabled');
+    
+  } catch (e) {
+    _showError('Failed to load Susceptibility layer: $e');
+    print('❌ Susceptibility layer loading error: $e');
+    
+    // Fallback: Try with rendering rule approach
+    await _loadSusceptibilityLayerWithRenderingRule();
+  }
+}
+
+  // Alternative approach using RenderingRule for raster visualization
+  Future<void> _loadSusceptibilityLayerWithRenderingRule() async {
     try {
-      _hideAllLayersExcept('susceptibility');
+      print('🔄 Trying RenderingRule approach for Susceptibility layer...');
       
       if (_susceptibilityLayer == null) {
-        print('🔍 Loading Susceptibility layer from GSI ImageServer');
-        
         // Create ImageServiceRaster from the GSI ImageServer URL
         final susceptibilityImageServiceUrl = Uri.parse('https://bhusanket.gsi.gov.in/gisserver/rest/services/GSI/Susceptibility/ImageServer');
         final imageServiceRaster = ImageServiceRaster(uri: susceptibilityImageServiceUrl);
+        
+        // Create a rendering rule for better visualization
+        final renderingRuleJson = '''
+        {
+          "rasterFunction": "Colormap",
+          "rasterFunctionArguments": {
+            "Colormap": [
+              [1, 0, 255, 0, 255],
+              [2, 255, 255, 0, 255],
+              [3, 255, 0, 0, 255]
+            ],
+            "Raster": ""
+          }
+        }
+        ''';
+        
+        final renderingRule = RenderingRule.withRenderingRuleJson(renderingRuleJson);
+        imageServiceRaster.renderingRule = renderingRule;
         
         // Create RasterLayer from the ImageServiceRaster
         _susceptibilityLayer = RasterLayer.withRaster(imageServiceRaster);
         
         // Configure the layer properties
-        _susceptibilityLayer!.opacity = 0.7; // Make it semi-transparent
+        _susceptibilityLayer!.opacity = 0.7;
         
-        // Add layer to map first
+        // Add layer to map
         _map.operationalLayers.add(_susceptibilityLayer!);
         
         // Load the layer
         await _susceptibilityLayer!.load();
-        
-        print('✅ Successfully loaded Susceptibility layer as RasterLayer');
       }
       
       setState(() {
@@ -920,13 +992,52 @@ Future<void> _recenterToIndia() async {
         _currentActiveLayer = 'susceptibility';
       });
       
-      _showError('Susceptibility layer enabled');
+      _showError('Susceptibility layer enabled (with rendering rule)');
+      print('✅ Susceptibility layer loaded with rendering rule');
       
     } catch (e) {
-      _showError('Failed to load Susceptibility layer: $e');
-      print('❌ Susceptibility layer loading error: $e');
+      print('❌ Rendering rule approach also failed: $e');
+      await _loadSusceptibilityLayerSimple();
     }
   }
+
+    // Simple approach without custom renderer
+  Future<void> _loadSusceptibilityLayerSimple() async {
+    try {
+      print('🔄 Trying simple approach for Susceptibility layer...');
+      
+      if (_susceptibilityLayer == null) {
+        // Create ImageServiceRaster from the GSI ImageServer URL
+        final susceptibilityImageServiceUrl = Uri.parse('https://bhusanket.gsi.gov.in/gisserver/rest/services/GSI/Susceptibility/ImageServer');
+        final imageServiceRaster = ImageServiceRaster(uri: susceptibilityImageServiceUrl);
+        
+        // Create RasterLayer from the ImageServiceRaster
+        _susceptibilityLayer = RasterLayer.withRaster(imageServiceRaster);
+        
+        // Configure the layer properties with default renderer
+        _susceptibilityLayer!.opacity = 0.7;
+        
+        // Add layer to map
+        _map.operationalLayers.add(_susceptibilityLayer!);
+        
+        // Load the layer
+        await _susceptibilityLayer!.load();
+      }
+      
+      setState(() {
+        _susceptibilityLayer!.isVisible = true;
+        _currentActiveLayer = 'susceptibility';
+      });
+      
+      _showError('Susceptibility layer enabled (simple)');
+      print('✅ Susceptibility layer loaded with default renderer');
+      
+    } catch (e) {
+      print('❌ Simple approach also failed: $e');
+      _showError('Susceptibility layer not available - server may be unreachable');
+    }
+  }
+
 
   // Load National Landslide Inventory Layer with correct URL
   Future<void> _loadLandslideInventoryLayer() async {

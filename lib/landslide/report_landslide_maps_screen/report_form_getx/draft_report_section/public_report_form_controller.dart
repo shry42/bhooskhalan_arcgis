@@ -498,16 +498,16 @@ Future<void> fetchLocationFromCoordinates() async {
           }
         } else {
           isLocationAutoPopulated.value = false;
-          _showLocationError('No results found');
+          // _showLocationError('No results found');
         }
       } else {
         isLocationAutoPopulated.value = false;
-        _showLocationError('API request failed');
+        // _showLocationError('API request failed');
       }
     }
   } catch (e) {
     isLocationAutoPopulated.value = false;
-    _showLocationError(e.toString());
+    // _showLocationError(e.toString());
   }
 }
 
@@ -546,16 +546,16 @@ void _showLocationNotFound() {
   );
 }
 
-void _showLocationError(String error) {
-  Get.snackbar(
-    'Location Error',
-    'Failed to get location: $error',
-    backgroundColor: Colors.red,
-    colorText: Colors.white,
-    snackPosition: SnackPosition.BOTTOM,
-    duration: const Duration(seconds: 3),
-  );
-}
+// void _showLocationError(String error) {
+//   Get.snackbar(
+//     'Location Error',
+//     'Failed to get location',
+//     backgroundColor: Colors.red,
+//     colorText: Colors.white,
+//     snackPosition: SnackPosition.BOTTOM,
+//     duration: const Duration(seconds: 3),
+//   );
+// }
 
 
 // SETUP METHODS
@@ -1382,6 +1382,7 @@ void _showSuccessDialog({required bool isOnline}) {
                   onPressed: () {
                     Get.back(); // Close dialog
                     Get.back(); // Go back to previous screen
+                    
                   },
                   child: const Text(
                     'DONE',
