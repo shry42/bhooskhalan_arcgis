@@ -142,7 +142,7 @@ class ExpertRegisterController extends GetxController {
       
       // Manually create the query string to match exactly what works
       final urlString = '$baseUrl/Register/create?mobile=$mobile&email=$email&username=$username'
-          '&password=$password&usertype=Expert&Organization=$organization&tocken=&datetim=&session=&otp=&status=&otp_session=';
+          '&password=$password&usertype=Geo-Scientist&Organization=$organization&tocken=&datetim=&session=&otp=&status=&otp_session=';
       
       // Log the request URL for debugging
       print("Request URL: $urlString");

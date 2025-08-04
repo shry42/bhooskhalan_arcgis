@@ -1,5 +1,6 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_table_row.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showAlertCategoryDialog(BuildContext context) {
   showDialog(
@@ -19,8 +20,8 @@ void showAlertCategoryDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Alert Category',
+                  Text(
+                    'alert_category'.tr,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -49,8 +50,8 @@ void showAlertCategoryDialog(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Ministry of Home affairs has categorized alert for landslide disaster into three categories',
+                      Text(
+                        'alert_category_description'.tr,
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.4,
@@ -58,8 +59,8 @@ void showAlertCategoryDialog(BuildContext context) {
                       ),
                       const SizedBox(height: 16),
                       
-                      const Text(
-                        'I-Red,high alert',
+                      Text(
+                        'red_high_alert'.tr,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -67,8 +68,8 @@ void showAlertCategoryDialog(BuildContext context) {
                       ),
                       const SizedBox(height: 8),
                       
-                      const Text(
-                        'II-Orange,medium alert',
+                      Text(
+                        'orange_medium_alert'.tr,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -76,8 +77,8 @@ void showAlertCategoryDialog(BuildContext context) {
                       ),
                       const SizedBox(height: 8),
                       
-                      const Text(
-                        'III-Yellow,low alert',
+                      Text(
+                        'yellow_low_alert'.tr,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -102,14 +103,14 @@ void showAlertCategoryDialog(BuildContext context) {
                                   topRight: Radius.circular(8),
                                 ),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
                                   Expanded(
                                     flex: 1,
                                     child: Padding(
                                       padding: EdgeInsets.all(12.0),
                                       child: Text(
-                                        'Category',
+                                        'category'.tr,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.blue,
@@ -123,7 +124,7 @@ void showAlertCategoryDialog(BuildContext context) {
                                     child: Padding(
                                       padding: EdgeInsets.all(12.0),
                                       child: Text(
-                                        'Description',
+                                        'description'.tr,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.blue,
@@ -137,7 +138,7 @@ void showAlertCategoryDialog(BuildContext context) {
                                     child: Padding(
                                       padding: EdgeInsets.all(12.0),
                                       child: Text(
-                                        'Stage',
+                                        'stage'.tr,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.blue,
@@ -153,22 +154,22 @@ void showAlertCategoryDialog(BuildContext context) {
                             // Table Rows
                             buildTableRow(
                               category: 'III',
-                              description: 'Landslide and subsidence that occur in the vicinity of the in habituated areas and/ or any infrastructure that can adversely affect either human or property or infrastructure Landslides and subsidence that blocks smaller natural drainages and posing insignificant to limited risk it lives and properties It may pose some amount of threat for future damage.',
-                              stage: 'Yellow',
+                              description: 'category_3_desc'.tr,
+                              stage: 'yellow'.tr,
                               isLast: false,
                             ),
                             
                             buildTableRow(
                               category: 'II',
-                              description: 'Landslide and subsidence that occur and/or have damaging effects on inhabited areas, important and strategic infrastructure such as highways/roads, pilgrimage routes, rail routes and other civil installations like any hydroelectric/irrigation/ multipurpose projects and that result either loss of lives or damage to any property.',
-                              stage: 'Orange',
+                              description: 'category_2_desc'.tr,
+                              stage: 'orange'.tr,
                               isLast: false,
                             ),
                             
                             buildTableRow(
                               category: 'I',
-                              description: 'Landslide and subsidence that occur nad /or have effect on inhabited areas, important and strategic infrastructure such as highways/roads, pilgrimage routes, rail routes and other civil installations like any appurtenant structures which result in significant losses of lives and properties This category also includes large landslide that causes damming and blocking of major rivers leading to the possibility of breaching of dam and flooding of downstream low-lying areas (outcome of Landslide Lake Outburst-LLOF).',
-                              stage: 'Red',
+                              description: 'category_1_desc'.tr,
+                              stage: 'red'.tr,
                               isLast: true,
                             ),
                           ],

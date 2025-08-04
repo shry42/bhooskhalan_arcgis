@@ -80,8 +80,8 @@ class BulletinDateController extends GetxController {
       }
       
       Get.snackbar(
-        "Error",
-        "Something went wrong: $e",
+        'error'.tr,
+        '${'something_went_wrong'.tr}$e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:get/get.dart';
 
 class NewsWebViewScreen extends StatefulWidget {
   final String url;
@@ -44,10 +45,10 @@ class _NewsWebViewScreenState extends State<NewsWebViewScreen> {
             });
           },
           onHttpError: (HttpResponseError error) {
-            _showErrorSnackBar('HTTP Error: ${error.response?.statusCode}');
+            _showErrorSnackBar('${'httpError'.tr} ${error.response?.statusCode}');
           },
           onWebResourceError: (WebResourceError error) {
-            _showErrorSnackBar('Web Resource Error: ${error.description}');
+            _showErrorSnackBar('${'webResourceError'.tr} ${error.description}');
           },
         ),
       )

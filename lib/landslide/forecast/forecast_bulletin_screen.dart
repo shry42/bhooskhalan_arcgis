@@ -8,16 +8,25 @@ class ForecastBulletinPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final districts = [
-      'TAMIL NADU - THE NILGIRIS',
-      'WEST BENGAL - DARJEELING',
-      'WEST BENGAL - KALIMPONG',
+      {
+        'key': 'district_tamil_nadu_nilgiris',
+        'original': 'TAMIL NADU - THE NILGIRIS',
+      },
+      {
+        'key': 'district_west_bengal_darjeeling',
+        'original': 'WEST BENGAL - DARJEELING',
+      },
+      {
+        'key': 'district_west_bengal_kalimpong',
+        'original': 'WEST BENGAL - KALIMPONG',
+      },
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Forecast Bulletin',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          'forecast_bulletin'.tr,
+          style: const TextStyle(color: Colors.white),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -31,9 +40,9 @@ class ForecastBulletinPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Select any district to get the forecast bulletin reports for the last 7 days',
-              style: TextStyle(
+            Text(
+              'select_district_instruction'.tr,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
@@ -42,7 +51,7 @@ class ForecastBulletinPage extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             ...districts.map(
-              (district) => Padding(
+              (districtInfo) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -54,8 +63,8 @@ class ForecastBulletinPage extends StatelessWidget {
                     elevation: 3,
                   ),
                   onPressed: () {
-                    // Parse the district string to extract state and district
-                    final parts = district.split(' - ');
+                    // Parse the original district string to extract state and district
+                    final parts = districtInfo['original']!.split(' - ');
                     final state = parts[0].trim();
                     final districtName = parts[1].trim();
                     
@@ -66,7 +75,7 @@ class ForecastBulletinPage extends StatelessWidget {
                     ));
                   },
                   child: Text(
-                    district,
+                    districtInfo['key']!.tr,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,

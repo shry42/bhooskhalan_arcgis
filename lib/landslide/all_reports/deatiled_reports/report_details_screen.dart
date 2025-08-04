@@ -59,6 +59,27 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     return value;
   }
 
+  String _formatImageCaptions(String? imageCaptions) {
+    if (imageCaptions == null || imageCaptions.isEmpty || imageCaptions == 'null') {
+      return 'N/A';
+    }
+    
+    // Split by &&& delimiter and format each caption
+    List<String> captions = imageCaptions.split('&&&');
+    captions = captions.where((caption) => caption.trim().isNotEmpty).toList();
+    
+    if (captions.isEmpty) {
+      return 'N/A';
+    }
+    
+    // Format as numbered list
+    return captions.asMap().entries.map((entry) {
+      int index = entry.key + 1;
+      String caption = entry.value.trim();
+      return '$index. $caption';
+    }).join('\n');
+  }
+
   String _formatDateTime(String? dateTime) {
     if (dateTime == null || dateTime.isEmpty || dateTime == 'null') {
       return 'N/A';
@@ -471,7 +492,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                       _buildDetailRow('u_lat', _formatValue(_report!.uLat)),
                       _buildDetailRow('u_long', _formatValue(_report!.uLong)),
                       _buildDetailRow('Toposheet_No', _formatValue(_report!.toposheetNo)),
-                      _buildDetailRow('ImageCaptions', _formatValue(_report!.imageCaptions)),
+                      _buildDetailRow('ImageCaptions', _formatImageCaptions(_report!.imageCaptions)),
 
                       // Photographs
                       _buildPhotographSection(),

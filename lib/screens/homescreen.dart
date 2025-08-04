@@ -1,6 +1,7 @@
 import 'package:bhooskhalann/landslide/all_reports/all_reports_screen.dart' show AllReportsScreen, AllReportsScreenArcGIS;
 import 'package:bhooskhalann/landslide/forecast/forecast_bulletin_screen.dart';
 import 'package:bhooskhalann/landslide/landslide_information_screen.dart/landslide_info_screen.dart';
+import 'package:bhooskhalann/landslide/report_landslide_maps_screen/maps/arcgis_map_screen.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/draft_report_section/recent_report_screen/recent_reports_screen.dart';
 import 'package:bhooskhalann/screens/news/recent_news_screen.dart';
 import 'package:bhooskhalann/screens/report_landslide_dialog.dart';
@@ -8,6 +9,7 @@ import 'package:bhooskhalann/user_profile/expert_user_profile.dart';
 import 'package:bhooskhalann/user_profile/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatelessWidget {
    HomeScreen({super.key});
@@ -97,10 +99,21 @@ Widget _buildCard(_HomeCardItem item) {
     elevation: 4,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     child: InkWell(
-      onTap: () {
-        if (item.title == 'report_landslide'.tr) {
-          showSafetyDialog(Get.context!); // Call the dialog
-        } else if(item.title == 'view_my_reports'.tr){
+      onTap: () async{
+if (item.title == 'report_landslide'.tr) {
+  // Check user type from SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+  final userType = prefs.getString('userType') ?? 'Public';
+  
+  if (userType == 'Public') {
+    // Navigate to ArcGisLocationMapScreen for public users
+    Get.to(() => ArcGisLocationMapScreen());
+  } else {
+    // Show safety dialog for other user types
+    showSafetyDialog(Get.context!);
+  }
+}
+         else if(item.title == 'view_my_reports'.tr){
           Get.to(()=>RecentReportsPage());
         } else if(item.title == 'forecast_bulletin'.tr){
           Get.to(()=>ForecastBulletinPage());
@@ -170,7 +183,6 @@ class _HomeCardItem {
 
   _HomeCardItem(this.title, this.imagePath);
 }
-
 
 void showSafetyDialog(BuildContext context) {
   showDialog(

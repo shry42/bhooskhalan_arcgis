@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:bhooskhalann/user_profile/profile_controller.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -17,6 +17,7 @@ final ProfileController pc = Get.put(ProfileController());
 
   final formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
+  var imageCaptions = <TextEditingController>[].obs;
   
   // Loading state
   var isLoading = false.obs;
@@ -42,10 +43,9 @@ final ProfileController pc = Get.put(ProfileController());
 String? currentPendingReportId;
 var isPendingEditMode = false.obs;
 
-    final rainfallAmountController = TextEditingController();
-  var rainfallDurationValue = Rxn<String>();
+    // final rainfallAmountController = TextEditingController();
+  // var rainfallDurationValue = Rxn<String>();
   
-
   // Form controllers - Location Information
   final affiliationController = TextEditingController();
   late TextEditingController latitudeController;
@@ -59,6 +59,191 @@ var isPendingEditMode = false.obs;
   var isLocationAutoPopulated = false.obs;
 var selectedStateFromDropdown = Rxn<String>();
 var selectedDistrictFromDropdown = Rxn<String>();
+
+  // UI State variables
+  var isImpactSectionExpanded = false.obs;
+
+
+// Helper method to convert translated dropdown values back to English for API
+String? translateToEnglish(String? translatedValue, String fieldType) {
+  if (translatedValue == null) return null;
+  
+  // If the value is already an English key, convert it to the proper API format
+  switch (fieldType) {
+    case 'occurrence':
+      if (translatedValue == 'exact_occurrence_date') return 'I know the EXACT occurrence date';
+      if (translatedValue == 'approximate_occurrence_date') return 'I know the APPROXIMATE occurrence date';
+      if (translatedValue == 'no_occurrence_date') return 'I DO NOT know the occurrence date';
+      break;
+      
+    case 'source':
+      if (translatedValue == 'i_observed_it') return 'I observed it';
+      if (translatedValue == 'through_local') return 'Through a local';
+      if (translatedValue == 'social_media') return 'Social media';
+      if (translatedValue == 'news') return 'News';
+      if (translatedValue == 'i_dont_know') return 'I don\'t know';
+      break;
+      
+    case 'dateRange':
+      if (translatedValue == 'last_3_days') return 'In the last 3 days';
+      if (translatedValue == 'last_week') return 'In the last week';
+      if (translatedValue == 'last_month') return 'In the last month';
+      if (translatedValue == 'last_3_months') return 'In the last 3 months';
+      if (translatedValue == 'last_year') return 'In the last year';
+      if (translatedValue == 'older_than_year') return 'Older than a year';
+      break;
+      
+    case 'locationType':
+      if (translatedValue == 'near_on_road') return 'Near/onroad';
+      if (translatedValue == 'next_to_river') return 'Next to river';
+      if (translatedValue == 'settlement') return 'Settlement';
+      if (translatedValue == 'plantation') return 'Plantation (tea,rubber .... etc.)';
+      if (translatedValue == 'forest_area') return 'Forest Area';
+      if (translatedValue == 'cultivation') return 'Cultivation';
+      if (translatedValue == 'barren_land') return 'Barren Land';
+      if (translatedValue == 'other_specify') return 'Other (Specify)';
+      break;
+      
+    case 'material':
+      if (translatedValue == 'rock') return 'Rock';
+      if (translatedValue == 'soil') return 'Soil';
+      if (translatedValue == 'debris_mixture') return 'Debris (mixture of Rock and Soil)';
+      break;
+      
+    case 'roadType':
+      if (translatedValue == 'state_highway') return 'State Highway';
+      if (translatedValue == 'national_highway') return 'National Highway';
+      if (translatedValue == 'local') return 'Local';
+      break;
+      
+    case 'extent':
+      if (translatedValue == 'full') return 'Full';
+      if (translatedValue == 'partial') return 'Partial';
+      break;
+      
+    case 'size':
+      if (translatedValue == 'small_building') return 'Small - (Less than 2 storey Building) < 6m';
+      if (translatedValue == 'medium_building') return 'Medium - (Two to 5 storey Building) 6-15m';
+      if (translatedValue == 'large_building') return 'Large - (More than 5 storey Building) > 15m';
+      break;
+  }
+  
+  // If it's a translated value, try to find the English key and convert it
+  // This handles cases where the value might still be in Hindi
+  String? englishKey = _findEnglishKeyFromHindiValue(translatedValue, _getOptionsForFieldType(fieldType));
+  if (englishKey != null) {
+    return translateToEnglish(englishKey, fieldType);
+  }
+  
+  return translatedValue; // Return as-is if no translation found
+}
+
+// Helper method to get options for a specific field type
+List<String> _getOptionsForFieldType(String fieldType) {
+  switch (fieldType) {
+    case 'occurrence':
+      return landslideOccurrenceOptions;
+    case 'source':
+      return howDoYouKnowOptions;
+    case 'dateRange':
+      return ['last_3_days', 'last_week', 'last_month', 'last_3_months', 'last_year', 'older_than_year'];
+    case 'locationType':
+      return whereDidLandslideOccurOptions;
+    case 'material':
+      return typeOfMaterialOptions;
+    case 'roadType':
+      return roadTypeOptions;
+    case 'extent':
+      return roadExtentOptions;
+    case 'size':
+      return landslideSizeOptions;
+    default:
+      return [];
+  }
+}
+
+
+// Method to get translated occurrence options
+List<String> getOccurrenceOptions() {
+  return [
+    'exact_occurrence_date'.tr,
+    'approximate_occurrence_date'.tr,
+    'no_occurrence_date'.tr,
+  ];
+}
+
+// Method to get translated source options
+List<String> getSourceOptions() {
+  return [
+    'i_observed_it'.tr,
+    'through_local'.tr,
+    'social_media'.tr,
+    'news'.tr,
+    'i_dont_know'.tr,
+  ];
+}
+
+// Method to get translated date range options
+List<String> getDateRangeOptions() {
+  return [
+    'last_3_days'.tr,
+    'last_week'.tr,
+    'last_month'.tr,
+    'last_3_months'.tr,
+    'last_year'.tr,
+    'older_than_year'.tr,
+  ];
+}
+
+// Method to get translated location type options
+List<String> getLocationTypeOptions() {
+  return [
+    'near_on_road'.tr,
+    'next_to_river'.tr,
+    'settlement'.tr,
+    'plantation'.tr,
+    'forest_area'.tr,
+    'cultivation'.tr,
+    'barren_land'.tr,
+    'other_specify'.tr,
+  ];
+}
+
+// Method to get translated material type options
+List<String> getMaterialTypeOptions() {
+  return [
+    'rock'.tr,
+    'soil'.tr,
+    'debris_mixture'.tr,
+  ];
+}
+
+// Method to get translated road type options
+List<String> getRoadTypeOptions() {
+  return [
+    'state_highway'.tr,
+    'national_highway'.tr,
+    'local'.tr,
+  ];
+}
+
+// Method to get translated extent options
+List<String> getExtentOptions() {
+  return [
+    'full'.tr,
+    'partial'.tr,
+  ];
+}
+
+// Method to get translated landslide size options
+List<String> getLandslideSizeOptions() {
+  return [
+    'small_building'.tr,
+    'medium_building'.tr,
+    'large_building'.tr,
+  ];
+}
+
 
 final List<String> indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -277,16 +462,16 @@ final Map<String, List<String>> stateDistrictsMap = {
   final dateController = TextEditingController();
   final timeController = TextEditingController();
   var occurrenceDateRange = ''.obs;
-  final otherRelevantInformation = TextEditingController();
+  // final otherRelevantInformation = TextEditingController();
   
   // Dropdown values - Main form
   var landslideOccurrenceValue = Rxn<String>();
   var howDoYouKnowValue = Rxn<String>();
   var whereDidLandslideOccurValue = Rxn<String>();
   var typeOfMaterialValue = Rxn<String>();
-  var typeOfMovementValue = Rxn<String>();
+  // var typeOfMovementValue = Rxn<String>();
   var landslideSize = Rxn<String>(); // New field for public form
-  var whatInducedLandslideValue = Rxn<String>();
+  // var whatInducedLandslideValue = Rxn<String>();
   
   // Impact/Damage - Same as original form
   var peopleAffected = false.obs;
@@ -331,7 +516,7 @@ final Map<String, List<String>> stateDistrictsMap = {
 
   // LIFECYCLE METHODS
 @override
-void onInit() {
+  Future<void> onInit() async {
   super.onInit();
   _loadUserData();
   
@@ -349,13 +534,13 @@ void onInit() {
     if (args.containsKey('draftId') && args.containsKey('draftData')) {
       currentDraftId = args['draftId'];
       isDraftMode.value = true;
-      loadDraftData(args['draftData']);
+              await loadDraftData(args['draftData']);
     }
     // Check if this is a pending report being edited
     else if (args.containsKey('pendingReportId') && args.containsKey('pendingReportData')) {
       currentPendingReportId = args['pendingReportId']; // Add this property to controller
       isPendingEditMode.value = true; // Add this property to controller
-      loadDraftData(args['pendingReportData']); // Reuse the same loading method
+      await loadDraftData(args['pendingReportData']); // Reuse the same loading method
     } else {
       // If not a draft/pending and we have coordinates, fetch location
       if (args['latitude'] != null && args['longitude'] != null) {
@@ -431,7 +616,7 @@ Future<void> fetchLocationFromCoordinates() async {
         
         if (data['status'] == 'OK' && data['results'] != null && data['results'].isNotEmpty) {
           
-          String? state, district;
+          String? state, district, subdivision, village;
           List<String> populatedFields = [];
           
           // Parse all results to find best components
@@ -462,6 +647,30 @@ Future<void> fetchLocationFromCoordinates() async {
                   district = _cleanLocationName(longName);
                 }
               }
+              
+              // Extract SUBDIVISION/TALUK
+              if (subdivision == null) {
+                // Look for sublocality_level_1 or administrative_area_level_4
+                if (types.contains('sublocality_level_1') || types.contains('administrative_area_level_4')) {
+                  subdivision = _cleanLocationName(longName);
+                }
+                // Fallback to sublocality if it seems like a subdivision
+                else if (types.contains('sublocality') && _seemsLikeSubdivision(longName)) {
+                  subdivision = _cleanLocationName(longName);
+                }
+              }
+              
+              // Extract VILLAGE
+              if (village == null) {
+                // Look for sublocality_level_2 or sublocality_level_3
+                if (types.contains('sublocality_level_2') || types.contains('sublocality_level_3')) {
+                  village = _cleanLocationName(longName);
+                }
+                // Fallback to premise or neighborhood if it seems like a village
+                else if ((types.contains('premise') || types.contains('neighborhood')) && _seemsLikeVillage(longName)) {
+                  village = _cleanLocationName(longName);
+                }
+              }
             }
           }
           
@@ -480,6 +689,20 @@ Future<void> fetchLocationFromCoordinates() async {
             populatedFields.add('District: $district');
             populated = true;
             print('✅ District set: $district');
+          }
+          
+          if (subdivision != null && subdivision.isNotEmpty) {
+            subdivisionController.text = subdivision;
+            populatedFields.add('Subdivision/Taluk: $subdivision');
+            populated = true;
+            print('✅ Subdivision/Taluk set: $subdivision');
+          }
+          
+          if (village != null && village.isNotEmpty) {
+            villageController.text = village;
+            populatedFields.add('Village: $village');
+            populated = true;
+            print('✅ Village set: $village');
           }
           
           if (populated) {
@@ -527,6 +750,22 @@ bool _seemsLikeDistrict(String name) {
          !lower.contains('ward') && !lower.contains('road');
 }
 
+// Check if name seems like a subdivision/taluk
+bool _seemsLikeSubdivision(String name) {
+  String lower = name.toLowerCase();
+  return lower.contains('taluk') || lower.contains('tehsil') || lower.contains('subdivision') ||
+         lower.contains('block') || lower.contains('mandal') || lower.contains('tahsil') ||
+         (lower.length > 3 && lower.length < 15 && !lower.contains('ward') && !lower.contains('road'));
+}
+
+// Check if name seems like a village
+bool _seemsLikeVillage(String name) {
+  String lower = name.toLowerCase();
+  return lower.contains('village') || lower.contains('gram') || lower.contains('gaon') ||
+         lower.contains('pur') || lower.contains('nagar') || lower.contains('colony') ||
+         (lower.length > 2 && lower.length < 12 && !lower.contains('ward') && !lower.contains('road'));
+}
+
 // Clean location names
 String _cleanLocationName(String name) {
   return name
@@ -537,25 +776,14 @@ String _cleanLocationName(String name) {
 // Error handling methods
 void _showLocationNotFound() {
   Get.snackbar(
-    'Location Not Found',
-    'Could not fetch location details. Please enter manually.',
+    'location_not_found'.tr,
+    'could_not_fetch_location'.tr,
     backgroundColor: Colors.orange,
     colorText: Colors.white,
     snackPosition: SnackPosition.BOTTOM,
     duration: const Duration(seconds: 3),
   );
 }
-
-// void _showLocationError(String error) {
-//   Get.snackbar(
-//     'Location Error',
-//     'Failed to get location',
-//     backgroundColor: Colors.red,
-//     colorText: Colors.white,
-//     snackPosition: SnackPosition.BOTTOM,
-//     duration: const Duration(seconds: 3),
-//   );
-// }
 
 
 // SETUP METHODS
@@ -567,12 +795,12 @@ void _showLocationNotFound() {
   }
 
   // DRAFT MANAGEMENT METHODS
-  void loadDraftData(Map<String, dynamic> draftData) {
+  Future<void> loadDraftData(Map<String, dynamic> draftData) async {
     try {
       _loadTextControllers(draftData);
       _loadDropdownValues(draftData);
       loadCheckboxData(draftData);
-      _loadDraftImages(draftData);
+      await _loadDraftImages(draftData);
     } catch (e) {
       print('Error loading draft data: $e');
       Get.snackbar(
@@ -584,14 +812,17 @@ void _showLocationNotFound() {
     }
   }
 
-  void _loadDraftImages(Map<String, dynamic> draftData) {
+  Future<void> _loadDraftImages(Map<String, dynamic> draftData) async {
     if (draftData['imageCount'] != null && draftData['imageCount'] > 0) {
+      // Load images from draft data
+      await loadImagesFromDraft(draftData);
+      
       Get.snackbar(
-        'Draft Images',
-        'This draft had ${draftData['imageCount']} images. Please re-select images for submission.',
-        backgroundColor: Colors.blue,
+        'Draft Images Loaded',
+        '${draftData['imageCount']} images loaded from draft',
+        backgroundColor: Colors.green,
         colorText: Colors.white,
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 2),
       );
     }
   }
@@ -603,9 +834,9 @@ void _showLocationNotFound() {
     if (draftData['subdivision'] != null) subdivisionController.text = draftData['subdivision'];
     if (draftData['village'] != null) villageController.text = draftData['village'];
     if (draftData['locationDetails'] != null) locationDetailsController.text = draftData['locationDetails'];
-    if (draftData['otherRelevantInfo'] != null) otherRelevantInformation.text = draftData['otherRelevantInfo'];
+    // if (draftData['otherRelevantInfo'] != null) otherRelevantInformation.text = draftData['otherRelevantInfo'];
   if (draftData['occurrenceDateRange'] != null) occurrenceDateRange.value = draftData['occurrenceDateRange'];
-     if (draftData['rainfallAmount'] != null) rainfallAmountController.text = draftData['rainfallAmount'];
+    //  if (draftData['rainfallAmount'] != null) rainfallAmountController.text = draftData['rainfallAmount'];
     
 
       if (draftData['isLocationAutoPopulated'] == false) {
@@ -636,10 +867,10 @@ void _showLocationNotFound() {
     howDoYouKnowValue.value = draftData['howDoYouKnow'];
     whereDidLandslideOccurValue.value = draftData['whereDidLandslideOccur'];
     typeOfMaterialValue.value = draftData['typeOfMaterial'];
-    typeOfMovementValue.value = draftData['typeOfMovement'];
+    // typeOfMovementValue.value = draftData['typeOfMovement'];
     landslideSize.value = draftData['landslideSize'];
-    whatInducedLandslideValue.value = draftData['whatInducedLandslide'];
-    rainfallDurationValue.value = draftData['rainfallDuration'];
+    // whatInducedLandslideValue.value = draftData['whatInducedLandslide'];
+    // rainfallDurationValue.value = draftData['rainfallDuration'];
   }
   
   void loadCheckboxData(Map<String, dynamic> draftData) {
@@ -686,7 +917,24 @@ void _showLocationNotFound() {
     powerExtentValue.value = draftData['powerExtent'];
   }
   
-  Map<String, dynamic> collectFormData() {
+  Future<Map<String, dynamic>> collectFormData() async {
+    // Convert images to base64 for storage
+    List<String> imageBase64List = [];
+    List<String> imageCaptionsList = [];
+    
+    for (int i = 0; i < selectedImages.length; i++) {
+      try {
+        String base64Image = await imageToBase64(selectedImages[i]);
+        imageBase64List.add(base64Image);
+        imageCaptionsList.add(imageCaptions[i].text);
+      } catch (e) {
+        print('Error converting image $i to base64: $e');
+        // Add empty string to maintain index alignment
+        imageBase64List.add('');
+        imageCaptionsList.add(imageCaptions[i].text);
+      }
+    }
+    
     return {
       // Location data
       'latitude': latitudeController.text,
@@ -698,27 +946,29 @@ void _showLocationNotFound() {
       'locationDetails': locationDetailsController.text,
 
        'isLocationAutoPopulated': isLocationAutoPopulated.value,
-             'rainfallAmount': rainfallAmountController.text,
-      'rainfallDuration': rainfallDurationValue.value,
+            //  'rainfallAmount': rainfallAmountController.text,
+      // 'rainfallDuration': rainfallDurationValue.value,
       
       // Occurrence data
-      'landslideOccurrence': landslideOccurrenceValue.value,
+      'landslideOccurrence': _getEnglishValueForAPI(landslideOccurrenceValue.value, landslideOccurrenceOptions),
       'date': dateController.text,
       'time': timeController.text,
-      'howDoYouKnow': howDoYouKnowValue.value,
+      'howDoYouKnow': _getEnglishValueForAPI(howDoYouKnowValue.value, howDoYouKnowOptions),
      'occurrenceDateRange': occurrenceDateRange.value,
+     'imageCaptions': imageCaptionsList,
       
       // Basic landslide data
-      'whereDidLandslideOccur': whereDidLandslideOccurValue.value,
-      'typeOfMaterial': typeOfMaterialValue.value,
-      'typeOfMovement': typeOfMovementValue.value,
+      'whereDidLandslideOccur': _getEnglishValueForAPI(whereDidLandslideOccurValue.value, whereDidLandslideOccurOptions),
+      'typeOfMaterial': _getEnglishValueForAPI(typeOfMaterialValue.value, typeOfMaterialOptions),
+      // 'typeOfMovement': typeOfMovementValue.value,
       'landslideSize': landslideSize.value,
-      'whatInducedLandslide': whatInducedLandslideValue.value,
-      'otherRelevantInfo': otherRelevantInformation.text,
+      // 'whatInducedLandslide': whatInducedLandslideValue.value,
+      // 'otherRelevantInfo': otherRelevantInformation.text,
       
-      // Images metadata for draft
+      // Images data for draft - now includes actual images
       'imageCount': selectedImages.length,
       'hasImages': selectedImages.isNotEmpty,
+      'images': imageBase64List, // Store actual images as base64
       
       // Impact/Damage
       'peopleAffected': peopleAffected.value,
@@ -766,15 +1016,15 @@ void _showLocationNotFound() {
   
 Future<void> saveDraft() async {
   try {
-    final formData = collectFormData();
+    final formData = await collectFormData();
     final reportsController = Get.put(RecentReportsController());
   
     if (currentDraftId != null) {
       // Update existing draft with 'public' form type
       await reportsController.updateDraftReport(currentDraftId!, formData, 'public');
       Get.snackbar(
-        'Success',
-        'Public draft updated successfully',
+        'success'.tr,
+        'public_draft_updated'.tr,
         backgroundColor: const Color(0xFF1976D2),
         colorText: Colors.white,
       );
@@ -784,204 +1034,262 @@ Future<void> saveDraft() async {
       currentDraftId = draftId;
       isDraftMode.value = true;
       Get.snackbar(
-        'Success',
-        'Public form saved as draft',
+        'success'.tr,
+        'public_form_saved_draft'.tr,
         backgroundColor: const Color(0xFF1976D2),
         colorText: Colors.white,
       );
     }
   } catch (e) {
     Get.snackbar(
-      'Error',
-      'Failed to save public draft: $e',
+      'error'.tr,
+      '${'failed_save_draft'.tr}: $e',
       backgroundColor: Colors.red,
       colorText: Colors.white,
     );
   }
 }
 
+
   // IMAGE HANDLING METHODS WITH VALIDATION
-  Future<void> openCamera() async {
-    try {
-      final XFile? photo = await _picker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1800,
-        maxHeight: 1800,
-        imageQuality: 85,
-      );
-      
-      if (photo != null) {
-        selectedImages.add(File(photo.path));
-        _validateImages(); // Clear any validation errors
-        Get.snackbar(
-          'Success',
-          'Photo captured! Total images: ${selectedImages.length}',
-          backgroundColor: const Color(0xFF1976D2),
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
+Future<void> openCamera() async {
+  try {
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1800,
+      maxHeight: 1800,
+      imageQuality: 85,
+    );
+    
+    if (photo != null) {
+      selectedImages.add(File(photo.path));
+      imageCaptions.add(TextEditingController());
+      _validateImages();
       Get.snackbar(
-        'Error',
-        'Error accessing camera: $e',
-        backgroundColor: Colors.red,
+        'success'.tr,
+        '${'photo_captured'.tr} ${selectedImages.length}',
+        backgroundColor: const Color(0xFF1976D2),
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
       );
     }
+  } catch (e) {
+    Get.snackbar(
+      'error'.tr,
+      '${'error_accessing_camera'.tr} $e',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
-  
-  Future<void> openGallery() async {
-    try {
-      final List<XFile> photos = await _picker.pickMultiImage(
-        maxWidth: 1800,
-        maxHeight: 1800,
-        imageQuality: 85,
-      );
-      
-      if (photos.isNotEmpty) {
-        // Check if adding these photos would exceed the limit (max 5 images)
-        if (selectedImages.length + photos.length > 5) {
-          final remaining = 5 - selectedImages.length;
-          Get.snackbar(
-            'Warning',
-            'You can only select up to 5 images. Adding $remaining images.',
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-          );
-          selectedImages.addAll(photos.take(remaining).map((photo) => File(photo.path)));
-        } else {
-          selectedImages.addAll(photos.map((photo) => File(photo.path)));
+}
+
+Future<void> openGallery() async {
+  try {
+    final List<XFile> photos = await _picker.pickMultiImage(
+      maxWidth: 1800,
+      maxHeight: 1800,
+      imageQuality: 85,
+    );
+    
+    if (photos.isNotEmpty) {
+      if (selectedImages.length + photos.length > 5) {
+        final remaining = 5 - selectedImages.length;
+        Get.snackbar(
+          'warning'.tr,
+          '${'warning_max_5_images'.tr} $remaining ${'remaining_images'.tr}',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        selectedImages.addAll(photos.take(remaining).map((photo) => File(photo.path)));
+        for (int i = 0; i < remaining; i++) {
+          imageCaptions.add(TextEditingController());
         }
-        
-        _validateImages(); // Clear any validation errors
-        Get.snackbar(
-          'Success',
-          '${photos.length} images selected! Total images: ${selectedImages.length}',
-          backgroundColor: const Color(0xFF1976D2),
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+      } else {
+        selectedImages.addAll(photos.map((photo) => File(photo.path)));
+        for (int i = 0; i < photos.length; i++) {
+          imageCaptions.add(TextEditingController());
+        }
       }
-    } catch (e) {
+      
+      _validateImages();
       Get.snackbar(
-        'Error',
-        'Error accessing gallery: $e',
-        backgroundColor: Colors.red,
+        'success'.tr,
+        '${photos.length} ${'images_selected_gallery'.tr} ${selectedImages.length}',
+        backgroundColor: const Color(0xFF1976D2),
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
       );
     }
+  } catch (e) {
+    Get.snackbar(
+      'error'.tr,
+      '${'error_accessing_gallery'.tr} $e',
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
-  
+}
+
+
+
   void removeImage(int index) {
     selectedImages.removeAt(index);
+    // Dispose and remove the corresponding caption controller
+  imageCaptions[index].dispose();
+  imageCaptions.removeAt(index);
     _validateImages(); // Re-validate after removal
   }
 
   // IMAGE VALIDATION METHOD
-  bool _validateImages() {
-    if (selectedImages.isEmpty) {
-      imageValidationError.value = 'At least one image is required';
-      return false;
-    } else {
-      imageValidationError.value = '';
-      return true;
+bool _validateImages() {
+  if (selectedImages.isEmpty) {
+    imageValidationError.value = 'at_least_one_image_required'.tr;
+    return false;
+  } else {
+    imageValidationError.value = '';
+    return true;
+  }
+}
+
+  // Load images from draft data
+  Future<void> loadImagesFromDraft(Map<String, dynamic> formData) async {
+    try {
+      // Clear existing images
+      selectedImages.clear();
+      for (var controller in imageCaptions) {
+        controller.dispose();
+      }
+      imageCaptions.clear();
+      
+      // Load images from base64 data
+      List<dynamic>? imagesData = formData['images'];
+      List<dynamic>? captionsData = formData['imageCaptions'];
+      
+      if (imagesData != null && imagesData.isNotEmpty) {
+        for (int i = 0; i < imagesData.length; i++) {
+          try {
+            String base64Image = imagesData[i];
+            if (base64Image.isNotEmpty) {
+              // Convert base64 to File object
+              List<int> bytes = base64Decode(base64Image);
+              String tempPath = '/tmp/draft_image_$i.jpg';
+              File tempFile = File(tempPath);
+              await tempFile.writeAsBytes(bytes);
+              
+              selectedImages.add(tempFile);
+              
+              // Add caption controller
+              TextEditingController captionController = TextEditingController();
+              if (captionsData != null && i < captionsData.length) {
+                captionController.text = captionsData[i] ?? '';
+              }
+              imageCaptions.add(captionController);
+            }
+          } catch (e) {
+            print('Error loading image $i from draft: $e');
+          }
+        }
+      }
+      
+      _validateImages();
+    } catch (e) {
+      print('Error loading images from draft: $e');
     }
   }
 
   // Enhanced validation to show image requirement prominently
-  void showImageRequirementDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.camera_alt, color: Colors.red, size: 24),
-            const SizedBox(width: 8),
-            const Text('Images Required'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'At least one image is required to submit the landslide report.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Please:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text('• Use the CAMERA button to take photos'),
-            const Text('• Use the GALLERY button to select existing photos'),
-            const Text('• You can add up to 5 images'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info, color: Colors.blue.shade700, size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Good quality images help in better assessment of the landslide.',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('OK'),
+void showImageRequirementDialog() {
+  Get.dialog(
+    AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.camera_alt, color: Colors.red, size: 24),
+          const SizedBox(width: 8),
+          Text('images_required'.tr),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'at_least_one_image_required'.tr,
+            style: const TextStyle(fontSize: 16),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              openCamera();
-            },
-            child: const Text('Take Photo'),
+          const SizedBox(height: 16),
+          Text(
+            'please_action'.tr,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text('• ${'use_camera_button'.tr}'),
+          Text('• ${'use_gallery_button'.tr}'),
+          Text('• ${'up_to_5_images'.tr}'),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info, color: Colors.blue.shade700, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'good_quality_images_help'.tr,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-    );
-  }
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: Text('ok'.tr),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Get.back();
+            openCamera();
+          },
+          child: Text('take_photo'.tr),
+        ),
+      ],
+    ),
+  );
+}
 
   // Show landslide size selection dialog
-  void showLandslideSizeDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Select Landslide Size'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildSizeOption('Small - (Less than 2 storey Building) < 6m'),
-            _buildSizeOption('Medium - (Two to 5 storey Building) 6-15m'),
-            _buildSizeOption('Large - (More than 5 storey Building) > 15m'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('CANCEL'),
-          ),
+void showLandslideSizeDialog() {
+  Get.dialog(
+    AlertDialog(
+      title: Text('select_landslide_size_title'.tr),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSizeOption('small_building'.tr),
+          _buildSizeOption('medium_building'.tr),
+          _buildSizeOption('large_building'.tr),
         ],
       ),
-    );
-  }
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: Text('cancel'.tr),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildSizeOption(String size) {
     return ListTile(
@@ -1027,116 +1335,75 @@ Future<void> saveDraft() async {
   }
 
   // VALIDATION METHODS
-  String? validateRequired(String? value, String fieldName) {
-    if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
-    }
-    return null;
+String? validateRequired(String? value, String fieldName) {
+  if (value == null || value.trim().isEmpty) {
+    return '$fieldName ${'is_required'.tr}';
+  }
+  return null;
+}
+  
+bool validateForm() {
+  bool isValid = true;
+  String errorMessage = '';
+  
+  // Check image requirement FIRST
+  if (!_validateImages()) {
+    showImageRequirementDialog();
+    return false;
   }
   
-  bool validateForm() {
-    bool isValid = true;
-    String errorMessage = '';
-    
-    // Check image requirement FIRST
-    if (!_validateImages()) {
-      showImageRequirementDialog();
-      return false;
-    }
-    
-    // Check required fields
-    if (stateController.text.trim().isEmpty) {
-      errorMessage += 'State is required\n';
-      isValid = false;
-    }
-    
-    if (districtController.text.trim().isEmpty) {
-      errorMessage += 'District is required\n';
-      isValid = false;
-    }
-    
-    if (landslideOccurrenceValue.value == null) {
-      errorMessage += 'Landslide occurrence is required\n';
-      isValid = false;
-    }
-    
-    if (whereDidLandslideOccurValue.value == null) {
-      errorMessage += 'Landslide location type is required\n';
-      isValid = false;
-    }
-    
-    if (typeOfMaterialValue.value == null) {
-      errorMessage += 'Type of material is required\n';
-      isValid = false;
-    }
-    
-    if (typeOfMovementValue.value == null) {
-      errorMessage += 'Type of movement is required\n';
-      isValid = false;
-    }
-    
-    if (landslideSize.value == null) {
-      errorMessage += 'Landslide size is required\n';
-      isValid = false;
-    }
-    
-    if (whatInducedLandslideValue.value == null) {
-      errorMessage += 'What induced landslide is required\n';
-      isValid = false;
-    }
-       if (whatInducedLandslideValue.value == 'Rainfall') {
-      if (rainfallDurationValue.value == null) {
-        errorMessage += 'Rainfall duration is required when trigger is rainfall\n';
-        isValid = false;
-      }
-    }
-    
-    if (!isValid) {
-      Get.snackbar(
-        'Validation Error',
-        errorMessage.trim(),
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-    
-    return isValid;
+  // Check required fields
+  if (stateController.text.trim().isEmpty) {
+    errorMessage += '${'state_required'.tr}\n';
+    isValid = false;
   }
+  
+  if (districtController.text.trim().isEmpty) {
+    errorMessage += '${'district_required'.tr}\n';
+    isValid = false;
+  }
+  
+  if (landslideOccurrenceValue.value == null) {
+    errorMessage += '${'landslide_occurrence_required'.tr}\n';
+    isValid = false;
+  }
+  
+  if (!isValid) {
+    Get.snackbar(
+      'validation_error'.tr,
+      errorMessage.trim(),
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 5),
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+  
+  return isValid;
+}
 
   // Get validation summary for UI display
-  Map<String, dynamic> getValidationSummary() {
-    int totalRequired = 8; // Total required fields for public form
-    int completed = 0;
-    List<String> missing = [];
-    
-    // Check each required field
-    if (stateController.text.trim().isNotEmpty) completed++; else missing.add('State');
-    if (districtController.text.trim().isNotEmpty) completed++; else missing.add('District');
-    if (landslideOccurrenceValue.value != null) completed++; else missing.add('Landslide Occurrence');
-    if (whereDidLandslideOccurValue.value != null) completed++; else missing.add('Location Type');
-    if (typeOfMaterialValue.value != null) completed++; else missing.add('Material Type');
-    if (typeOfMovementValue.value != null) completed++; else missing.add('Movement Type');
-    if (landslideSize.value != null) completed++; else missing.add('Landslide Size');
-    if (selectedImages.isNotEmpty) completed++; else missing.add('Images (At least 1)');
-        if (whatInducedLandslideValue.value == 'Rainfall') {
-      if (rainfallDurationValue.value != null) {
-        completed++; // Duration is the main requirement
-      } else {
-        missing.add('Rainfall Duration');
-      }
-      totalRequired++; // Increase total required when rainfall is selected
-    }
-    
-    return {
-      'totalRequired': totalRequired,
-      'completed': completed,
-      'percentage': ((completed / totalRequired) * 100).round(),
-      'missing': missing,
-      'isComplete': completed == totalRequired,
-    };
-  }
+Map<String, dynamic> getValidationSummary() {
+  int totalRequired = 4; // Total required fields for public form
+  int completed = 0;
+  List<String> missing = [];
+  
+  // Check each required field
+  if (stateController.text.trim().isNotEmpty) completed++; else missing.add('state'.tr);
+  if (districtController.text.trim().isNotEmpty) completed++; else missing.add('district'.tr);
+  if (landslideOccurrenceValue.value != null) completed++; else missing.add('landslide_occurrence_required'.tr);
+
+  if (selectedImages.isNotEmpty) completed++; else missing.add('images_required_error'.tr);
+  
+  return {
+    'totalRequired': totalRequired,
+    'completed': completed,
+    'percentage': ((completed / totalRequired) * 100).round(),
+    'missing': missing,
+    'isComplete': completed == totalRequired,
+  };
+}
+
 
   // API HELPER METHODS
   String formatDateForAPI(String displayDate) {
@@ -1205,13 +1472,13 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
   final reportsController = Get.put(RecentReportsController());
   await reportsController.updatePendingReport(currentPendingReportId!, updatedPayload);
   
-  Get.snackbar(
-    'Success',
-    'Public pending report updated successfully!',
-    backgroundColor: Colors.green,
-    colorText: Colors.white,
-    snackPosition: SnackPosition.BOTTOM,
-  );
+      Get.snackbar(
+        'success'.tr,
+        'public_pending_report_updated'.tr,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
   
   Get.back(); // Go back to reports screen
   return;
@@ -1223,6 +1490,18 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
     if (hasInternet) {
       // Online submission
       try {
+        // Debug: Print the payload being sent
+        print('🔍 DEBUG: Sending payload to API:');
+        print('Payload: ${jsonEncode(payload)}');
+        
+        // Debug: Check for null or empty values that might cause issues
+        print('🔍 DEBUG: Checking for potential issues:');
+        payload.forEach((key, value) {
+          if (value == null || value == 'null' || value == '') {
+            print('⚠️  WARNING: Field "$key" has value: "$value"');
+          }
+        });
+        
         await ApiService.postLandslide('/Landslide/create/${mobile.value}/Public', [payload]);
         
         // If submission is successful and this was a draft, remove it from drafts
@@ -1245,9 +1524,9 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
     }
     
   } catch (e) {
-    Get.snackbar(
-      'Error',
-      'Failed to process report: $e',
+Get.snackbar(
+      'error'.tr,
+      '${'failed_to_process_report'.tr}: $e',
       backgroundColor: Colors.red,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
@@ -1274,6 +1553,8 @@ Future<void> _handleOfflineSubmission(Map<String, dynamic> payload) async {
   // Add to "To Be Synced" queue
   await reportsController.addToBeSyncedReport(payload);
 }
+
+
 // Show success dialog
 void _showSuccessDialog({required bool isOnline}) {
   Get.dialog(
@@ -1305,9 +1586,9 @@ void _showSuccessDialog({required bool isOnline}) {
               const SizedBox(height: 24),
               
               // Thank you text
-              const Text(
-                'Thankyou',
-                style: TextStyle(
+              Text(
+                'thankyou'.tr,
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -1317,9 +1598,7 @@ void _showSuccessDialog({required bool isOnline}) {
               
               // Subtitle
               Text(
-                isOnline 
-                  ? 'for filling out this proforma for the landslide nodal agency of India'
-                  : 'for filling out this proforma for the landslide nodal agency of India',
+                'filling_proforma_message'.tr,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 16,
@@ -1329,9 +1608,9 @@ void _showSuccessDialog({required bool isOnline}) {
               const SizedBox(height: 24),
               
               // GSI text
-              const Text(
-                'Geological Survey of India (GSI)',
-                style: TextStyle(
+              Text(
+                'geological_survey_india'.tr,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
@@ -1352,7 +1631,7 @@ void _showSuccessDialog({required bool isOnline}) {
                       Icon(Icons.wifi_off, color: Colors.orange.shade700, size: 24),
                       const SizedBox(height: 8),
                       Text(
-                        'Report saved offline and will be submitted when internet is available.',
+                        'report_saved_offline'.tr,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.orange.shade700,
@@ -1382,11 +1661,10 @@ void _showSuccessDialog({required bool isOnline}) {
                   onPressed: () {
                     Get.back(); // Close dialog
                     Get.back(); // Go back to previous screen
-                    
                   },
-                  child: const Text(
-                    'DONE',
-                    style: TextStyle(
+                  child: Text(
+                    'done'.tr,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
@@ -1402,220 +1680,221 @@ void _showSuccessDialog({required bool isOnline}) {
     barrierDismissible: false,
   );
 }
-  Future<Map<String, dynamic>> _buildApiPayload(String landslidePhotographs) async {
-    // Convert additional images to base64 if they exist
-    String? landslidePhotograph1;
-    String? landslidePhotograph2;
-    String? landslidePhotograph3;
-    String? landslidePhotograph4;
-    
-    if (selectedImages.length > 1) {
-      landslidePhotograph1 = await imageToBase64(selectedImages[1]);
-    }
-    if (selectedImages.length > 2) {
-      landslidePhotograph2 = await imageToBase64(selectedImages[2]);
-    }
-    if (selectedImages.length > 3) {
-      landslidePhotograph3 = await imageToBase64(selectedImages[3]);
-    }
-    if (selectedImages.length > 4) {
-      landslidePhotograph4 = await imageToBase64(selectedImages[4]);
-    }
-    
-    return {
-      "Latitude": latitudeController.text.trim(),
-      "Longitude": longitudeController.text.trim(),
-      "State": stateController.text.trim(),
-      "District": districtController.text.trim(),
-      "SubdivisionOrTaluk": subdivisionController.text.trim(),
-      "Village": villageController.text.trim(),
-      "LocationDetails": locationDetailsController.text.trim(),
-      "LandslideDate": dateController.text.trim().isNotEmpty ? formatDateForAPI(dateController.text.trim()) : null,
-      "LandslideTime": timeController.text.trim().isNotEmpty ? formatTimeForAPI(timeController.text.trim()) : null,
-      "LandslidePhotographs": landslidePhotographs,
-      "LanduseOrLandcover": whereDidLandslideOccurValue.value ?? "",
-      "MaterialInvolved": typeOfMaterialValue.value ?? "",
-      "MovementType": typeOfMovementValue.value ?? "",
-      "LandslideSize": landslideSize.value ?? "",
-      "InducingFactor": whatInducedLandslideValue.value ?? "",
-      "ImpactOrDamage": buildImpactDamageString(),
-      "OtherInformation": otherRelevantInformation.text.trim(),
-      "Status": null,
-      "LivestockDead": livestockDeadController.text.trim().isNotEmpty ? livestockDeadController.text.trim() : "0",
-      "LivestockInjured": livestockInjuredController.text.trim().isNotEmpty ? livestockInjuredController.text.trim() : "0",
-      "HousesBuildingfullyaffected": housesFullyController.text.trim().isNotEmpty ? housesFullyController.text.trim() : "0",
-      "HousesBuildingpartialaffected": housesPartiallyController.text.trim().isNotEmpty ? housesPartiallyController.text.trim() : "0",
-      "DamsBarragesCount": damsNameController.text.trim().isNotEmpty ? "1" : "0",
-      "DamsBarragesExtentOfDamage": damsExtentValue.value ?? "",
-      "RoadsAffectedType": roadTypeValue.value ?? "",
-      "RoadsAffectedExtentOfDamage": roadExtentValue.value ?? "",
-      "RoadBlocked": roadBlockageValue.value ?? "",
-      "RoadBenchesAffected": roadBenchesExtentValue.value ?? "",
-      "RailwayLineAffected": railwayDetailsController.text.trim(),
-      "RailwayLineBlockage": railwayBlockageValue.value ?? "",
-      "RailwayBenchesAffected": railwayBenchesExtentValue.value ?? "",
-      "PowerInfrastructureAffected": powerExtentValue.value ?? "",
-      "OthersAffected": otherDamageDetailsController.text.trim(),
-      "Date_and_time_Range": occurrenceDateRange.value.trim(),
-      "datacreatedby": mobile.value,
-      "DateTimeType": landslideOccurrenceValue.value ?? "",
-      "LandslidePhotograph1": landslidePhotograph1,
-      "LandslidePhotograph2": landslidePhotograph2,
-      "LandslidePhotograph3": landslidePhotograph3,
-      "LandslidePhotograph4": landslidePhotograph4,
-      "check_Status": "Pending",
-      "PeopleDead": peopleDeadController.text.trim().isNotEmpty ? peopleDeadController.text.trim() : "0",
-      "PeopleInjured": peopleInjuredController.text.trim().isNotEmpty ? peopleInjuredController.text.trim() : "0",
-      "ContactName": username.value,
-        "ContactAffiliation": affiliationController.text.trim(),
-      "ContactEmailId": email.value,
-      "ContactMobile": mobile.value,
-      "UserType": "Public",
-      "source": "webportal",
-      "ExactDateInfo": howDoYouKnowValue.value ?? "",
-            "Amount_of_rainfall": rainfallAmountController.text.trim().isNotEmpty ? rainfallAmountController.text.trim() : "0",
-      "Duration_of_rainfall": rainfallDurationValue.value ?? "",
-      "DamsBarragesName": damsNameController.text.trim(),
-    };
+
+
+// Update the _buildApiPayload method to convert translated values to English
+Future<Map<String, dynamic>> _buildApiPayload(String landslidePhotographs) async {
+  // Convert additional images to base64 if they exist
+  String? landslidePhotograph1;
+  String? landslidePhotograph2;
+  String? landslidePhotograph3;
+  String? landslidePhotograph4;
+  
+  if (selectedImages.length > 1) {
+    landslidePhotograph1 = await imageToBase64(selectedImages[1]);
   }
+  if (selectedImages.length > 2) {
+    landslidePhotograph2 = await imageToBase64(selectedImages[2]);
+  }
+  if (selectedImages.length > 3) {
+    landslidePhotograph3 = await imageToBase64(selectedImages[3]);
+  }
+  if (selectedImages.length > 4) {
+    landslidePhotograph4 = await imageToBase64(selectedImages[4]);
+  }
+  
+  return {
+    "Latitude": latitudeController.text.trim(),
+    "Longitude": longitudeController.text.trim(),
+    "State": stateController.text.trim(),
+    "District": districtController.text.trim(),
+    "SubdivisionOrTaluk": subdivisionController.text.trim(),
+    "Village": villageController.text.trim(),
+    "LocationDetails": locationDetailsController.text.trim(),
+    "LandslideDate": dateController.text.trim().isNotEmpty ? formatDateForAPI(dateController.text.trim()) : null,
+    "LandslideTime": timeController.text.trim().isNotEmpty ? formatTimeForAPI(timeController.text.trim()) : null,
+    "LandslidePhotographs": landslidePhotographs,
+    "LanduseOrLandcover": translateToEnglish(whereDidLandslideOccurValue.value, 'locationType') ?? "",
+    "MaterialInvolved": translateToEnglish(typeOfMaterialValue.value, 'material') ?? "",
+    "LandslideSize": translateToEnglish(landslideSize.value, 'size') ?? "",
+    "ImpactOrDamage": buildImpactDamageString(),
+    "Status": null,
+    "LivestockDead": livestockDeadController.text.trim().isNotEmpty ? livestockDeadController.text.trim() : "0",
+    "LivestockInjured": livestockInjuredController.text.trim().isNotEmpty ? livestockInjuredController.text.trim() : "0",
+    "HousesBuildingfullyaffected": housesFullyController.text.trim().isNotEmpty ? housesFullyController.text.trim() : "0",
+    "HousesBuildingpartialaffected": housesPartiallyController.text.trim().isNotEmpty ? housesPartiallyController.text.trim() : "0",
+    "DamsBarragesCount": damsNameController.text.trim().isNotEmpty ? "1" : "0",
+    "DamsBarragesExtentOfDamage": translateToEnglish(damsExtentValue.value, 'extent') ?? "",
+    "RoadsAffectedType": translateToEnglish(roadTypeValue.value, 'roadType') ?? "",
+    "RoadsAffectedExtentOfDamage": translateToEnglish(roadExtentValue.value, 'extent') ?? "",
+    "RoadBlocked": translateToEnglish(roadBlockageValue.value, 'extent') ?? "",
+    "RoadBenchesAffected": translateToEnglish(roadBenchesExtentValue.value, 'extent') ?? "",
+    "RailwayLineAffected": railwayDetailsController.text.trim(),
+    "RailwayLineBlockage": translateToEnglish(railwayBlockageValue.value, 'extent') ?? "",
+    "RailwayBenchesAffected": translateToEnglish(railwayBenchesExtentValue.value, 'extent') ?? "",
+    "PowerInfrastructureAffected": translateToEnglish(powerExtentValue.value, 'extent') ?? "",
+    "OthersAffected": otherDamageDetailsController.text.trim(),
+    "Date_and_time_Range": translateToEnglish(occurrenceDateRange.value.trim(), 'dateRange'),
+    "datacreatedby": mobile.value,
+    "DateTimeType": translateToEnglish(landslideOccurrenceValue.value, 'occurrence') ?? "",
+    "LandslidePhotograph1": landslidePhotograph1,
+    "LandslidePhotograph2": landslidePhotograph2,
+    "LandslidePhotograph3": landslidePhotograph3,
+    "LandslidePhotograph4": landslidePhotograph4,
+    "check_Status": "Pending",
+    "PeopleDead": peopleDeadController.text.trim().isNotEmpty ? peopleDeadController.text.trim() : "0",
+    "PeopleInjured": peopleInjuredController.text.trim().isNotEmpty ? peopleInjuredController.text.trim() : "0",
+    "ContactName": username.value,
+    "ContactAffiliation": affiliationController.text.trim(),
+    "ContactEmailId": email.value,
+    "ContactMobile": mobile.value,
+    "UserType": "Public",
+    "source": "webportal",
+    "ExactDateInfo": translateToEnglish(howDoYouKnowValue.value, 'source') ?? "",
+    "DamsBarragesName": damsNameController.text.trim(),
+  };
+}
 
   // STRING BUILDER METHODS FOR API
-  String buildImpactDamageString() {
-    List<String> impacts = [];
-    if (peopleAffected.value) impacts.add("People affected");
-    if (livestockAffected.value) impacts.add("Livestock affected");
-    if (housesBuildingAffected.value) impacts.add("Houses and buildings affected");
-    if (damsBarragesAffected.value) impacts.add("Dams / Barrages affected");
-    if (roadsAffected.value) impacts.add("Roads affected");
-    if (roadsBlocked.value) impacts.add("Roads blocked");
-    if (roadBenchesDamaged.value) impacts.add("Road benches damaged");
-    if (railwayLineAffected.value) impacts.add("Railway line affected");
-    if (railwayBlocked.value) impacts.add("Railway blocked");
-    if (railwayBenchesDamaged.value) impacts.add("Railway benches damaged");
-    if (powerInfrastructureAffected.value) impacts.add("Power infrastructure and telecommunication affected");
-    if (damagesToAgriculturalForestLand.value) impacts.add("Damages to Agriculture/Barren/Forest");
-    if (other.value) impacts.add("Other");
-    if (noDamages.value) impacts.add("No damages");
-    if (iDontKnow.value) impacts.add("I don't know");
-    return impacts.join(", ");
-  }
+String buildImpactDamageString() {
+  List<String> impacts = [];
+  
+  // Store the English keys for API, but display translated values in UI
+  if (peopleAffected.value) impacts.add("People affected");
+  if (livestockAffected.value) impacts.add("Livestock affected");
+  if (housesBuildingAffected.value) impacts.add("Houses and buildings affected");
+  if (damsBarragesAffected.value) impacts.add("Dams / Barrages affected");
+  if (roadsAffected.value) impacts.add("Roads affected");
+  if (roadsBlocked.value) impacts.add("Roads blocked");
+  if (roadBenchesDamaged.value) impacts.add("Road benches damaged");
+  if (railwayLineAffected.value) impacts.add("Railway line affected");
+  if (railwayBlocked.value) impacts.add("Railway blocked");
+  if (railwayBenchesDamaged.value) impacts.add("Railway benches damaged");
+  if (powerInfrastructureAffected.value) impacts.add("Power infrastructure and telecommunication affected");
+  if (damagesToAgriculturalForestLand.value) impacts.add("Damages to Agriculture/Barren/Forest");
+  if (other.value) impacts.add("Other");
+  if (noDamages.value) impacts.add("No damages");
+  if (iDontKnow.value) impacts.add("I don't know");
+  
+  return impacts.join(", ");
+}
 
   // UTILITY METHODS FOR UI
   
   // Get image status for UI display
-  String getImageStatusText() {
-    if (selectedImages.isEmpty) {
-      return 'No images selected (Required)';
-    } else if (selectedImages.length == 1) {
-      return '1 image selected';
-    } else {
-      return '${selectedImages.length} images selected';
-    }
+String getImageStatusText() {
+  if (selectedImages.isEmpty) {
+    return 'no_images_selected'.tr;
+  } else if (selectedImages.length == 1) {
+    return 'image_selected_single'.tr;
+  } else {
+    return '${selectedImages.length} ${'images_selected_multiple'.tr}';
   }
+}
 
   // Check if form can be submitted
   bool canSubmitForm() {
-    return selectedImages.isNotEmpty && getValidationSummary()['completed'] >= 6; // At least 75% complete
+    return selectedImages.isNotEmpty && getValidationSummary()['completed'] >= 3; // At least 75% complete
   }
 
   // Get form completion status for UI
-  String getFormCompletionText() {
-    final summary = getValidationSummary();
-    return '${summary['completed']}/${summary['totalRequired']} fields completed (${summary['percentage']}%)';
-  }
+String getFormCompletionText() {
+  final summary = getValidationSummary();
+  return '${summary['completed']} में से ${summary['totalRequired']} आवश्यक फ़ील्ड पूर्ण';
+}
 
   // Show validation summary dialog
-  void showValidationSummary() {
-    final summary = getValidationSummary();
-    Get.dialog(
-      AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              summary['isComplete'] ? Icons.check_circle : Icons.warning,
-              color: summary['isComplete'] ? Colors.green : Colors.orange,
-            ),
-            const SizedBox(width: 8),
-            Text('Form Status'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Completion: ${summary['percentage']}%',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text('${summary['completed']} of ${summary['totalRequired']} required fields completed'),
-              const SizedBox(height: 16),
-              if (!summary['isComplete']) ...[
-                const Text(
-                  'Missing required fields:',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
-                ),
-                const SizedBox(height: 8),
-                ...summary['missing'].map((field) => Padding(
-                  padding: const EdgeInsets.only(left: 8, bottom: 4),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.circle, size: 6, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(field)),
-                    ],
-                  ),
-                )),
-              ],
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info, color: Colors.blue.shade700),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'You can save this as a draft and complete it later.',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+void showValidationSummary() {
+  final summary = getValidationSummary();
+  Get.dialog(
+    AlertDialog(
+      title: Row(
+        children: [
+          Icon(
+            summary['isComplete'] ? Icons.check_circle : Icons.warning,
+            color: summary['isComplete'] ? Colors.green : Colors.orange,
           ),
-        ),
-        actions: [
-          if (!summary['isComplete'])
-            TextButton(
-              onPressed: () {
-                Get.back();
-                saveDraft();
-              },
-              child: const Text('Save as Draft'),
-            ),
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
-          if (summary['isComplete'])
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-                submitForm();
-              },
-              child: const Text('Submit Report'),
-            ),
+          const SizedBox(width: 8),
+          Text('form_status'.tr),
         ],
       ),
-    );
-  }
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'पूर्णता: ${summary['percentage']}%',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text('${summary['completed']} में से ${summary['totalRequired']} आवश्यक फ़ील्ड पूर्ण'),
+            const SizedBox(height: 16),
+            if (!summary['isComplete']) ...[
+              Text(
+                'missing_required_fields'.tr,
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+              ),
+              const SizedBox(height: 8),
+              ...summary['missing'].map((field) => Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.circle, size: 6, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(field)),
+                  ],
+                ),
+              )),
+            ],
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info, color: Colors.blue.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'save_as_draft_info'.tr,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        if (!summary['isComplete'])
+          TextButton(
+            onPressed: () {
+              Get.back();
+              saveDraft();
+            },
+            child: Text('save_as_draft'.tr),
+          ),
+        TextButton(
+          onPressed: () => Get.back(),
+          child: Text('close'.tr),
+        ),
+        if (summary['isComplete'])
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              submitForm();
+            },
+            child: Text('submit_report'.tr),
+          ),
+      ],
+    ),
+  );
+}
 
   // CLEANUP METHODS
   void _disposeAllControllers() {
@@ -1629,9 +1908,9 @@ void _showSuccessDialog({required bool isOnline}) {
     locationDetailsController.dispose();
     dateController.dispose();
     timeController.dispose();
-    otherRelevantInformation.dispose();
+    // otherRelevantInformation.dispose();
     affiliationController.dispose(); // Add this line
-        rainfallAmountController.dispose();
+        // rainfallAmountController.dispose();
     
     // Impact controllers
     peopleDeadController.dispose();
@@ -1643,5 +1922,155 @@ void _showSuccessDialog({required bool isOnline}) {
     damsNameController.dispose();
     railwayDetailsController.dispose();
     otherDamageDetailsController.dispose();
+    for (var controller in imageCaptions) {
+  controller.dispose();
+}
+imageCaptions.clear();
+  }
+
+  // Add option constants for public form
+  static const List<String> landslideOccurrenceOptions = [
+    'exact_occurrence_date',
+    'approximate_occurrence_date', 
+    'no_occurrence_date'
+  ];
+
+  static const List<String> howDoYouKnowOptions = [
+    'i_observed_it',
+    'through_local',
+    'social_media',
+    'news',
+    'i_dont_know',
+  ];
+
+  static const List<String> whereDidLandslideOccurOptions = [
+    'near_on_road',
+    'next_to_river',
+    'settlement',
+    'plantation',
+    'forest_area',
+    'cultivation',
+    'barren_land',
+    'other_specify'
+  ];
+
+  static const List<String> typeOfMaterialOptions = [
+    'rock',
+    'soil',
+    'debris_mixture'
+  ];
+
+  static const List<String> roadTypeOptions = [
+    'state_highway',
+    'national_highway',
+    'local'
+  ];
+
+  static const List<String> roadExtentOptions = [
+    'full',
+    'partial'
+  ];
+
+  static const List<String> landslideSizeOptions = [
+    'small_building',
+    'medium_building',
+    'large_building'
+  ];
+
+  // Helper method to get English value for API submission
+  String? _getEnglishValueForAPI(String? currentValue, List<String> optionKeys) {
+    if (currentValue == null) return null;
+    
+    // If it's already an English key, return it
+    if (optionKeys.contains(currentValue)) {
+      return currentValue;
+    }
+    
+    // If it's a translated value, find the English key
+    for (String key in optionKeys) {
+      if (key.tr == currentValue) {
+        return key;
+      }
+    }
+    
+    // Try Hindi to English mapping
+    String? englishKey = _findEnglishKeyFromHindiValue(currentValue, optionKeys);
+    return englishKey;
+  }
+
+  // Helper method to find English key from Hindi value
+  String? _findEnglishKeyFromHindiValue(String? hindiValue, List<String> optionKeys) {
+    if (hindiValue == null) return null;
+    
+    // Create a static mapping of Hindi values to English keys
+    Map<String, String> hindiToEnglishMap = {
+      // Landslide occurrence options
+      'मुझे सटीक घटना तिथि पता है': 'exact_occurrence_date',
+      'मुझे अनुमानित घटना तिथि पता है': 'approximate_occurrence_date',
+      'मुझे घटना की तारीख नहीं पता': 'no_occurrence_date',
+      
+      // How do you know options
+      'मैंने इसे देखा': 'i_observed_it',
+      'स्थानीय व्यक्ति के माध्यम से': 'through_local',
+      'सोशल मीडिया': 'social_media',
+      'समाचार': 'news',
+      'मुझे नहीं पता': 'i_dont_know',
+      
+      // Where did landslide occur options
+      'सड़क के निकट/पर': 'near_on_road',
+      'नदी के पास': 'next_to_river',
+      'बस्ती': 'settlement',
+      'बागान (चाय, रबर .... आदि)': 'plantation',
+      'वन क्षेत्र': 'forest_area',
+      'खेती': 'cultivation',
+      'बंजर भूमि': 'barren_land',
+      'अन्य (निर्दिष्ट करें)': 'other_specify',
+      
+      // Material type options
+      'चट्टान': 'rock',
+      'मिट्टी': 'soil',
+      'मलबा (चट्टान और मिट्टी का मिश्रण)': 'debris_mixture',
+    };
+    
+    // Return the English key for the Hindi value
+    return hindiToEnglishMap[hindiValue];
+  }
+
+  // Helper method to get translated value for display
+  String? getTranslatedValueForDisplay(String? storedValue, List<String> optionKeys) {
+    if (storedValue == null) return null;
+    
+    // If stored value is already a translation key, translate it
+    if (optionKeys.contains(storedValue)) {
+      return storedValue.tr;
+    }
+    
+    // If stored value is Hindi text, find the corresponding English key and translate it
+    String? englishKey = _findEnglishKeyFromHindiValue(storedValue, optionKeys);
+    if (englishKey != null) {
+      return englishKey.tr;
+    }
+    
+    // If stored value is already translated text, return as is
+    return storedValue;
+  }
+
+  // Helper method to get English key from translated value
+  String? getEnglishKeyFromTranslatedValue(String? translatedValue, List<String> optionKeys) {
+    if (translatedValue == null) return null;
+    
+    // If the value is already an English key, return it
+    if (optionKeys.contains(translatedValue)) {
+      return translatedValue;
+    }
+    
+    // Find the English key for the translated value
+    for (String key in optionKeys) {
+      if (key.tr == translatedValue) {
+        return key;
+      }
+    }
+    
+    return null;
   }
 }

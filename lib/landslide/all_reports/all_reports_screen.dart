@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:arcgis_maps/arcgis_maps.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:get/get.dart'; // Added for translations
 import 'dart:math';
 import 'dart:async';
 import 'package:intl/intl.dart';
@@ -64,7 +65,7 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
   static const String _gsiPassword = 'nlfcadmin1234';
   
   // ArcGIS API Key and License
-  static const String _arcgisApiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOqj9vsaKKHwafyQtKINWeMtuT47-o9HvNNf0Sr4AXK_Z0nEuHmGLq10e9tfRST8lnfLYMly3rmIc8gjRoWsPC7dgkz4jal4xcz_-LE_msCKrG6d_ACX174bDQ4WdKS9pEaUrHZrz3vGXsQUZWKmo6jlbAuW2MedeMPN1X14mcEOixZ5CCpZ8k3hm3NCQACNMPnCyMtfJXXCAy0S8_GWjGA.AT1_6zX0ZMIw';
+  static const String _arcgisApiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOqj9vsaKKHwafyQtKINWeMtuT47-o9HvNNf0Sr4AXK_Z0nEuHmGLr10e9tfRST8lnfLYMly3rmIc8gjRoWsPC7dgkz4jal4xcz_-LE_msCKrG6d_ACX174bDQ4WdKS9pEaUrHZrz3vGXsQUZWKmo6jlbAuW2MedeMPN1X14mcEOixZ5CCpZ8k3hm3NCQACNMPnCyMtfJXXCAy0S8_GWjGA.AT1_6zX0ZMIw';
   static const String _licenseKey = 'runtimelite,1000,rud2840189929,none,HC5X0H4AH76HF5KHT190';
   
   // Map bounds for India
@@ -130,35 +131,60 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
     }
   }
 
-  void _initializeArcGIS() {
-    try {
-      setState(() => _isLoading = true);
-      
-      // Set the API key
-      ArcGISEnvironment.apiKey = _arcgisApiKey;
-      
-      // Set license string to remove watermark
-      ArcGISEnvironment.setLicenseUsingKey(_licenseKey);
-      
-      // Set up authentication challenge handler for Enterprise portals (GSI)
-      ArcGISEnvironment.authenticationManager.arcGISAuthenticationChallengeHandler = this;
-      print('✓ Authentication challenge handler configured');
-      
-      // Create map with basemap style
-      _map = ArcGISMap.withBasemapStyle(_currentBasemapStyle);
-      
-      setState(() => _isArcGISInitialized = true);
-      
-      // Initialize other components
-      _initCompass();
-      _fetchReports();
-      
-    } catch (e) {
-      print('Error initializing ArcGIS: $e');
-      _showError('Failed to initialize map: ${e.toString()}');
-      setState(() => _isLoading = false);
-    }
+void _initializeArcGIS() {
+  try {
+    setState(() => _isLoading = true);
+    
+    // Set the license key to remove watermark
+    ArcGISEnvironment.setLicenseUsingKey(_licenseKey);
+    
+    // Using GSI proxy - no API key needed for GSI services
+    print('✓ Using GSI proxy basemaps - no API key required');
+    
+    // Set up authentication challenge handler for Enterprise portals (GSI)
+    ArcGISEnvironment.authenticationManager.arcGISAuthenticationChallengeHandler = this;
+    print('✓ Authentication challenge handler configured');
+    
+    // Create map with GSI topographic view by default
+    _createMapWithStreetsView();
+    
+    setState(() => _isArcGISInitialized = true);
+    
+    // Initialize other components
+    _initCompass();
+    _fetchReports();
+    
+  } catch (e) {
+    print('Error initializing ArcGIS: $e');
+    _showError('failed_to_initialize_map'.trParams({'error': e.toString()}));
+    setState(() => _isLoading = false);
   }
+}
+
+// Add this new method to create map with GSI portal
+Future<void> _createMapWithStreetsView() async {
+  try {
+    // Create portal pointing to GSI portal using the correct constructor
+    final gsiPortal = Portal(
+      Uri.parse('https://bhusanket.gsi.gov.in/gisportal/sharing/rest'),
+      connection: PortalConnection.authenticated
+    );
+    
+    // Create portal item for topographic map using named parameters
+    final topographicItem = PortalItem.withPortalAndItemId(
+      portal: gsiPortal, 
+      itemId: '79873351c4c1462cba9af947be2fdf4c'
+    );
+    
+    // Create map from portal item
+    _map = ArcGISMap.withItem(topographicItem);
+    print('✓ Map created with GSI Topographic view via portal');
+  } catch (e) {
+    print('Failed to create map with GSI Topographic view: $e');
+    // Fallback: create empty map with default basemap
+    _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISTopographic));
+  }
+}
 
   void _initCompass() {
     _compassSubscription = FlutterCompass.events?.listen((CompassEvent event) {
@@ -195,7 +221,7 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
       print("Error fetching reports: $e");
       setState(() => _isLoading = false);
       
-      _showError('Failed to load reports: ${e.toString()}');
+      _showError('failed_to_load_reports'.trParams({'error': e.toString()}));
     }
   }
 
@@ -233,7 +259,7 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
       }
       
     } catch (e) {
-      _showError('Failed to initialize map: $e');
+      _showError('failed_to_initialize_map'.trParams({'error': e.toString()}));
     }
   }
 
@@ -290,14 +316,13 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
   ArcGISSymbol _getMarkerSymbol(LandslideReport report) {
     Color markerColor;
     
-    if (report.isApproved) {
-      markerColor = Colors.green;
-    } else if (report.isRejected) {
-      markerColor = Colors.red;
-    } else if (report.isPending) {
-      markerColor = Colors.orange;
+    // Use only two colors based on user type
+    // Check if the report is from geo-scientist (expert) or public
+    if (report.userTypeDisplayName.toLowerCase().contains('geo-scientist') || 
+        report.userTypeDisplayName.toLowerCase().contains('expert')) {
+      markerColor = Colors.red; // Red for expert reports
     } else {
-      markerColor = Colors.blue;
+      markerColor = Colors.green; // Green for public reports
     }
     
     return SimpleMarkerSymbol(
@@ -391,7 +416,7 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
         );
       }
     } catch (e) {
-      _showError('Failed to zoom in: $e');
+      _showError('failed_to_zoom_in'.trParams({'error': e.toString()}));
     }
   }
 
@@ -406,7 +431,7 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
         );
       }
     } catch (e) {
-      _showError('Failed to zoom out: $e');
+      _showError('failed_to_zoom_out'.trParams({'error': e.toString()}));
     }
   }
 
@@ -419,7 +444,7 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
           scale: 50000000, // Approximate scale for country view
         ),
       );
-      _showError('Reset to India view');
+      _showError('reset_to_india_view'.tr);
     }
   }
 
@@ -436,80 +461,71 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
         );
         
         _mapViewController.setViewpoint(newViewpoint);
-        _showError('Map rotation reset to north');
+        _showError('map_rotation_reset'.tr);
       }
     } catch (e) {
-      _showError('Failed to reset map rotation: $e');
+      _showError('failed_to_reset_rotation'.trParams({'error': e.toString()}));
     }
   }
 
-  // Show basemap gallery dialog (matching the style from ArcGisLocationMapScreen)
-  void _showBasemapGallery() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Container(
-            color: Colors.blue,
-            padding: const EdgeInsets.all(16),
-            child: const Text(
-              'Basemap gallery',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+// Update the _showBasemapGallery method to match the GSI options
+void _showBasemapGallery() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Container(
+          color: Colors.blue,
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'basemap_gallery'.tr,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+          ),
+        ),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.all(16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.terrain),
+              title: Text('topographic'.tr),
+              subtitle: Text('gsi_terrain_elevation'.tr),
+              onTap: () {
+                Navigator.of(context).pop();
+                _setMapType('topographic', 'topographic'.tr);
+              },
             ),
-          ),
-          titlePadding: EdgeInsets.zero,
-          contentPadding: const EdgeInsets.all(16),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.terrain),
-                title: const Text('Topographic'),
-                subtitle: const Text('Terrain and elevation'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _setMapType(BasemapStyle.arcGISTopographic, 'Topographic');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.satellite),
-                title: const Text('Satellite'),
-                subtitle: const Text('Aerial imagery view'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _setMapType(BasemapStyle.arcGISImageryStandard, 'Satellite');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.map),
-                title: const Text('OpenStreetMap'),
-                subtitle: const Text('Free open-source map'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _setMapToOpenStreetMap();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.location_city),
-                title: const Text('Streets'),
-                subtitle: const Text('Detailed street view'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _setMapType(BasemapStyle.arcGISStreets, 'Streets');
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+            ListTile(
+              leading: const Icon(Icons.satellite),
+              title: Text('imagery'.tr),
+              subtitle: Text('gsi_aerial_imagery'.tr),
+              onTap: () {
+                Navigator.of(context).pop();
+                _setMapType('imagery', 'imagery'.tr);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.map),
+              title: Text('openstreetmap'.tr),
+              subtitle: Text('free_opensource_map'.tr),
+              onTap: () {
+                Navigator.of(context).pop();
+                _setMapToOpenStreetMap();
+              },
             ),
           ],
-        );
-      },
-    );
-  }
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('close'.tr),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   // Show layer list dialog for report layers
   void _showLayerList() {
@@ -523,9 +539,9 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Layer list',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+                Text(
+                  'layer_list'.tr,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
                 ),
                 TextButton(
                   onPressed: () {
@@ -538,11 +554,11 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
                     });
                     _createMarkers();
                     Navigator.of(context).pop();
-                    _showError('All layers cleared');
+                    _showError('all_layers_cleared'.tr);
                   },
-                  child: const Text(
-                    'CLEAR',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    'clear'.tr,
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -558,33 +574,33 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   color: Colors.grey[200],
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.public, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.public, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        'GSI Geological Data',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        'gsi_geological_data'.tr,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
-                _buildLayerListItem('Landslide Susceptibility (1:50,000)', 'susceptibility'),
-                _buildLayerListItem('National Landslide Inventory', 'inventory'),
-                _buildLayerListItem('Shortrange Forecast', 'forecast', isShortrangeForecast: true),
-                _buildLayerListItem('India State Boundary', 'state'),
+                _buildLayerListItem('landslide_susceptibility'.tr, 'susceptibility'),
+                _buildLayerListItem('national_landslide_inventory'.tr, 'inventory'),
+                _buildLayerListItem('shortrange_forecast'.tr, 'forecast', isShortrangeForecast: true),
+                _buildLayerListItem('india_state_boundary'.tr, 'state'),
                 
                 // Report Layers Section
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   color: Colors.grey[200],
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.report, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.report, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        'Report Layers',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        'report_layers'.tr,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -594,8 +610,8 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
                     return Column(
                       children: [
                         CheckboxListTile(
-                          title: const Text('Approved Reports'),
-                          subtitle: Text('${_allReports.where((r) => r.isApproved).length} reports'),
+                          title: Text('approved_reports'.tr),
+                          subtitle: Text('${_allReports.where((r) => r.isApproved).length} ${'reports'.tr}'),
                           value: _showApprovedLayer,
                           activeColor: Colors.green,
                           onChanged: (bool? value) {
@@ -609,8 +625,8 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
                           },
                         ),
                         CheckboxListTile(
-                          title: const Text('Pending Reports'),
-                          subtitle: Text('${_allReports.where((r) => r.isPending).length} reports'),
+                          title: Text('pending_reports'.tr),
+                          subtitle: Text('${_allReports.where((r) => r.isPending).length} ${'reports'.tr}'),
                           value: _showPendingLayer,
                           activeColor: Colors.orange,
                           onChanged: (bool? value) {
@@ -624,8 +640,8 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
                           },
                         ),
                         CheckboxListTile(
-                          title: const Text('Rejected Reports'),
-                          subtitle: Text('${_allReports.where((r) => r.isRejected).length} reports'),
+                          title: Text('rejected_reports'.tr),
+                          subtitle: Text('${_allReports.where((r) => r.isRejected).length} ${'reports'.tr}'),
                           value: _showRejectedLayer,
                           activeColor: Colors.red,
                           onChanged: (bool? value) {
@@ -711,10 +727,10 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
           await _loadDistrictBoundaryLayer();
           break;
         default:
-          _showError('Unknown layer type: $layerType');
+          _showError('unknown_layer_type'.trParams({'layerType': layerType}));
       }
     } catch (e) {
-      _showError('Failed to load $layerType layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layerName': layerType, 'error': e.toString()}));
     }
   }
 
@@ -736,7 +752,11 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
         return AlertDialog(
           backgroundColor: Colors.grey[800],
           content: Text(
-            'Only for districts where landslide forecasting is operational. Valid from $fromDate $time to $toDate $time IST',
+            'forecast_validity_message'.trParams({
+              'fromDate': fromDate,
+              'toDate': toDate,
+              'time': time
+            }),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -747,9 +767,9 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text(
-                'OK',
-                style: TextStyle(
+              child: Text(
+                'ok'.tr,
+                style: const TextStyle(
                   color: Colors.pink,
                   fontWeight: FontWeight.bold,
                 ),
@@ -793,7 +813,7 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
       });
       
     } catch (e) {
-      _showError('Failed to load Shortrange Forecast layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layerName': 'shortrange_forecast'.tr, 'error': e.toString()}));
       print('❌ Shortrange Forecast layer loading error: $e');
     }
   }
@@ -812,9 +832,9 @@ Future<void> _recenterToIndia() async {
       scale: 40000000, // Wider zoom to show full India
     );
 
-    _showError('Recentered to India');
+    _showError('recentered_to_india'.tr);
   } catch (e) {
-    _showError('Failed to recenter to India: $e');
+    _showError('failed_to_recenter'.trParams({'error': e.toString()}));
   }
 }
 
@@ -935,10 +955,10 @@ Future<void> _loadSusceptibilityLayer() async {
       _currentActiveLayer = 'susceptibility';
     });
     
-    _showError('Susceptibility layer enabled');
+    _showError('layer_enabled'.trParams({'layerName': 'landslide_susceptibility'.tr}));
     
   } catch (e) {
-    _showError('Failed to load Susceptibility layer: $e');
+    _showError('failed_to_load_layer'.trParams({'layerName': 'landslide_susceptibility'.tr, 'error': e.toString()}));
     print('❌ Susceptibility layer loading error: $e');
     
     // Fallback: Try with rendering rule approach
@@ -992,7 +1012,7 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'susceptibility';
       });
       
-      _showError('Susceptibility layer enabled (with rendering rule)');
+      _showError('layer_enabled'.trParams({'layerName': 'landslide_susceptibility'.tr + ' (with rendering rule)'}));
       print('✅ Susceptibility layer loaded with rendering rule');
       
     } catch (e) {
@@ -1029,15 +1049,14 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'susceptibility';
       });
       
-      _showError('Susceptibility layer enabled (simple)');
+      _showError('layer_enabled'.trParams({'layerName': 'landslide_susceptibility'.tr + ' (simple)'}));
       print('✅ Susceptibility layer loaded with default renderer');
       
     } catch (e) {
       print('❌ Simple approach also failed: $e');
-      _showError('Susceptibility layer not available - server may be unreachable');
+      _showError('layer_not_available'.tr);
     }
   }
-
 
   // Load National Landslide Inventory Layer with correct URL
   Future<void> _loadLandslideInventoryLayer() async {
@@ -1076,10 +1095,10 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'inventory';
       });
       
-      _showError('National Landslide Inventory layer enabled');
+      _showError('layer_enabled'.trParams({'layerName': 'national_landslide_inventory'.tr}));
       
     } catch (e) {
-      _showError('Failed to load National Landslide Inventory layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layerName': 'national_landslide_inventory'.tr, 'error': e.toString()}));
       print('❌ National Landslide Inventory layer loading error: $e');
     }
   }
@@ -1120,10 +1139,10 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'state';
       });
       
-      _showError('India State Boundary layer enabled');
+      _showError('layer_enabled'.trParams({'layerName': 'india_state_boundary'.tr}));
       
     } catch (e) {
-      _showError('Failed to load State Boundary layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layerName': 'india_state_boundary'.tr, 'error': e.toString()}));
       print('❌ State Boundary layer loading error: $e');
     }
   }
@@ -1164,37 +1183,71 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'district';
       });
       
-      _showError('District Boundary layer enabled');
+      _showError('layer_enabled'.trParams({'layerName': 'District Boundary'}));
       
     } catch (e) {
-      _showError('Failed to load District Boundary layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layerName': 'District Boundary', 'error': e.toString()}));
       print('❌ District Boundary layer loading error: $e');
     }
   }
 
-  // Set map type
-  void _setMapType(BasemapStyle basemapStyle, String typeName) {
-    try {
-      setState(() {
-        _currentBasemapStyle = basemapStyle;
-        if (_ready) {
-          _map.basemap = Basemap.withStyle(basemapStyle);
-        }
-      });
-      _showError('Switched to $typeName view');
-    } catch (e) {
-      _showError('Failed to change map type: $e');
+// Update the _setMapType method to use GSI portal items
+Future<void> _setMapType(String mapType, String typeName) async {
+  try {
+    String itemId;
+    switch (mapType) {
+      case 'topographic':
+        itemId = '79873351c4c1462cba9af947be2fdf4c';
+        break;
+      case 'imagery':
+        itemId = '72d22cd267a141fba0e35f9913f34736';
+        break;
+      default:
+        _showError('unknown_map_type'.trParams({'mapType': mapType}));
+        return;
     }
+    
+    // Create portal pointing to GSI portal using the correct constructor
+    final gsiPortal = Portal(
+      Uri.parse('https://bhusanket.gsi.gov.in/gisportal/sharing/rest'),
+      connection: PortalConnection.authenticated
+    );
+    
+    // Create portal item using named parameters
+    final portalItem = PortalItem.withPortalAndItemId(
+      portal: gsiPortal, 
+      itemId: itemId
+    );
+    
+    // Create new map from portal item
+    _map = ArcGISMap.withItem(portalItem);
+    _mapViewController.arcGISMap = _map;
+    
+    _showError('switched_to'.trParams({'mapType': typeName}));
+  } catch (e) {
+    _showError('failed_to_change_map_type'.trParams({'error': e.toString()}));
+    // Fallback to regular basemap
+    setState(() {
+      if (mapType == 'topographic') {
+        _currentBasemapStyle = BasemapStyle.arcGISTopographic;
+      } else if (mapType == 'imagery') {
+        _currentBasemapStyle = BasemapStyle.arcGISImageryStandard;
+      }
+      if (_ready) {
+        _map.basemap = Basemap.withStyle(_currentBasemapStyle);
+      }
+    });
   }
+}
 
   // Set map to OpenStreetMap
   void _setMapToOpenStreetMap() {
     try {
       // For OpenStreetMap, you might need to use a different approach
       // This is a placeholder - implement according to your needs
-      _showError('Switched to OpenStreetMap');
+      _showError('switched_to'.trParams({'mapType': 'openstreetmap'.tr}));
     } catch (e) {
-      _showError('Failed to switch to OpenStreetMap: $e');
+      _showError('failed_to_change_map_type'.trParams({'error': e.toString()}));
     }
   }
 
@@ -1234,7 +1287,7 @@ Future<void> _loadSusceptibilityLayer() async {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
-        title: const Text('All Reports'),
+        title: Text('all_reports'.tr),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.of(context).pop(),
@@ -1253,7 +1306,7 @@ Future<void> _loadSusceptibilityLayer() async {
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Text(_isArcGISInitialized ? 'Loading reports...' : 'Initializing map...'),
+                  Text(_isArcGISInitialized ? 'loading_reports'.tr : 'initializing_map'.tr),
                 ],
               ),
             )
@@ -1364,8 +1417,6 @@ Future<void> _loadSusceptibilityLayer() async {
                           child: const Icon(Icons.home, color: Colors.white),
                         ),
                       ),
-                      
-              
                     ],
                   ),
                 ),
@@ -1397,75 +1448,13 @@ Future<void> _loadSusceptibilityLayer() async {
                     ),
                   ),
                 ),
-                
-                // Legend
-                Positioned(
-                  bottom: 20,
-                  left: 20,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Legend',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _legendItem(Colors.green, 'Approved'),
-                        _legendItem(Colors.red, 'Rejected'),
-                        _legendItem(Colors.orange, 'Pending'),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: filterReports,
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.filter_list, color: Colors.white),
-      ),
-    );
-  }
-
-  // Helper method for legend items
-  Widget _legendItem(Color color, String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10),
-          ),
-        ],
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: filterReports,
+      //   backgroundColor: Colors.blue,
+      //   child: const Icon(Icons.filter_list, color: Colors.white),
+      // ),
     );
   }
 
@@ -1477,21 +1466,21 @@ Future<void> _loadSusceptibilityLayer() async {
         final stats = LandslideReportsService.getStatistics(_allReports);
         
         return AlertDialog(
-          title: const Text('Filter Reports'),
+          title: Text('filter_reports'.tr),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _filterOption('All', 'All Reports (${stats['total']})'),
+              _filterOption('All', 'all_reports_count'.trParams({'count': stats['total'].toString()})),
               const Divider(),
-              _filterOption('Approved', 'Approved (${stats['approved']})', 
+              _filterOption('Approved', 'approved_count'.trParams({'count': stats['approved'].toString()}), 
                 color: Colors.green),
-              _filterOption('Rejected', 'Rejected (${stats['rejected']})', 
+              _filterOption('Rejected', 'rejected_count'.trParams({'count': stats['rejected'].toString()}), 
                 color: Colors.red),
-              _filterOption('Pending', 'Pending (${stats['pending']})', 
+              _filterOption('Pending', 'pending_count'.trParams({'count': stats['pending'].toString()}), 
                 color: Colors.orange),
               const Divider(),
-              _filterOption('Geo-Scientist', 'Geo-Scientists (${stats['geoScientist']})'),
-              _filterOption('Public', 'Public Reports (${stats['public']})'),
+              _filterOption('Geo-Scientist', 'geo_scientists_count'.trParams({'count': stats['geoScientist'].toString()})),
+              _filterOption('Public', 'public_reports_count'.trParams({'count': stats['public'].toString()})),
             ],
           ),
         );

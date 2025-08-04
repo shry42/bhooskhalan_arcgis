@@ -1,5 +1,6 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_distribution_section.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showDistributionDialog(BuildContext context) {
   showDialog(
@@ -19,8 +20,8 @@ void showDistributionDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Distribution',
+                  Text(
+                    'distribution'.tr,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -49,8 +50,8 @@ void showDistributionDialog(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Distribution of the landslide is divided by seven categories: (source UNESCO-WP/WLI 1993)',
+                      Text(
+                        'distribution_description'.tr,
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.4,
@@ -60,44 +61,44 @@ void showDistributionDialog(BuildContext context) {
                       
                       buildDistributionSection(
                         number: '1.',
-                        title: 'Advancing',
-                        description: 'The rupture surface is extending in the direction of the movement.',
+                        title: 'advancing'.tr,
+                        description: 'advancing_desc'.tr,
                       ),
                       
                       buildDistributionSection(
                         number: '2.',
-                        title: 'Retrogressive',
-                        description: 'The rupture surface is extending in the direction opposite to the motion of the displaced material.',
+                        title: 'retrogressive'.tr,
+                        description: 'retrogressive_desc'.tr,
                       ),
                       
                       buildDistributionSection(
                         number: '3.',
-                        title: 'Enlarging',
-                        description: 'The rupture surface of the landslide is extending in two or more directions.',
+                        title: 'enlarging'.tr,
+                        description: 'enlarging_desc'.tr,
                       ),
                       
                       buildDistributionSection(
                         number: '4.',
-                        title: 'Diminishing',
-                        description: 'The volume of the displacing material is decreasing.',
+                        title: 'diminishing'.tr,
+                        description: 'diminishing_desc'.tr,
                       ),
                       
                       buildDistributionSection(
                         number: '5.',
-                        title: 'Confined',
-                        description: 'There is a scarp but no rupture surface is visible at the foot of the displaced mass.',
+                        title: 'confined'.tr,
+                        description: 'confined_desc'.tr,
                       ),
                       
                       buildDistributionSection(
                         number: '6.',
-                        title: 'Moving',
-                        description: 'The displaced material continues to move without any visible change in the rupture surface and the volume of the displaced material.',
+                        title: 'moving'.tr,
+                        description: 'moving_desc'.tr,
                       ),
                       
                       buildDistributionSection(
                         number: '7.',
-                        title: 'Widening',
-                        description: 'The rupture surface is extending into one or both flanks of the landslide.',
+                        title: 'widening'.tr,
+                        description: 'widening_desc'.tr,
                       ),
                     ],
                   ),

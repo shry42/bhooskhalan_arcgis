@@ -86,7 +86,7 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
       setState(() {
         isLoading = false;
         hasError = true;
-        errorMessage = 'Failed to load PDF: $e';
+        errorMessage = '${'something_went_wrong'.tr}$e';
       });
     }
   }
@@ -122,7 +122,7 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bulletin - ${_formatDisplayDate(widget.bulletinDate)}',
+              '${'bulletin_title'.tr}${_formatDisplayDate(widget.bulletinDate)}',
               style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
             Text(
@@ -142,7 +142,7 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
             IconButton(
               icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
               onPressed: currentPage > 0 ? _goToPreviousPage : null,
-              tooltip: 'Previous page',
+              tooltip: 'previous_page'.tr,
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -159,7 +159,7 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
             IconButton(
               icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
               onPressed: currentPage < totalPages - 1 ? _goToNextPage : null,
-              tooltip: 'Next page',
+              tooltip: 'next_page'.tr,
             ),
           ],
           IconButton(
@@ -185,16 +185,16 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
                       color: Colors.red,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Failed to load bulletin',
-                      style: TextStyle(
+                    Text(
+                      'failed_to_load_bulletin'.tr,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Bulletin for ${widget.state} - ${widget.district}',
+                      '${'bulletin_for'.tr}${widget.state} - ${widget.district}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -218,9 +218,9 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
                         backgroundColor: const Color(0xFF2196F3),
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
-                      child: const Text(
-                        'Retry',
-                        style: TextStyle(color: Colors.white),
+                      child: Text(
+                        'retry'.tr,
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
@@ -243,14 +243,14 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
               onError: (error) {
                 setState(() {
                   hasError = true;
-                  errorMessage = 'Error displaying PDF: $error';
+                  errorMessage = '${'error_displaying_pdf'.tr}$error';
                   isLoading = false;
                 });
               },
               onPageError: (page, error) {
                 setState(() {
                   hasError = true;
-                  errorMessage = 'Error loading page $page: $error';
+                  errorMessage = '${'error_loading_page'.tr}$page: $error';
                 });
               },
               onViewCreated: (PDFViewController pdfViewController) {
@@ -266,17 +266,17 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
           else
             Container(
               color: Colors.grey.shade50,
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
+                    const CircularProgressIndicator(
                       color: Color(0xFF2196F3),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
-                      'Loading bulletin...',
-                      style: TextStyle(
+                      'loading_bulletin'.tr,
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
                       ),
@@ -298,9 +298,9 @@ class _BulletinWebViewScreenState extends State<BulletinWebViewScreen> {
                       color: Color(0xFF2196F3),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Downloading bulletin...',
-                      style: TextStyle(
+                    Text(
+                      'downloading_bulletin'.tr,
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
                       ),

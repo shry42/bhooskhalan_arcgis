@@ -1,4 +1,3 @@
-
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/maps/arcgis_map_screen.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/maps/google_map_screen.dart';
 import 'package:flutter/material.dart';
@@ -41,9 +40,9 @@ class _SafetyDialogState extends State<SafetyDialog> {
               ),
             ),
 
-            const Text(
-              "Safety Measures",
-              style: TextStyle(
+            Text(
+              'safety_measures_title'.tr,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
@@ -58,15 +57,15 @@ class _SafetyDialogState extends State<SafetyDialog> {
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    SafetyBullet(text: "Stay away from the main landslide areas. There may be danger of additional slides. Do not go near unstable buildings and structures."),
-                    SafetyBullet(text: "Listen for any unusual sounds such as boulders knocking together. This may indicate moving debris. Stay away from such places."),
-                    SafetyBullet(text: "Listen to the latest local radio or television news."),
-                    SafetyBullet(text: "Watch out for WhatsApp and other messages for the latest emergency information."),
-                    SafetyBullet(text: "Watch out for flooding which may occur after landslides. Keep away from streams and rivers."),
-                    SafetyBullet(text: "Please note that rescuers have priority of access to landslide sites."),
-                    SafetyBullet(text: "Always keep in mind your own safety and safety of others in landslide areas."),
-                    SafetyBullet(text: "If you notice something unusual in the landslide area, please notify local emergency authorities."),
+                  children: [
+                    SafetyBullet(text: 'safety_measure_1'.tr),
+                    SafetyBullet(text: 'safety_measure_2'.tr),
+                    SafetyBullet(text: 'safety_measure_3'.tr),
+                    SafetyBullet(text: 'safety_measure_4'.tr),
+                    SafetyBullet(text: 'safety_measure_5'.tr),
+                    SafetyBullet(text: 'safety_measure_6'.tr),
+                    SafetyBullet(text: 'safety_measure_7'.tr),
+                    SafetyBullet(text: 'safety_measure_8'.tr),
                   ],
                 ),
               ),
@@ -88,7 +87,7 @@ class _SafetyDialogState extends State<SafetyDialog> {
                   child: Padding(
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(
-                      "I have read the safety measures and understood them. I will follow its instructions.",
+                      'safety_agreement_text'.tr,
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontWeight: FontWeight.w600,
@@ -98,7 +97,7 @@ class _SafetyDialogState extends State<SafetyDialog> {
                 ),
               ],
             ),
-SizedBox(height: 20),
+            const SizedBox(height: 20),
             // AGREE button
             SizedBox(
               width: double.infinity,
@@ -117,10 +116,13 @@ SizedBox(height: 20),
                   backgroundColor:
                       isChecked ? Colors.blue : Colors.grey.shade400,
                 ),
-                child: const Text("AGREE",style: TextStyle(color: Colors.white),),
+                child: Text(
+                  'agree_button'.tr,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ),
-            SizedBox(height: 20,)
+            const SizedBox(height: 20)
           ],
         ),
       ),

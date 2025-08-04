@@ -2,6 +2,7 @@ import 'package:bhooskhalann/screens/news/models/news_item_model.dart';
 import 'package:bhooskhalann/screens/news/news_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:get/get.dart';
 import 'news_webview_screen.dart';
 import 'enhanced_pdf_viewer_screen.dart'; // Use the enhanced PDF viewer
 
@@ -38,7 +39,7 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
               Icon(Icons.info_outline, color: Colors.white),
               SizedBox(width: 8),
               Expanded(
-                child: Text('No web link available for this news item'),
+                child: Text('noWebLinkAvailable'.tr),
               ),
             ],
           ),
@@ -93,9 +94,9 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem(Icons.picture_as_pdf, 'PDF', pdfCount, Colors.red),
-          _buildStatItem(Icons.open_in_browser, 'Web', webCount, Colors.blue),
-          _buildStatItem(Icons.article_outlined, 'Text', textOnlyCount, Colors.grey),
+          _buildStatItem(Icons.picture_as_pdf, 'pdf'.tr, pdfCount, Colors.red),
+          _buildStatItem(Icons.open_in_browser, 'web'.tr, webCount, Colors.blue),
+          _buildStatItem(Icons.article_outlined, 'text'.tr, textOnlyCount, Colors.grey),
         ],
       ),
     );
@@ -165,7 +166,7 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'PDF',
+                  'pdf'.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.red.shade600,
@@ -180,7 +181,7 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Web',
+                  'web'.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.blue.shade600,
@@ -195,7 +196,7 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Text Only',
+                  'textOnly'.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade500,
@@ -225,7 +226,7 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recent News'),
+        title: Text('recentNews'.tr),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
       ),
@@ -245,9 +246,9 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
                     color: Colors.red.shade400,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "Error fetching news",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  Text(
+                    'errorFetchingNews'.tr,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -262,25 +263,25 @@ class _RecentNewsScreenState extends State<RecentNewsScreen> {
                         _newsList = NewsService.fetchNews();
                       });
                     },
-                    child: const Text('Retry'),
+                    child: Text('retry'.tr),
                   ),
                 ],
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.article_outlined,
                     size: 64,
                     color: Colors.grey,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    "No news found",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    'noNewsFound'.tr,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),

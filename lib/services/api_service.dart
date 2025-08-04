@@ -130,6 +130,9 @@ class ApiService {
         await _handleUnauthorized();
         return null;
       } else {
+        // Debug: Print the response body for non-200 status codes
+        print('🔍 DEBUG: Server response for status ${response.statusCode}:');
+        print('Response body: ${response.body}');
         throw HttpException('POST $endpoint failed with status: ${response.statusCode}');
       }
     } catch (e) {

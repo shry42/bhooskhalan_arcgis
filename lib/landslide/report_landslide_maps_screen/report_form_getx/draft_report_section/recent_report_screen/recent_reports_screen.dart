@@ -2,6 +2,7 @@ import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/draft_report_section/public_report_form_screen.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/draft_report_section/recent_report_screen/recent_reports_controller.dart';
 import 'package:bhooskhalann/user_profile/profile_controller.dart';
+import 'package:bhooskhalann/screens/homescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,7 +53,7 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
 
   // Added missing methods for _RecentReportsPageState
   String _getFormTypeText() {
-    return currentUserType == 'Public' ? 'Public' : 'Expert';
+    return currentUserType == 'Public' ? 'public'.tr : 'expert'.tr;
   }
 
   void _handleAction(String value, BuildContext context) {
@@ -60,252 +61,405 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
     _handleMenuAction(value, controller);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (isLoadingUserType) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Recent Reports'),
-          backgroundColor: Colors.blue,
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
+// Replace the existing build method in _RecentReportsPageState class (around line 47-150)
+@override
+Widget build(BuildContext context) {
+  if (isLoadingUserType) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('recent_reports'.tr),
+        backgroundColor: Colors.blue,
+      ),
+      body: const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Recent Reports',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              Text(
-                '$currentUserType User Dashboard',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Get.back(),
-          ),
-          backgroundColor: _getUserTypeColor(),
-          elevation: 0,
-          actions: [
-            // User type indicator
-            Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _getUserTypeIcon(),
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    currentUserType.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+  // Check if user is Public - show only Draft tab
+  if (currentUserType == 'Public') {
+    return Scaffold(
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'my_draft_reports'.tr,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
-            PopupMenuButton<String>(
-              onSelected: (value) => _handleMenuAction(value, controller), // Fixed this call
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'refresh',
-                  child: Row(
-                    children: [
-                      Icon(Icons.refresh, size: 18, color: Colors.blue),
-                      SizedBox(width: 8),
-                      Text('Refresh'),
-                    ],
-                  ),
+            Text(
+              '$currentUserType ${'user_dashboard'.tr}',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            print('Back button pressed - Public user');
+            try {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else if (Get.isDialogOpen == true) {
+                Get.back();
+              } else {
+                // Fallback: try to go back to home screen
+                Get.offAll(() => HomeScreen());
+              }
+            } catch (e) {
+              print('Navigation error: $e');
+              // Final fallback
+              Get.offAll(() => HomeScreen());
+            }
+          },
+        ),
+        backgroundColor: _getUserTypeColor(),
+        elevation: 0,
+        actions: [
+          // User type indicator
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getUserTypeIcon(),
+                  color: Colors.white,
+                  size: 16,
                 ),
-                const PopupMenuItem(
-                  value: 'storage_info',
-                  child: Row(
-                    children: [
-                      Icon(Icons.storage, size: 18, color: Colors.green),
-                      SizedBox(width: 8),
-                      Text('Storage Info'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'user_stats',
-                  child: Row(
-                    children: [
-                      Icon(Icons.analytics, size: 18, color: Colors.orange),
-                      SizedBox(width: 8),
-                      Text('User Stats'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'cleanup',
-                  child: Row(
-                    children: [
-                      Icon(Icons.cleaning_services, size: 18, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Cleanup'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'export',
-                  child: Row(
-                    children: [
-                      Icon(Icons.download, size: 18, color: Colors.blue),
-                      SizedBox(width: 8),
-                      Text('Export'),
-                    ],
+                const SizedBox(width: 4),
+                Text(
+                  currentUserType.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-          ],
-          bottom: TabBar(
-            isScrollable: true,
-            indicator: const UnderlineTabIndicator(
-              borderSide: BorderSide(width: 2.0, color: Colors.white),
-              insets: EdgeInsets.symmetric(horizontal: 30.0),
-            ),
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.normal,
-              color: Colors.white70,
-            ),
-            tabs: [
-              Tab(
-                child: Obx(() => Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) => _handleMenuAction(value, controller),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'refresh',
+                child: Row(
                   children: [
-                    const Text('DRAFT'),
-                    const SizedBox(width: 2),
-                    if (controller.filteredDraftReports.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${controller.filteredDraftReports.length}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    const Icon(Icons.refresh, size: 18, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Text('refresh'.tr),
                   ],
-                )),
+                ),
               ),
-          Tab(
-  child: Obx(() => Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      const Text('TO BE SYNCED'),
-      const SizedBox(width: 2),
-      if (controller.filteredToBeSyncedReports.isNotEmpty)
-        GestureDetector(
-          onTap: () {
-            // Navigate to the "To Be Synced" tab (index 1)
-            DefaultTabController.of(context)?.animateTo(1);
-            
-            // Optional: Show a snackbar to guide user
-            Get.snackbar(
-              'Pending Reports',
-              'Tap any report to edit it',
-              backgroundColor: Colors.orange,
-              colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM,
-              duration: const Duration(seconds: 2),
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '${controller.filteredToBeSyncedReports.length}',
+              PopupMenuItem(
+                value: 'storage_info',
+                child: Row(
+                  children: [
+                    const Icon(Icons.storage, size: 18, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text('storage_info'.tr),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'user_stats',
+                child: Row(
+                  children: [
+                    const Icon(Icons.analytics, size: 18, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Text('user_stats'.tr),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'cleanup',
+                child: Row(
+                  children: [
+                    const Icon(Icons.cleaning_services, size: 18, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text('cleanup'.tr),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'export',
+                child: Row(
+                  children: [
+                    const Icon(Icons.download, size: 18, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Text('export'.tr),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: DraftReportsTab(controller: controller, userType: currentUserType),
+    );
+  }
+
+  // For Expert users - show all tabs (existing tabbed interface)
+  return DefaultTabController(
+    length: 3,
+    child: Scaffold(
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'recent_reports'.tr,
               style: const TextStyle(
-                fontSize: 10,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
+            ),
+            Text(
+              '$currentUserType ${'user_dashboard'.tr}',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            print('Back button pressed - Expert user');
+            try {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else if (Get.isDialogOpen == true) {
+                Get.back();
+              } else {
+                // Fallback: try to go back to home screen
+                Get.offAll(() => HomeScreen());
+              }
+            } catch (e) {
+              print('Navigation error: $e');
+              // Final fallback
+              Get.offAll(() => HomeScreen());
+            }
+          },
+        ),
+        backgroundColor: _getUserTypeColor(),
+        elevation: 0,
+        actions: [
+          // User type indicator
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getUserTypeIcon(),
+                  color: Colors.white,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  currentUserType.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-    ],
-  )),
-),
-           
-              Tab(
-                child: Obx(() => Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          PopupMenuButton<String>(
+            onSelected: (value) => _handleMenuAction(value, controller),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'refresh',
+                child: Row(
                   children: [
-                    const Text('SYNCED'),
-                    const SizedBox(width: 2),
-                    if (controller.filteredSyncedReports.isNotEmpty)
-                      Container(
+                    const Icon(Icons.refresh, size: 18, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Text('refresh'.tr),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'storage_info',
+                child: Row(
+                  children: [
+                    const Icon(Icons.storage, size: 18, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text('storage_info'.tr),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'user_stats',
+                child: Row(
+                  children: [
+                    const Icon(Icons.analytics, size: 18, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Text('user_stats'.tr),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'cleanup',
+                child: Row(
+                  children: [
+                    const Icon(Icons.cleaning_services, size: 18, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text('cleanup'.tr),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'export',
+                child: Row(
+                  children: [
+                    const Icon(Icons.download, size: 18, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Text('export'.tr),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+        bottom: TabBar(
+          isScrollable: true,
+          indicator: const UnderlineTabIndicator(
+            borderSide: BorderSide(width: 2.0, color: Colors.white),
+            insets: EdgeInsets.symmetric(horizontal: 30.0),
+          ),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.normal,
+            color: Colors.white70,
+          ),
+          tabs: [
+            Tab(
+              child: Obx(() => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('draft'.tr.toUpperCase()),
+                  const SizedBox(width: 2),
+                  if (controller.filteredDraftReports.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${controller.filteredDraftReports.length}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              )),
+            ),
+            Tab(
+              child: Obx(() => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('to_be_synced'.tr.toUpperCase()),
+                  const SizedBox(width: 2),
+                  if (controller.filteredToBeSyncedReports.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to the "To Be Synced" tab (index 1)
+                        DefaultTabController.of(context)?.animateTo(1);
+                        
+                        // Optional: Show a snackbar to guide user
+                        Get.snackbar(
+                          'pending_reports'.tr,
+                          'tap_report_to_edit'.tr,
+                          backgroundColor: Colors.orange,
+                          colorText: Colors.white,
+                          snackPosition: SnackPosition.BOTTOM,
+                          duration: const Duration(seconds: 2),
+                        );
+                      },
+                      child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          '${controller.filteredSyncedReports.length}',
+                          '${controller.filteredToBeSyncedReports.length}',
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                  ],
-                )),
-              ),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            DraftReportsTab(controller: controller, userType: currentUserType),
-            ToBeSyncedReportsTab(controller: controller, userType: currentUserType),
-            SyncedReportsTab(controller: controller, userType: currentUserType),
+                    ),
+                ],
+              )),
+            ),
+            Tab(
+              child: Obx(() => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('synced'.tr.toUpperCase()),
+                  const SizedBox(width: 2),
+                  if (controller.filteredSyncedReports.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${controller.filteredSyncedReports.length}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              )),
+            ),
           ],
         ),
       ),
-    );
-  }
+      body: TabBarView(
+        children: [
+          DraftReportsTab(controller: controller, userType: currentUserType),
+          ToBeSyncedReportsTab(controller: controller, userType: currentUserType),
+          SyncedReportsTab(controller: controller, userType: currentUserType),
+        ],
+      ),
+    ),
+  );
+}
 
   Color _getUserTypeColor() {
     return currentUserType == 'Public' ? Colors.blue : Colors.green;
@@ -320,8 +474,8 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
       case 'refresh':
         controller.refreshAllReports();
         Get.snackbar(
-          'Refreshing',
-          'Reports are being refreshed...',
+          'refreshing'.tr,
+          'reports_being_refreshed'.tr,
           backgroundColor: _getUserTypeColor(),
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
@@ -352,7 +506,7 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
           children: [
             Icon(_getUserTypeIcon(), color: _getUserTypeColor()),
             const SizedBox(width: 8),
-            Text('$currentUserType User Storage'),
+            Text('$currentUserType ${'user_storage'.tr}'),
           ],
         ),
         content: SingleChildScrollView(
@@ -360,21 +514,21 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildInfoRow('Your Drafts', '${stats['userDrafts']}'),
-              _buildInfoRow('Your To Be Synced', '${stats['userToBeSynced']}'),
-              _buildInfoRow('Your Synced Reports', '${stats['userSynced']}'),
+              _buildInfoRow('your_drafts'.tr, '${stats['userDrafts']}'),
+              _buildInfoRow('your_to_be_synced'.tr, '${stats['userToBeSynced']}'),
+              _buildInfoRow('your_synced_reports'.tr, '${stats['userSynced']}'),
               const Divider(),
-              _buildInfoRow('Total Drafts (All Users)', '${stats['totalDrafts']}'),
-              _buildInfoRow('Total Synced (All Users)', '${stats['totalSynced']}'),
+              _buildInfoRow('total_drafts_all_users'.tr, '${stats['totalDrafts']}'),
+              _buildInfoRow('total_synced_all_users'.tr, '${stats['totalSynced']}'),
               const Divider(),
-              _buildInfoRow('Storage Used', '${(storageInfo['totalSize'] / 1024).toStringAsFixed(2)} KB'),
+              _buildInfoRow('storage_used'.tr, '${(storageInfo['totalSize'] / 1024).toStringAsFixed(2)} KB'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close'),
+            child: Text('close'.tr),
           ),
         ],
       ),
@@ -390,7 +544,7 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
           children: [
             Icon(_getUserTypeIcon(), color: _getUserTypeColor()),
             const SizedBox(width: 8),
-            Text('$currentUserType User \nStatistics'),
+            Text('$currentUserType ${'user_statistics'.tr}'),
           ],
         ),
         content: SingleChildScrollView(
@@ -398,23 +552,23 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildInfoRow('Your Draft Reports', '${stats['userDrafts']}'),
-              _buildInfoRow('Your Pending Reports', '${stats['userToBeSynced']}'),
-              _buildInfoRow('Your Synced Reports', '${stats['userSynced']}'),
-              _buildInfoRow('Your Total Reports', '${stats['userTotal']}'),
+              _buildInfoRow('your_draft_reports'.tr, '${stats['userDrafts']}'),
+              _buildInfoRow('your_pending_reports'.tr, '${stats['userToBeSynced']}'),
+              _buildInfoRow('your_synced_reports'.tr, '${stats['userSynced']}'),
+              _buildInfoRow('your_total_reports'.tr, '${stats['userTotal']}'),
               const Divider(),
-              _buildInfoRow('Drafts This Week', '${stats['draftsThisWeek']}'),
-              _buildInfoRow('Synced This Week', '${stats['syncedThisWeek']}'),
+              _buildInfoRow('drafts_this_week'.tr, '${stats['draftsThisWeek']}'),
+              _buildInfoRow('synced_this_week'.tr, '${stats['syncedThisWeek']}'),
               const Divider(),
-              _buildInfoRow('Completion Rate', '${stats['completionRate']}%'),
-              _buildInfoRow('Average Completion', '${stats['avgCompletion']}%'),
+              _buildInfoRow('completion_rate'.tr, '${stats['completionRate']}%'),
+              _buildInfoRow('average_completion'.tr, '${stats['avgCompletion']}%'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close'),
+            child: Text('close'.tr),
           ),
         ],
       ),
@@ -437,19 +591,19 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
   void _showCleanupDialog(RecentReportsController controller) {
     Get.dialog(
       AlertDialog(
-        title: const Text('Cleanup Old Reports'),
-        content: Text('This will remove your synced $currentUserType reports older than 90 days. Continue?'),
+        title: Text('cleanup_old_reports'.tr),
+        content: Text('cleanup_confirmation'.tr.replaceAll('{userType}', currentUserType)),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr),
           ),
           ElevatedButton(
             onPressed: () {
               Get.back();
               controller.cleanupOldReports();
             },
-            child: const Text('Cleanup'),
+            child: Text('cleanup'.tr),
           ),
         ],
       ),
@@ -458,17 +612,22 @@ class _RecentReportsPageState extends State<RecentReportsPage> {
 
   void _exportDrafts(RecentReportsController controller) async {
     try {
-      final jsonData = await controller.exportDraftsAsJson(userType: currentUserType);
+      // Show loading indicator
       Get.snackbar(
-        'Export Ready',
-        'Your $currentUserType drafts exported successfully',
-        backgroundColor: Colors.green,
+        'generating_pdf'.tr,
+        'Please wait while generating PDF...',
+        backgroundColor: Colors.blue,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
       );
+      
+      // Export as PDF instead of JSON
+      await controller.exportDraftsAsPdf(userType: currentUserType);
+      
     } catch (e) {
       Get.snackbar(
-        'Export Failed',
+        'export_failed'.tr,
         e.toString(),
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -503,7 +662,7 @@ class DraftReportsTab extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Showing your $userType form drafts only',
+                  'showing_form_drafts_only'.tr.replaceAll('{userType}', userType),
                   style: TextStyle(
                     color: _getUserTypeColor(),
                     fontWeight: FontWeight.w500,
@@ -511,7 +670,7 @@ class DraftReportsTab extends StatelessWidget {
                 ),
               ),
               Obx(() => Text(
-                '${controller.filteredDraftReports.length} drafts',
+                '${controller.filteredDraftReports.length} ${'drafts'.tr}',
                 style: TextStyle(
                   color: _getUserTypeColor(),
                   fontWeight: FontWeight.bold,
@@ -525,7 +684,7 @@ class DraftReportsTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Search your $userType drafts...',
+              hintText: 'search_drafts'.tr.replaceAll('{userType}', userType),
               prefixIcon: Icon(Icons.search, color: _getUserTypeColor()),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -554,7 +713,7 @@ class DraftReportsTab extends StatelessWidget {
 
             if (controller.filteredDraftReports.isEmpty) {
               return EmptyReportTab(
-                message: 'No $userType draft reports found',
+                message: 'no_draft_reports_found'.tr.replaceAll('{userType}', userType),
                 icon: _getUserTypeIcon(),
                 userType: userType,
               );
@@ -617,7 +776,7 @@ class ToBeSyncedReportsTab extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Your $userType reports pending sync',
+                  'reports_pending_sync'.tr.replaceAll('{userType}', userType),
                   style: const TextStyle(
                     color: Colors.orange,
                     fontWeight: FontWeight.w500,
@@ -625,7 +784,7 @@ class ToBeSyncedReportsTab extends StatelessWidget {
                 ),
               ),
               Obx(() => Text(
-                '${controller.filteredToBeSyncedReports.length} pending',
+                '${controller.filteredToBeSyncedReports.length} ${'pending_count'.tr}',
                 style: const TextStyle(
                   color: Colors.orange,
                   fontWeight: FontWeight.bold,
@@ -644,7 +803,7 @@ class ToBeSyncedReportsTab extends StatelessWidget {
 
             if (controller.filteredToBeSyncedReports.isEmpty) {
               return EmptyReportTab(
-                message: 'No $userType reports pending sync',
+                message: 'no_reports_pending_sync'.tr.replaceAll('{userType}', userType),
                 icon: Icons.sync,
                 userType: userType,
               );
@@ -697,7 +856,7 @@ class SyncedReportsTab extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Your successfully synced $userType reports',
+                  'successfully_synced_reports'.tr.replaceAll('{userType}', userType),
                   style: const TextStyle(
                     color: Colors.green,
                     fontWeight: FontWeight.w500,
@@ -705,7 +864,7 @@ class SyncedReportsTab extends StatelessWidget {
                 ),
               ),
               Obx(() => Text(
-                '${controller.filteredSyncedReports.length} synced',
+                '${controller.filteredSyncedReports.length} ${'synced_count'.tr}',
                 style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.bold,
@@ -724,7 +883,7 @@ class SyncedReportsTab extends StatelessWidget {
 
             if (controller.filteredSyncedReports.isEmpty) {
               return EmptyReportTab(
-                message: 'No $userType synced reports found',
+                message: 'no_synced_reports_found'.tr.replaceAll('{userType}', userType),
                 icon: Icons.cloud_done,
                 userType: userType,
               );
@@ -759,7 +918,7 @@ class EmptyReportTab extends StatelessWidget {
 
   const EmptyReportTab({
     super.key,
-    this.message = 'No reports found',
+    this.message = '',
     this.icon = Icons.insert_drive_file_rounded,
     required this.userType,
   });
@@ -777,7 +936,7 @@ class EmptyReportTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            message,
+            message.isEmpty ? 'no_reports_found'.tr : message,
             style: TextStyle(
               color: Colors.grey.shade500,
               fontSize: 16,
@@ -787,7 +946,7 @@ class EmptyReportTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Create your first $userType report to see it here',
+            'create_first_report'.tr.replaceAll('{userType}', userType),
             style: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 14,
@@ -893,7 +1052,7 @@ class DraftReportCard extends StatelessWidget {
                           Icon(Icons.check_circle, size: 12, color: Colors.green.shade700),
                           const SizedBox(width: 4),
                           Text(
-                            'READY',
+                            'ready'.tr.toUpperCase(),
                             style: TextStyle(
                               color: Colors.green.shade700,
                               fontSize: 10,
@@ -913,27 +1072,27 @@ class DraftReportCard extends StatelessWidget {
                           children: [
                             Icon(_getUserTypeIcon(), size: 18, color: _getUserTypeColor()),
                             const SizedBox(width: 8),
-                            Text('Edit ${draft.formTypeDisplayName}'),
+                            Text('edit_form'.tr.replaceAll('{formType}', draft.formTypeDisplayName)),
                           ],
                         ),
                       ),
-                      // const PopupMenuItem(
-                      //   value: 'details',
-                      //   child: Row(
-                      //     children: [
-                      //       Icon(Icons.info_outline, size: 18),
-                      //       SizedBox(width: 8),
-                      //       Text('View Details'),
-                      //     ],
-                      //   ),
-                      // ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
+                        value: 'export',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.picture_as_pdf, size: 18, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            Text('Export PDF', style: const TextStyle(color: Colors.orange)),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
+                            const Icon(Icons.delete, size: 18, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Text('delete'.tr, style: const TextStyle(color: Colors.red)),
                           ],
                         ),
                       ),
@@ -987,7 +1146,7 @@ class DraftReportCard extends StatelessWidget {
                   Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
                   Text(
-                    'Updated ${controller.getTimeAgo(draft.updatedAt)}',
+                    'updated_time_ago'.tr.replaceAll('{time}', controller.getTimeAgo(draft.updatedAt)),
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
@@ -1032,7 +1191,7 @@ class DraftReportCard extends StatelessWidget {
       parts.add(formData['state'].toString());
     }
     
-    return parts.isEmpty ? 'Location not specified' : parts.join(', ');
+    return parts.isEmpty ? 'location_not_specified'.tr : parts.join(', ');
   }
 
   void _onTapDraft(BuildContext context) {
@@ -1065,12 +1224,41 @@ class DraftReportCard extends StatelessWidget {
       case 'edit':
         _onTapDraft(context); // For drafts, edit means opening the draft
         break;
+      case 'export':
+        _exportDraft(context);
+        break;
       case 'details':
         _showDetailsDialog(context);
         break;
       case 'delete':
         _showDeleteDialog(context);
         break;
+    }
+  }
+
+  void _exportDraft(BuildContext context) async {
+    try {
+      // Show loading indicator
+      Get.snackbar(
+        'generating_pdf'.tr,
+        'Please wait while generating PDF...',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+      
+      // Export single draft as PDF
+      await controller.exportDraftAsPdf(draft);
+      
+    } catch (e) {
+      Get.snackbar(
+        'export_failed'.tr,
+        'Failed to export draft as PDF: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -1082,7 +1270,7 @@ class DraftReportCard extends StatelessWidget {
           children: [
             Icon(_getUserTypeIcon(), color: _getUserTypeColor()),
             const SizedBox(width: 8),
-            const Text('Draft Details'),
+            Text('draft_details'.tr),
           ],
         ),
         content: SingleChildScrollView(
@@ -1090,30 +1278,30 @@ class DraftReportCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailRow('Form Type', draft.formTypeDisplayName),
-              _buildDetailRow('Title', draft.title),
-              _buildDetailRow('Completion', '${summary['completion'].toInt()}%'),
-              _buildDetailRow('Status', summary['status']),
-              _buildDetailRow('Location', summary['location']),
+              _buildDetailRow('form_type'.tr, draft.formTypeDisplayName),
+              _buildDetailRow('title'.tr, draft.title),
+              _buildDetailRow('completion'.tr, '${summary['completion'].toInt()}%'),
+              _buildDetailRow('status'.tr, summary['status']),
+              _buildDetailRow('location'.tr, summary['location']),
               if (summary['description'].toString().isNotEmpty)
-                _buildDetailRow('Description', summary['description']),
-              _buildDetailRow('Created', controller.getTimeAgo(draft.createdAt)),
-              _buildDetailRow('Last Modified', controller.getTimeAgo(draft.updatedAt)),
-              _buildDetailRow('Ready to Submit', summary['isValidForSubmission'] ? 'Yes' : 'No'),
+                _buildDetailRow('description'.tr, summary['description']),
+              _buildDetailRow('created'.tr, controller.getTimeAgo(draft.createdAt)),
+              _buildDetailRow('last_modified'.tr, controller.getTimeAgo(draft.updatedAt)),
+              _buildDetailRow('ready_to_submit'.tr, summary['isValidForSubmission'] ? 'yes'.tr : 'no'.tr),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close'),
+            child: Text('close'.tr),
           ),
           ElevatedButton(
             onPressed: () {
               Get.back();
               _onTapDraft(context);
             },
-            child: const Text('Edit Draft'),
+            child: Text('edit_draft'.tr),
           ),
         ],
       ),
@@ -1144,18 +1332,18 @@ class DraftReportCard extends StatelessWidget {
   void _showDeleteDialog(BuildContext context) {
     Get.dialog(
       AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.red),
-            SizedBox(width: 8),
-            Text('Delete Draft'),
+            const Icon(Icons.warning, color: Colors.red),
+            const SizedBox(width: 8),
+            Text('delete_draft'.tr),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to delete this ${draft.formTypeDisplayName} draft?'),
+            Text('delete_draft_confirmation'.tr.replaceAll('{formType}', draft.formTypeDisplayName)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1171,22 +1359,22 @@ class DraftReportCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  Text('Form Type: ${draft.formTypeDisplayName}'),
-                  Text('Completion: ${draft.getCompletionPercentage().toInt()}%'),
+                  Text('${'form_type'.tr}: ${draft.formTypeDisplayName}'),
+                  Text('${'completion'.tr}: ${draft.getCompletionPercentage().toInt()}%'),
                 ],
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'This action cannot be undone.',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
+            Text(
+              'action_cannot_be_undone'.tr,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1197,7 +1385,7 @@ class DraftReportCard extends StatelessWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: Text('delete'.tr),
           ),
         ],
       ),
@@ -1248,7 +1436,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                       Icon(Icons.sync, size: 12, color: Colors.orange.shade800),
                       const SizedBox(width: 4),
                       Text(
-                        'PENDING',
+                        'pending'.tr.toUpperCase(),
                         style: TextStyle(
                           color: Colors.orange.shade800,
                           fontSize: 10,
@@ -1283,7 +1471,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'Retry: $retryCount',
+                      'retry_count'.tr.replaceAll('{count}', retryCount.toString()),
                       style: TextStyle(
                         color: Colors.red.shade800,
                         fontSize: 10,
@@ -1294,53 +1482,53 @@ class ToBeSyncedReportCard extends StatelessWidget {
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleAction(value, context),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'edit',
                       child: Row(
                         children: [
-                          Icon(Icons.edit, size: 18, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Text('Edit Report'),
+                          const Icon(Icons.edit, size: 18, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text('edit_report'.tr),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'retry',
                       child: Row(
                         children: [
-                          Icon(Icons.sync, size: 18, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text('Retry Submission'),
+                          const Icon(Icons.sync, size: 18, color: Colors.orange),
+                          const SizedBox(width: 8),
+                          Text('retry_submission'.tr),
                         ],
                       ),
                     ),
-                    // const PopupMenuItem(
-                    //   value: 'details',
-                    //   child: Row(
-                    //     children: [
-                    //       Icon(Icons.info_outline, size: 18),
-                    //       SizedBox(width: 8),
-                    //       Text('View Details'),
-                    //     ],
-                    //   ),
-                    // ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'download',
                       child: Row(
                         children: [
-                          Icon(Icons.download, size: 18, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Text('Download Report'),
+                          const Icon(Icons.download, size: 18, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text('download_report'.tr),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
+                      value: 'export',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.picture_as_pdf, size: 18, color: Colors.orange),
+                          const SizedBox(width: 8),
+                          Text('Export PDF', style: const TextStyle(color: Colors.orange)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete, size: 18, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: Colors.red)),
+                          const Icon(Icons.delete, size: 18, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Text('delete'.tr, style: const TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),
@@ -1350,7 +1538,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              report['title'] ?? '${_getFormTypeText()} Landslide Report',
+              report['title'] ?? 'landslide_report'.tr.replaceAll('{formType}', _getFormTypeText()),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1380,7 +1568,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                 Icon(Icons.assessment, size: 16, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
                 Text(
-                  '${_getFormTypeText()} Form • ${_getFormStatus()}',
+                  'form_awaiting_sync'.tr.replaceAll('{formType}', _getFormTypeText()).replaceAll('{status}', _getFormStatus()),
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 12,
@@ -1394,7 +1582,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                 Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
                 Text(
-                  'Created ${controller.getTimeAgo(createdAt)}',
+                  'created_time_ago'.tr.replaceAll('{time}', controller.getTimeAgo(createdAt)),
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 12,
@@ -1409,7 +1597,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                   Icon(Icons.error_outline, size: 16, color: Colors.red.shade600),
                   const SizedBox(width: 4),
                   Text(
-                    'Failed $retryCount time${retryCount > 1 ? 's' : ''}',
+                    'failed_attempts'.tr.replaceAll('{count}', retryCount.toString()).replaceAll('{plural}', retryCount > 1 ? 's' : ''),
                     style: TextStyle(
                       color: Colors.red.shade600,
                       fontSize: 12,
@@ -1434,7 +1622,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                     ),
                     onPressed: () => controller.resubmitPendingReport(report),
                     icon: const Icon(Icons.sync, size: 16),
-                    label: const Text('SYNC'),
+                    label: Text('sync'.tr.toUpperCase()),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1449,7 +1637,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                     ),
                     onPressed: () => _downloadReport(),
                     icon: const Icon(Icons.download, size: 16),
-                    label: const Text('DOWNLOAD'),
+                    label: Text('download'.tr.toUpperCase()),
                   ),
                 ),
               ],
@@ -1463,7 +1651,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
   // Helper methods for ToBeSyncedReportCard
   String _getFormTypeText() {
     String formType = report['formType']?.toString().toLowerCase() ?? 'public';
-    return formType == 'expert' ? 'Expert' : 'Public';
+    return formType == 'expert' ? 'expert'.tr : 'public'.tr;
   }
 
   Color _getUserTypeColor() {
@@ -1475,9 +1663,9 @@ class ToBeSyncedReportCard extends StatelessWidget {
     final retryCount = report['retryCount'] ?? 0;
     String formType = _getFormTypeText();
     if (retryCount > 0) {
-      return '$formType retry pending';
+      return 'retry_pending'.tr.replaceAll('{formType}', formType);
     }
-    return '$formType awaiting sync';
+    return 'awaiting_sync'.tr.replaceAll('{formType}', formType);
   }
 
   String _getLocationText() {
@@ -1494,13 +1682,16 @@ class ToBeSyncedReportCard extends StatelessWidget {
       parts.add(reportData['state'].toString());
     }
     
-    return parts.isEmpty ? 'Location not specified' : parts.join(', ');
+    return parts.isEmpty ? 'location_not_specified'.tr : parts.join(', ');
   }
 
   void _handleAction(String action, BuildContext context) {
     switch (action) {
       case 'edit':
         _editPendingReport();
+        break;
+      case 'export':
+        _exportPendingReport(context);
         break;
       case 'retry':
         controller.resubmitPendingReport(report);
@@ -1514,6 +1705,43 @@ class ToBeSyncedReportCard extends StatelessWidget {
       case 'delete':
         _showDeleteDialog(context);
         break;
+    }
+  }
+
+  void _exportPendingReport(BuildContext context) async {
+    try {
+      // Show loading indicator
+      Get.snackbar(
+        'generating_pdf'.tr,
+        'Please wait while generating PDF...',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+      
+      // Get report data
+      final reportData = report['data'] ?? report;
+      final formType = _getFormTypeText().toLowerCase();
+      
+      // Export pending report as PDF
+      await controller.exportDraftAsPdf(DraftReport(
+        id: report['id'] ?? '',
+        title: report['title'] ?? 'Landslide Report',
+        formType: formType,
+        formData: reportData,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+      
+    } catch (e) {
+      Get.snackbar(
+        'export_failed'.tr,
+        'Failed to export pending report as PDF: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -1552,8 +1780,8 @@ class ToBeSyncedReportCard extends StatelessWidget {
       }
     } catch (e) {
       Get.snackbar(
-        'Error',
-        'Unable to edit this report: $e',
+        'error'.tr,
+        'unable_to_edit_report'.tr.replaceAll('{error}', e.toString()),
         backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -1678,8 +1906,8 @@ class ToBeSyncedReportCard extends StatelessWidget {
     try {
       final jsonData = await controller.exportPendingReportAsJson(report);
       Get.snackbar(
-        'Download Ready',
-        '${_getFormTypeText()} landslide report data exported successfully',
+        'download_ready'.tr,
+        'report_exported_successfully'.tr.replaceAll('{formType}', _getFormTypeText()),
         backgroundColor: Colors.green,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -1690,7 +1918,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
       
     } catch (e) {
       Get.snackbar(
-        'Download Failed',
+        'download_failed'.tr,
         e.toString(),
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -1710,7 +1938,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
           children: [
             const Icon(Icons.sync, color: Colors.orange),
             const SizedBox(width: 8),
-            Text('Pending $formType Report'),
+            Text('pending_report_title'.tr.replaceAll('{formType}', formType)),
           ],
         ),
         content: SingleChildScrollView(
@@ -1718,35 +1946,35 @@ class ToBeSyncedReportCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailRow('Form Type', '$formType Landslide Report'),
-              _buildDetailRow('Status', 'Pending Sync'),
-              _buildDetailRow('Location', _getLocationText()),
-              _buildDetailRow('Material Type', reportData['MaterialInvolved'] ?? reportData['typeOfMaterial'] ?? 'Not specified'),
-              _buildDetailRow('Movement Type', reportData['MovementType'] ?? reportData['typeOfMovement'] ?? 'Not specified'),
-              if (formType == 'Expert') ...[
-                _buildDetailRow('Length', '${reportData['LengthInMeters'] ?? reportData['length'] ?? 'Not specified'}m'),
-                _buildDetailRow('Activity', reportData['Activity'] ?? reportData['activity'] ?? 'Not specified'),
+              _buildDetailRow('form_type'.tr, 'landslide_report'.tr.replaceAll('{formType}', formType)),
+              _buildDetailRow('status'.tr, 'pending_sync'.tr),
+              _buildDetailRow('location'.tr, _getLocationText()),
+              _buildDetailRow('material_type'.tr, reportData['MaterialInvolved'] ?? reportData['typeOfMaterial'] ?? 'not_specified'.tr),
+              _buildDetailRow('movement_type'.tr, reportData['MovementType'] ?? reportData['typeOfMovement'] ?? 'not_specified'.tr),
+              if (formType == 'expert'.tr) ...[
+                _buildDetailRow('length_meters'.tr, '${reportData['LengthInMeters'] ?? reportData['length'] ?? 'not_specified'.tr}m'),
+                _buildDetailRow('activity'.tr, reportData['Activity'] ?? reportData['activity'] ?? 'not_specified'.tr),
               ],
-              _buildDetailRow('Images', reportData['hasImages'] == true ? 'Yes (${reportData['imageCount'] ?? 0})' : 'No'),
-              _buildDetailRow('Created', controller.getTimeAgo(DateTime.parse(report['createdAt']))),
+              _buildDetailRow('images'.tr, reportData['hasImages'] == true ? '${'yes'.tr} (${reportData['imageCount'] ?? 0})' : 'no'.tr),
+              _buildDetailRow('created'.tr, controller.getTimeAgo(DateTime.parse(report['createdAt']))),
               if (retryCount > 0)
-                _buildDetailRow('Retry Count', retryCount.toString()),
+                _buildDetailRow('retry_count_label'.tr, retryCount.toString()),
               if (report['lastRetryAt'] != null)
-                _buildDetailRow('Last Retry', controller.getTimeAgo(DateTime.parse(report['lastRetryAt']))),
+                _buildDetailRow('last_retry'.tr, controller.getTimeAgo(DateTime.parse(report['lastRetryAt']))),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close'),
+            child: Text('close'.tr),
           ),
           ElevatedButton(
             onPressed: () {
               Get.back();
               controller.resubmitPendingReport(report);
             },
-            child: const Text('Retry Now'),
+            child: Text('retry_now'.tr),
           ),
         ],
       ),
@@ -1777,18 +2005,18 @@ class ToBeSyncedReportCard extends StatelessWidget {
   void _showDeleteDialog(BuildContext context) {
     Get.dialog(
       AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.red),
-            SizedBox(width: 8),
-            Text('Delete Pending \nReport'),
+            const Icon(Icons.warning, color: Colors.red),
+            const SizedBox(width: 8),
+            Text('delete_pending_report'.tr),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Are you sure you want to delete this pending report?'),
+            Text('delete_pending_confirmation'.tr),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1800,35 +2028,35 @@ class ToBeSyncedReportCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    report['title'] ?? '${_getFormTypeText()} Landslide Report',
+                    report['title'] ?? 'landslide_report'.tr.replaceAll('{formType}', _getFormTypeText()),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 4),
-                  Text('Type: ${_getFormTypeText()} Form'),
-                  Text('Status: Pending Sync'),
+                  const SizedBox(width: 4),
+                  Text('${'type'.tr}: ${_getFormTypeText()} Form'),
+                  Text('${'status'.tr}: ${'pending_sync'.tr}'),
                   if ((report['retryCount'] ?? 0) > 0)
-                    Text('Failed attempts: ${report['retryCount']}'),
+                    Text('failed_attempts_count'.tr.replaceAll('{count}', '${report['retryCount']}')),
                 ],
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'This will permanently delete the report. Consider downloading it first.',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
+            Text(
+              'delete_report_warning'.tr,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr),
           ),
           TextButton(
             onPressed: () {
               Get.back();
               _downloadReport(); // Download before deleting
             },
-            child: const Text('Download First'),
+            child: Text('download_first'.tr),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1839,7 +2067,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: Text('delete'.tr),
           ),
         ],
       ),
@@ -1888,7 +2116,7 @@ class SyncedReportCard extends StatelessWidget {
                       Icon(Icons.cloud_done, size: 12, color: Colors.green.shade800),
                       const SizedBox(width: 4),
                       Text(
-                        'SYNCED',
+                        'synced'.tr.toUpperCase(),
                         style: TextStyle(
                           color: Colors.green.shade800,
                           fontSize: 10,
@@ -1920,7 +2148,7 @@ class SyncedReportCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              report['title'] ?? 'Untitled Report',
+              report['title'] ?? 'untitled_report'.tr,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1934,7 +2162,7 @@ class SyncedReportCard extends StatelessWidget {
                 Icon(Icons.cloud_upload, size: 16, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
                 Text(
-                  'Synced ${controller.getTimeAgo(syncedAt)}',
+                  'synced_time_ago'.tr.replaceAll('{time}', controller.getTimeAgo(syncedAt)),
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 12,

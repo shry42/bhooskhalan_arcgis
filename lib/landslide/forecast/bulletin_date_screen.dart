@@ -67,8 +67,8 @@ class BulletinDateScreen extends StatelessWidget {
       }
       
       Get.snackbar(
-        "Error",
-        "Something went wrong: $e",
+        'error'.tr,
+        '${'something_went_wrong'.tr}$e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -83,9 +83,9 @@ class BulletinDateScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Bulletin Date',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          'bulletin_date'.tr,
+          style: const TextStyle(color: Colors.white),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -112,7 +112,7 @@ class BulletinDateScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selected Location:',
+                  'selected_location'.tr,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -132,11 +132,11 @@ class BulletinDateScreen extends StatelessWidget {
             ),
           ),
           
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Text(
-              'Select any date',
-              style: TextStyle(
+              'select_any_date'.tr,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.normal,
                 color: Colors.black87,

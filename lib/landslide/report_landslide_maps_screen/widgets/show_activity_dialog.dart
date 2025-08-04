@@ -1,6 +1,7 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_activity_section.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_activity_sub_section.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showActivityDialog(BuildContext context) {
   showDialog(
@@ -20,8 +21,8 @@ void showActivityDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Activity',
+                  Text(
+                    'activity'.tr,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -50,8 +51,8 @@ void showActivityDialog(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Activity can be classified into four categories (source (UNESCO-WP/WLI, 1993))',
+                      Text(
+                        'activity_description'.tr,
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.4,
@@ -61,26 +62,26 @@ void showActivityDialog(BuildContext context) {
                       
                       buildActivitySection(
                         number: '1.',
-                        title: 'Active',
-                        description: 'A Active landslide is currently moving.',
+                        title: 'active'.tr,
+                        description: 'active_desc'.tr,
                       ),
                       
                       buildActivitySection(
                         number: '2.',
-                        title: 'Suspended',
-                        description: 'A suspended landslide has moved within the last twelve months but is not active at present.',
+                        title: 'suspended'.tr,
+                        description: 'suspended_desc'.tr,
                       ),
                       
                       buildActivitySection(
                         number: '3.',
-                        title: 'Reactivated',
-                        description: 'A reactivated landslide is an active landslide that has been inactive.',
+                        title: 'reactivated'.tr,
+                        description: 'reactivated_desc'.tr,
                       ),
                       
                       buildActivitySection(
                         number: '4.',
-                        title: 'Inactive',
-                        description: 'An inactive landslide has not moved within the last twelve months. Inactive landslides can be subdivided further into the following states. Inactive landslide further can be classified into sub categories.',
+                        title: 'inactive'.tr,
+                        description: 'inactive_desc'.tr,
                       ),
                       
                       const SizedBox(height: 16),
@@ -93,26 +94,26 @@ void showActivityDialog(BuildContext context) {
                           children: [
                             buildActivitySubSection(
                               letter: 'a.',
-                              title: 'Dormant',
-                              description: 'A dormant landslide is an inactive landslide that can be reactivated by its original causes or other causes.',
+                              title: 'dormant'.tr,
+                              description: 'dormant_desc'.tr,
                             ),
                             
                             buildActivitySubSection(
                               letter: 'b.',
-                              title: 'Abandoned',
-                              description: 'An abandoned landslide is an inactive landslide that is no longer affected by its original causes.',
+                              title: 'abandoned'.tr,
+                              description: 'abandoned_desc'.tr,
                             ),
                             
                             buildActivitySubSection(
                               letter: 'c.',
-                              title: 'Stabilized',
-                              description: 'A stabilized landslide is an inactive landslide that has been protected from its original causes by artificial remedial measures.',
+                              title: 'stabilized'.tr,
+                              description: 'stabilized_desc'.tr,
                             ),
                             
                             buildActivitySubSection(
                               letter: 'd.',
-                              title: 'Relict',
-                              description: 'A relict landslide is an inactive landslide that developed under geomorphological or climatic conditions considerably different from those at present.',
+                              title: 'relict'.tr,
+                              description: 'relict_desc'.tr,
                             ),
                           ],
                         ),

@@ -1,5 +1,6 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_rate_section.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showRateOfMovementDialog(BuildContext context) {
   showDialog(
@@ -19,8 +20,8 @@ void showRateOfMovementDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Rate of Movement',
+                  Text(
+                    'rate_of_movement'.tr,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -50,44 +51,44 @@ void showRateOfMovementDialog(BuildContext context) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       buildRateSection(
-                        title: 'Extremely Rapid',
-                        description: 'Typical velocity more than 5m/sec',
+                        title: 'extremely_rapid'.tr,
+                        description: 'extremely_rapid_desc'.tr,
                       ),
                       
                       buildRateSection(
-                        title: 'Very Rapid',
-                        description: 'Typical velocity more than 3 m/min',
+                        title: 'very_rapid'.tr,
+                        description: 'very_rapid_desc'.tr,
                       ),
                       
                       buildRateSection(
-                        title: 'Rapid',
-                        description: 'Typical velocity more than 1.8 m/hour',
+                        title: 'rapid'.tr,
+                        description: 'rapid_desc'.tr,
                       ),
                       
                       buildRateSection(
-                        title: 'Moderate',
-                        description: 'Typical velocity more than 13m/month',
+                        title: 'moderate'.tr,
+                        description: 'moderate_desc'.tr,
                       ),
                       
                       buildRateSection(
-                        title: 'Slow',
-                        description: 'Typical velocity more than 1.6m/year',
+                        title: 'slow'.tr,
+                        description: 'slow_desc'.tr,
                       ),
                       
                       buildRateSection(
-                        title: 'Very Slow',
-                        description: 'Typical velocity more than 16mm/year',
+                        title: 'very_slow'.tr,
+                        description: 'very_slow_desc'.tr,
                       ),
                       
                       buildRateSection(
-                        title: 'Extremely slow',
-                        description: 'Typical velocity less than 16mm/year',
+                        title: 'extremely_slow'.tr,
+                        description: 'extremely_slow_desc'.tr,
                       ),
                       
                       const SizedBox(height: 20),
                       
-                      const Text(
-                        '(source: Cruden & Varnes 1996)',
+                      Text(
+                        'rate_of_movement_source'.tr,
                         style: TextStyle(
                           fontSize: 14,
                           fontStyle: FontStyle.italic,

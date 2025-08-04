@@ -1,5 +1,6 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_hydrological_section.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showHydrologicalConditionDialog(BuildContext context) {
   showDialog(
@@ -19,8 +20,8 @@ void showHydrologicalConditionDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Hydrological Condition',
+                  Text(
+                    'hydrological_condition'.tr,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -50,28 +51,28 @@ void showHydrologicalConditionDialog(BuildContext context) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       buildHydrologicalSection(
-                        title: 'Dry',
-                        description: 'No moisture visible (source: cruden & varnes 1996) or none inflow per 10 m tunnel length (l/m) (source bieniawski (1989))',
+                        title: 'dry'.tr,
+                        description: 'dry_desc'.tr,
                       ),
                       
                       buildHydrologicalSection(
-                        title: 'Damp',
-                        description: 'With visible moisture or < 10 inflow per 10 m tunnel length (l/m) (source bieniawski (1989))',
+                        title: 'damp'.tr,
+                        description: 'damp_desc'.tr,
                       ),
                       
                       buildHydrologicalSection(
-                        title: 'Wet',
-                        description: 'Contains some water but no free water or 10-25 inflow per 10 m tunnel length (l/m) (source bieniawski (1989))',
+                        title: 'wet'.tr,
+                        description: 'wet_desc'.tr,
                       ),
                       
                       buildHydrologicalSection(
-                        title: 'Dripping',
-                        description: 'Water flowing slowly in tiny drops or 25-125 inflow per 10 m tunnel length (l/m) (source bieniawski (1989))',
+                        title: 'dripping'.tr,
+                        description: 'dripping_desc'.tr,
                       ),
                       
                       buildHydrologicalSection(
-                        title: 'Flowing',
-                        description: 'Water is moving smoothly and continuously or >125 inflow per 10 m tunnel length (l/m) (source bieniawski (1989))',
+                        title: 'flowing'.tr,
+                        description: 'flowing_desc'.tr,
                       ),
                     ],
                   ),

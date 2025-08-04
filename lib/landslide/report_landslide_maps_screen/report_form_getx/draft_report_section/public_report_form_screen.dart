@@ -1,6 +1,7 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/draft_report_section/public_report_form_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/show_material_type_dialog.dart';
 
 class PublicLandslideReportingScreen extends StatelessWidget {
   const PublicLandslideReportingScreen({Key? key, required this.latitude,  required this.longitude}) : super(key: key);
@@ -11,7 +12,6 @@ class PublicLandslideReportingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Initialize controller with coordinates
-
     final controller = Get.put(PublicLandslideReportController());
     controller.setCoordinates(latitude, longitude);
     
@@ -23,7 +23,6 @@ class PublicLandslideReportingScreen extends StatelessWidget {
     final Color textColor = const Color(0xFF2C3E50);
     final Color hintColor = const Color(0xFF7F8C8D);
 
- 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -33,14 +32,14 @@ class PublicLandslideReportingScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-     title: Obx(() => Text(
-  controller.isDraftMode.value 
-    ? 'Edit Draft Report'
-    : controller.isPendingEditMode.value 
-      ? 'Edit Pending Report' 
-      : 'Report Landslide (Public)',
-  style: const TextStyle(fontWeight: FontWeight.w600),
-)),
+        title: Obx(() => Text(
+          controller.isDraftMode.value 
+            ? 'edit_draft_report'.tr
+            : controller.isPendingEditMode.value 
+              ? 'edit_pending_report'.tr 
+              : 'report_landslide_public'.tr,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        )),
         actions: [
           Obx(() => TextButton(
             onPressed: () => controller.saveDraft(),
@@ -54,7 +53,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  controller.isDraftMode.value ? 'UPDATE' : 'SAVE',
+                  controller.isDraftMode.value ? 'update'.tr : 'save'.tr,
                   style: const TextStyle(
                     color: Colors.white, 
                     fontWeight: FontWeight.bold
@@ -73,7 +72,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                   CircularProgressIndicator(color: primaryColor),
                   const SizedBox(height: 16),
                   Text(
-                    'Submitting report...',
+                    'submitting_report'.tr,
                     style: TextStyle(
                       color: textColor,
                       fontSize: 16,
@@ -105,7 +104,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'You are editing a draft report. Your changes will be saved automatically.',
+                                'editing_draft_message'.tr,
                                 style: TextStyle(
                                   color: primaryColor,
                                   fontSize: 14,
@@ -120,143 +119,138 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                     return const SizedBox.shrink();
                   }),
 
-              
-
                   // Location Information Section
-            _buildSectionCard(
-  title: 'Location Information',
-  primaryColor: primaryColor,
-  cardColor: cardColor,
-  textColor: textColor,
-  children: [
-    _buildTextField(
-      label: 'Latitude *',
-      controller: controller.latitudeController,
-      readOnly: true,
-      validator: (value) => controller.validateRequired(value, 'Latitude'),
-    ),
-    const SizedBox(height: 16),
-    _buildTextField(
-      label: 'Longitude *',
-      controller: controller.longitudeController,
-      readOnly: true,
-      validator: (value) => controller.validateRequired(value, 'Longitude'),
-    ),
-    const SizedBox(height: 16),
+                  _buildSectionCard(
+                    title: 'location_information'.tr,
+                    primaryColor: primaryColor,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    children: [
+                      _buildTextField(
+                        label: '${'latitude'.tr} *',
+                        controller: controller.latitudeController,
+                        readOnly: true,
+                        validator: (value) => controller.validateRequired(value, 'latitude'.tr),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: '${'longitude'.tr} *',
+                        controller: controller.longitudeController,
+                        readOnly: true,
+                        validator: (value) => controller.validateRequired(value, 'longitude'.tr),
+                      ),
+                      const SizedBox(height: 16),
 
-    // Add location mode switch
-    _buildLocationModeSwitch(controller, primaryColor),
-    
-    // State Field - Conditional UI
-    Obx(() {
-      if (controller.isLocationAutoPopulated.value && controller.stateController.text.isNotEmpty) {
-        // Show text field when auto-populated
-        return _buildTextField(
-          label: 'State *',
-          controller: controller.stateController,
-          readOnly: true,
-          validator: (value) => controller.validateRequired(value, 'State'),
-        );
-      } else {
-        // Show dropdown when manual selection needed
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _labelText('State *', textColor),
-            _buildDropdown(
-              hint: 'Select State',
-              value: controller.selectedStateFromDropdown.value,
-              items: controller.indianStates,
-              onChanged: (value) => controller.onStateSelected(value),
-              icon: Icons.location_on,
-            ),
-          ],
-        );
-      }
-    }),
-    
-    const SizedBox(height: 16),
-    
-    // District Field - Conditional UI
-    Obx(() {
-      if (controller.isLocationAutoPopulated.value && controller.districtController.text.isNotEmpty) {
-        // Show text field when auto-populated
-        return _buildTextField(
-          label: 'District *',
-          controller: controller.districtController,
-          readOnly: true,
-          validator: (value) => controller.validateRequired(value, 'District'),
-        );
-      } else {
-        // Show dropdown when manual selection needed
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _labelText('District *', textColor),
-            _buildDropdown(
-              hint: controller.selectedStateFromDropdown.value == null 
-                  ? 'Select State first' 
-                  : 'Select District',
-              value: controller.selectedDistrictFromDropdown.value,
-              items: controller.getDistrictsForState(controller.selectedStateFromDropdown.value),
-              onChanged: controller.selectedStateFromDropdown.value == null 
-                  ? null 
-                  : (value) => controller.onDistrictSelected(value),
-              icon: Icons.location_city,
-            ),
-          ],
-        );
-      }
-    }),
-    
-    const SizedBox(height: 16),
-    _buildTextField(
-      label: 'Subdivision/Taluk',
-      controller: controller.subdivisionController,
-    ),
-    const SizedBox(height: 16),
-    _buildTextField(
-      label: 'Village',
-      controller: controller.villageController,
-    ),
-    const SizedBox(height: 16),
-    _buildTextField(
-      label: 'Other relevant location details',
-      controller: controller.locationDetailsController,
-      maxLines: 3,
-    ),
-  ],
-),     
+                      // Add location mode switch
+                      _buildLocationModeSwitch(controller, primaryColor),
+                      
+                      // State Field - Conditional UI
+                      Obx(() {
+                        if (controller.isLocationAutoPopulated.value && controller.stateController.text.isNotEmpty) {
+                          // Show text field when auto-populated
+                          return _buildTextField(
+                            label: '${'state'.tr} *',
+                            controller: controller.stateController,
+                            readOnly: true,
+                            validator: (value) => controller.validateRequired(value, 'state'.tr),
+                          );
+                        } else {
+                          // Show dropdown when manual selection needed
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _labelText('${'state'.tr} *', textColor),
+                              _buildDropdown(
+                                hint: 'select_state'.tr,
+                                value: controller.selectedStateFromDropdown.value,
+                                items: controller.indianStates,
+                                onChanged: (value) => controller.onStateSelected(value),
+                                icon: Icons.location_on,
+                              ),
+                            ],
+                          );
+                        }
+                      }),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // District Field - Conditional UI
+                      Obx(() {
+                        if (controller.isLocationAutoPopulated.value && controller.districtController.text.isNotEmpty) {
+                          // Show text field when auto-populated
+                          return _buildTextField(
+                            label: '${'district'.tr} *',
+                            controller: controller.districtController,
+                            readOnly: true,
+                            validator: (value) => controller.validateRequired(value, 'district'.tr),
+                          );
+                        } else {
+                          // Show dropdown when manual selection needed
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _labelText('${'district'.tr} *', textColor),
+                              _buildDropdown(
+                                hint: controller.selectedStateFromDropdown.value == null 
+                                    ? 'select_state_first'.tr 
+                                    : 'select_district'.tr,
+                                value: controller.selectedDistrictFromDropdown.value,
+                                items: controller.getDistrictsForState(controller.selectedStateFromDropdown.value),
+                                onChanged: controller.selectedStateFromDropdown.value == null 
+                                    ? null 
+                                    : (value) => controller.onDistrictSelected(value),
+                                icon: Icons.location_city,
+                              ),
+                            ],
+                          );
+                        }
+                      }),
+                      
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: 'subdivision_taluk'.tr,
+                        controller: controller.subdivisionController,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: 'village'.tr,
+                        controller: controller.villageController,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: 'other_relevant_location_details'.tr,
+                        controller: controller.locationDetailsController,
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),     
                   const SizedBox(height: 16),
                   
                   // Occurrence Information Section
                   _buildSectionCard(
-                   title: 'Occurrence of Landslide (Date & Time) *',
+                    title: '${'occurrence_of_landslide'.tr} *',
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: '---Select---',
-                        value: controller.landslideOccurrenceValue.value,
-                        items: [
-                          'I know the EXACT occurrence date',
-                          'I know the APPROXIMATE occurrence date', 
-                          'I DO NOT know the occurrence date'
-                        ],
+                        hint: 'select_occurrence_option'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.landslideOccurrenceValue.value, PublicLandslideReportController.landslideOccurrenceOptions),
+                        items: PublicLandslideReportController.landslideOccurrenceOptions.map((key) => key.tr).toList(),
                         onChanged: (value) {
-                          controller.landslideOccurrenceValue.value = value;
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, PublicLandslideReportController.landslideOccurrenceOptions);
+                          controller.landslideOccurrenceValue.value = englishKey;
                           controller.dateController.clear();
                           controller.timeController.clear();
                           controller.howDoYouKnowValue.value = null;
-                          // controller.occurrenceDateRangeController.clear();
                         },
                         icon: Icons.event,
                       )),
                       
                       // Conditional fields based on selection
                       Obx(() {
-                        if (controller.landslideOccurrenceValue.value == 'I know the EXACT occurrence date') {
+                        if (controller.landslideOccurrenceValue.value == 'exact_occurrence_date') {
                           return Column(
                             children: [
                               const SizedBox(height: 16),
@@ -266,7 +260,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        _labelText('Date *', textColor),
+                                        _labelText('${'date'.tr} *', textColor),
                                         GestureDetector(
                                           onTap: () => controller.selectDate(),
                                           child: Container(
@@ -280,7 +274,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Text(
-                                                  controller.selectedDateText.value.isEmpty ? 'Select Date' : controller.selectedDateText.value,
+                                                  controller.selectedDateText.value.isEmpty ? 'select_date'.tr : controller.selectedDateText.value,
                                                   style: TextStyle(
                                                     color: controller.selectedDateText.value.isEmpty ? Colors.grey[600] : Colors.black,
                                                   ),
@@ -298,7 +292,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        _labelText('Time', textColor),
+                                        _labelText('time'.tr, textColor),
                                         GestureDetector(
                                           onTap: () => controller.selectTime(),
                                           child: Container(
@@ -312,7 +306,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Text(
-                                                  controller.selectedTimeText.value.isEmpty ? 'Select Time' : controller.selectedTimeText.value,
+                                                  controller.selectedTimeText.value.isEmpty ? 'select_time'.tr : controller.selectedTimeText.value,
                                                   style: TextStyle(
                                                     color: controller.selectedTimeText.value.isEmpty ? Colors.grey[600] : Colors.black,
                                                   ),
@@ -328,44 +322,41 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(height: 16),
-                              _labelText('How do you know this Information? *', textColor),
+                              _labelText('${'how_do_you_know_info'.tr} *', textColor),
                               _buildDropdown(
-                                hint: 'Select source',
-                                value: controller.howDoYouKnowValue.value,
-                                items: [
-                                  'I observed it',
-                                  'Through a local',
-                                  'Social media',
-                                  'News',
-                                  'I don\'t know',
-                                ],
-                                onChanged: (value) => controller.howDoYouKnowValue.value = value,
+                                hint: 'select_source'.tr,
+                                value: controller.getTranslatedValueForDisplay(controller.howDoYouKnowValue.value, PublicLandslideReportController.howDoYouKnowOptions),
+                                items: PublicLandslideReportController.howDoYouKnowOptions.map((key) => key.tr).toList(),
+                                onChanged: (value) {
+                                  String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, PublicLandslideReportController.howDoYouKnowOptions);
+                                  controller.howDoYouKnowValue.value = englishKey;
+                                },
                                 icon: Icons.info,
                               ),
                             ],
                           );
-                       } else if (controller.landslideOccurrenceValue.value == 'I know the APPROXIMATE occurrence date') {
-  return Column(
-    children: [
-      const SizedBox(height: 16),
-      _labelText('Occurrence Date Range *', textColor),
-      _buildDropdown(
-        hint: '---Select---',
-        value: controller.occurrenceDateRange.value.isEmpty ? null : controller.occurrenceDateRange.value,
-        items: [
-          'In the last 3 days',
-          'In the last week', 
-          'In the last month',
-          'In the last 3 months',
-          'In the last year',
-          'Older than a year',                        
-        ],
-        onChanged: (value) => controller.occurrenceDateRange.value = value ?? '',
-        icon: Icons.date_range,
-      ),
-    ],
-  );
-}
+                        } else if (controller.landslideOccurrenceValue.value == 'approximate_occurrence_date') {
+                          return Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              _labelText('${'occurrence_date_range'.tr} *', textColor),
+                              _buildDropdown(
+                                hint: 'select_occurrence_option'.tr,
+                                value: controller.occurrenceDateRange.value.isEmpty ? null : controller.occurrenceDateRange.value,
+                                items: [
+                                  'last_3_days'.tr,
+                                  'last_week'.tr, 
+                                  'last_month'.tr,
+                                  'last_3_months'.tr,
+                                  'last_year'.tr,
+                                  'older_than_year'.tr,                        
+                                ],
+                                onChanged: (value) => controller.occurrenceDateRange.value = value ?? '',
+                                icon: Icons.date_range,
+                              ),
+                            ],
+                          );
+                        }
                         
                         return const SizedBox.shrink();
                       }),           
@@ -376,16 +367,19 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                   
                   // Landslide Location Type
                   _buildSectionCard(
-                    title: 'Where did landslide take place (Landuse/Landcover) *',
+                    title: 'where_landslide_occurred'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select location type',
-                        value: controller.whereDidLandslideOccurValue.value,
-                        items: ['Near/onroad', 'Next to river', 'Settlement', 'Plantation (tea,rubber .... etc.)', 'Forest Area', 'Cultivation','Barren Land','Other (Specify)'],
-                        onChanged: (value) => controller.whereDidLandslideOccurValue.value = value,
+                        hint: 'select_location_type'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.whereDidLandslideOccurValue.value, PublicLandslideReportController.whereDidLandslideOccurOptions),
+                        items: PublicLandslideReportController.whereDidLandslideOccurOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, PublicLandslideReportController.whereDidLandslideOccurOptions);
+                          controller.whereDidLandslideOccurValue.value = englishKey;
+                        },
                         icon: Icons.landscape,
                       )),
                     ],
@@ -395,45 +389,31 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                   
                   // Type of Material
                   _buildSectionCard(
-                    title: 'Type of Material *',
+                    title: 'type_of_material'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select material type',
-                        value: controller.typeOfMaterialValue.value,
-                        items: ['Rock', 'Soil', 'Debris (mixture of Rock and Soil)'],
-                        onChanged: (value) => controller.typeOfMaterialValue.value = value,
+                        hint: 'select_material_type'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.typeOfMaterialValue.value, PublicLandslideReportController.typeOfMaterialOptions),
+                        items: PublicLandslideReportController.typeOfMaterialOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, PublicLandslideReportController.typeOfMaterialOptions);
+                          controller.typeOfMaterialValue.value = englishKey;
+                        },
                         icon: Icons.terrain,
+                        hasInfoIcon: true,
+                        onInfoTap: () => showMaterialTypeDialog(context),
                       )),
                     ],
                   ),
                   
                   const SizedBox(height: 16),
-                  
-                  // Type of Movement
+                             
+                  // Landslide Size Section
                   _buildSectionCard(
-                    title: 'Type of Movement *',
-                    primaryColor: primaryColor,
-                    cardColor: cardColor,
-                    textColor: textColor,
-                    children: [
-                      Obx(() => _buildDropdown(
-                        hint: 'Select movement type',
-                        value: controller.typeOfMovementValue.value,
-                        items: ['Slide','Fall', 'Topple','Subsidence','Creep','Lateral spread', 'Flow','Complex'],
-                        onChanged: (value) => controller.typeOfMovementValue.value = value,
-                        icon: Icons.move_down,
-                      )),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-                  
-                  // Landslide Size Section (New for Public Form)
-                  _buildSectionCard(
-                    title: 'Size of Landslide *',
+                    title: 'size_of_landslide'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
@@ -453,7 +433,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  controller.landslideSize.value ?? 'Select landslide size',
+                                  controller.landslideSize.value ?? 'select_landslide_size'.tr,
                                   style: TextStyle(
                                     color: controller.landslideSize.value != null ? Colors.black : Colors.grey[600],
                                     fontSize: 16,
@@ -480,16 +460,16 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                               children: [
                                 Icon(Icons.info, color: Colors.blue.shade700, size: 20),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Size Categories:',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Text(
+                                  'size_categories'.tr,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            const Text('• Small: Less than 2 storey building (< 6m)'),
-                            const Text('• Medium: 2 to 5 storey building (6-15m)'),
-                            const Text('• Large: More than 5 storey building (> 15m)'),
+                            Text('• ${'small_size_desc'.tr}'),
+                            Text('• ${'medium_size_desc'.tr}'),
+                            Text('• ${'large_size_desc'.tr}'),
                           ],
                         ),
                       ),
@@ -497,124 +477,18 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                   ),
                   
                   const SizedBox(height: 16),
-                  
-                  // What induced/triggered the landslide
-            // What induced/triggered the landslide - REPLACE the existing section with this
-                  _buildSectionCard(
-                    title: 'What induced landslide? *',
-                    primaryColor: primaryColor,
-                    cardColor: cardColor,
-                    textColor: textColor,
-                    children: [
-                      Obx(() => _buildDropdown(
-                        hint: 'Select trigger',
-                        value: controller.whatInducedLandslideValue.value,
-                        items: ['Rainfall', 'Earthquake', 'Man made', 'Snow melt', 'Vibration', 'Toe erosion', 'I don\'t know'],
-                        onChanged: (value) {
-                          controller.whatInducedLandslideValue.value = value;
-                          // Clear rainfall fields if not rainfall
-                          if (value != 'Rainfall') {
-                            controller.rainfallAmountController.clear();
-                            controller.rainfallDurationValue.value = null;
-                          }
-                        },
-                        icon: Icons.warning_amber,
-                      )),
-                      
-                      // Conditional rainfall fields
-                      Obx(() {
-                        if (controller.whatInducedLandslideValue.value == 'Rainfall') {
-                          return Column(
-                            children: [
-                              const SizedBox(height: 20),
-                              
-                              // Amount of rainfall
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _labelText('Amount of rainfall(in mm), if known', textColor),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: Colors.grey[300]!),
-                                    ),
-                                    child: TextField(
-                                      controller: controller.rainfallAmountController,
-                                      keyboardType: TextInputType.text,
-                                      decoration: const InputDecoration(
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        border: InputBorder.none,
-                                        hintText: 'Enter amount (e.g., 25.0, 25-30, 100+)',
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              
-                              const SizedBox(height: 20),
-                              
-                              // Duration of rainfall
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _labelText('Duration of rainfall *', textColor),
-                                  const SizedBox(height: 12),
-                                  
-                                  // Radio button options
-                                  _buildRainfallDurationOption(
-                                    'No rainfall on the day of landslide',
-                                    controller,
-                                    primaryColor,
-                                  ),
-                                  _buildRainfallDurationOption(
-                                    'Half of the day or less',
-                                    controller,
-                                    primaryColor,
-                                  ),
-                                  _buildRainfallDurationOption(
-                                    'The whole day',
-                                    controller,
-                                    primaryColor,
-                                  ),
-                                  _buildRainfallDurationOption(
-                                    'The last few days, but less than a week',
-                                    controller,
-                                    primaryColor,
-                                  ),
-                                  _buildRainfallDurationOption(
-                                    'A week or more',
-                                    controller,
-                                    primaryColor,
-                                  ),
-                                  _buildRainfallDurationOption(
-                                    'I don\'t know',
-                                    controller,
-                                    primaryColor,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      }),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 16),
 
-                  // Enhanced Impact/Damage Section (Same as detailed form)
-                  _buildSectionCard(
-                    title: 'What is Impact/Damage Caused by Landslide ?',
+                  // Enhanced Impact/Damage Section
+                  _buildCollapsibleSectionCard(
+                    title: 'impact_damage_caused'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
+                    isExpanded: controller.isImpactSectionExpanded,
                     children: [
                       // People affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'People affected',
+                        title: 'people_affected'.tr,
                         value: controller.peopleAffected.value,
                         onChanged: (value) {
                           controller.peopleAffected.value = value ?? false;
@@ -626,8 +500,8 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                         subItems: controller.peopleAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDamageDetailRow(
-                            label1: 'Dead',
-                            label2: 'Injured',
+                            label1: 'dead'.tr,
+                            label2: 'injured'.tr,
                             controller1: controller.peopleDeadController,
                             controller2: controller.peopleInjuredController,
                             primaryColor: primaryColor,
@@ -640,7 +514,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Livestock affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Livestock affected',
+                        title: 'livestock_affected'.tr,
                         value: controller.livestockAffected.value,
                         onChanged: (value) {
                           controller.livestockAffected.value = value ?? false;
@@ -652,8 +526,8 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                         subItems: controller.livestockAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDamageDetailRow(
-                            label1: 'Dead',
-                            label2: 'Injured',
+                            label1: 'dead'.tr,
+                            label2: 'injured'.tr,
                             controller1: controller.livestockDeadController,
                             controller2: controller.livestockInjuredController,
                             primaryColor: primaryColor,
@@ -666,7 +540,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Houses and buildings affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Houses and buildings affected',
+                        title: 'houses_buildings_affected'.tr,
                         value: controller.housesBuildingAffected.value,
                         onChanged: (value) {
                           controller.housesBuildingAffected.value = value ?? false;
@@ -678,8 +552,8 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                         subItems: controller.housesBuildingAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDamageDetailRow(
-                            label1: 'Fully affected',
-                            label2: 'Partially affected',
+                            label1: 'fully_affected'.tr,
+                            label2: 'partially_affected'.tr,
                             controller1: controller.housesFullyController,
                             controller2: controller.housesPartiallyController,
                             primaryColor: primaryColor,
@@ -692,7 +566,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Roads affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Roads affected',
+                        title: 'roads_affected'.tr,
                         value: controller.roadsAffected.value,
                         onChanged: (value) {
                           controller.roadsAffected.value = value ?? false;
@@ -712,7 +586,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Roads blocked
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'Roads blocked',
+                        title: 'roads_blocked'.tr,
                         value: controller.roadsBlocked.value,
                         onChanged: (value) {
                           controller.roadsBlocked.value = value ?? false;
@@ -723,7 +597,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Railway line affected
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'Railway line affected',
+                        title: 'railway_line_affected'.tr,
                         value: controller.railwayLineAffected.value,
                         onChanged: (value) {
                           controller.railwayLineAffected.value = value ?? false;
@@ -734,7 +608,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Power infrastructure affected
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'Power infrastructure affected',
+                        title: 'power_infrastructure_affected'.tr,
                         value: controller.powerInfrastructureAffected.value,
                         onChanged: (value) {
                           controller.powerInfrastructureAffected.value = value ?? false;
@@ -745,7 +619,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Damages to Agriculture/Barren/Forest
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'Damages to Agriculture/Barren/Forest',
+                        title: 'damages_agriculture_forest'.tr,
                         value: controller.damagesToAgriculturalForestLand.value,
                         onChanged: (value) {
                           controller.damagesToAgriculturalForestLand.value = value ?? false;
@@ -756,7 +630,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // Other damages
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Other',
+                        title: 'other'.tr,
                         value: controller.other.value,
                         onChanged: (value) {
                           controller.other.value = value ?? false;
@@ -767,7 +641,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                         subItems: controller.other.value ? [
                           const SizedBox(height: 8),
                           _buildSingleDamageField(
-                            label: 'Mention details',
+                            label: 'mention_details'.tr,
                             controller: controller.otherDamageDetailsController,
                             primaryColor: primaryColor,
                           ),
@@ -779,7 +653,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // No damages
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'No damages',
+                        title: 'no_damages'.tr,
                         value: controller.noDamages.value,
                         onChanged: (value) {
                           controller.noDamages.value = value ?? false;
@@ -790,7 +664,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                       
                       // I don't know
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'I don\'t know',
+                        title: 'i_dont_know'.tr,
                         value: controller.iDontKnow.value,
                         onChanged: (value) {
                           controller.iDontKnow.value = value ?? false;
@@ -803,74 +677,55 @@ class PublicLandslideReportingScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Any other relevant information
+                  // Contact Information Section
                   _buildSectionCard(
-                    title: 'Any other relevant information on the landslide',
+                    title: 'contact_information'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
-                      _buildTextField(
-                        label: 'Enter any other relevant information',
-                        controller: controller.otherRelevantInformation,
-                        maxLines: 3,
+                      Obx(() => _buildReadOnlyField(
+                        label: 'name'.tr,
+                        value: controller.username.value,
+                        icon: Icons.person,
+                      )),
+                      const SizedBox(height: 16),
+                      // Make affiliation editable with save functionality
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _labelText('affiliation'.tr, textColor),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  label: 'enter_affiliation'.tr,
+                                  controller: controller.affiliationController,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 16),
+                      Obx(() => _buildReadOnlyField(
+                        label: 'email'.tr,
+                        value: controller.email.value,
+                        icon: Icons.email,
+                      )),
+                      const SizedBox(height: 16),
+                      Obx(() => _buildReadOnlyField(
+                        label: 'mobile'.tr,
+                        value: controller.mobile.value,
+                        icon: Icons.phone,
+                      )),
                     ],
                   ),
-                  
-                  const SizedBox(height: 16),
-                      // Contact Information Section
- // Replace the Contact Information Section in your UI (around line 650)
-// Contact Information Section
-_buildSectionCard(
-  title: 'Contact Information',
-  primaryColor: primaryColor,
-  cardColor: cardColor,
-  textColor: textColor,
-  children: [
-    Obx(() => _buildReadOnlyField(
-      label: 'Name',
-      value: controller.username.value,
-      icon: Icons.person,
-    )),
-    const SizedBox(height: 16),
-    // Make affiliation editable with save functionality
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _labelText('Affiliation', textColor),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                label: 'Enter your affiliation',
-                controller: controller.affiliationController,
-              ),
-            ),
-         
-          ],
-        ),
-      ],
-    ),
-    const SizedBox(height: 16),
-    Obx(() => _buildReadOnlyField(
-      label: 'Email',
-      value: controller.email.value,
-      icon: Icons.email,
-    )),
-    const SizedBox(height: 16),
-    Obx(() => _buildReadOnlyField(
-      label: 'Mobile',
-      value: controller.mobile.value,
-      icon: Icons.phone,
-    )),
-  ],
-),
                   const SizedBox(height: 16),
 
                   // Image Selection Section with Validation
                   _buildSectionCard(
-                    title: 'Landslide Images *',
+                    title: '${'landslide_images'.tr} *',
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
@@ -923,7 +778,7 @@ _buildSectionCard(
                               ),
                               onPressed: () => controller.openCamera(),
                               icon: const Icon(Icons.camera_alt),
-                              label: const Text('CAMERA'),
+                              label: Text('camera'.tr),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -939,7 +794,7 @@ _buildSectionCard(
                               ),
                               onPressed: () => controller.openGallery(),
                               icon: const Icon(Icons.photo_library),
-                              label: const Text('GALLERY'),
+                              label: Text('gallery'.tr),
                             ),
                           ),
                         ],
@@ -962,16 +817,16 @@ _buildSectionCard(
                               children: [
                                 Icon(Icons.info, color: Colors.blue.shade700, size: 20),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Image Requirements',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                Text(
+                                  'image_requirements'.tr,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            const Text('• At least 1 image is required to submit the report'),
-                            const Text('• You can add up to 5 images'),
-                            const Text('• Good quality images help in better assessment'),
+                            Text('• ${'at_least_1_image_required'.tr}'),
+                            Text('• ${'up_to_5_images'.tr}'),
+                            Text('• ${'good_quality_images_help'.tr}'),
                           ],
                         ),
                       ),
@@ -980,84 +835,122 @@ _buildSectionCard(
 
                   const SizedBox(height: 16),
 
-                  // Enhanced Selected Images Display
+                  // Enhanced Selected Images Display with Captions
                   Obx(() {
                     if (controller.selectedImages.isNotEmpty) {
                       return _buildSectionCard(
-                        title: 'Selected Images (${controller.selectedImages.length}/5)',
+                        title: '${'selected_images'.tr} (${controller.selectedImages.length}/5)',
                         primaryColor: primaryColor,
                         cardColor: cardColor,
                         textColor: textColor,
                         children: [
-                          SizedBox(
-                            height: 120,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: controller.selectedImages.length,
-                              itemBuilder: (context, index) {
-                                return Container(
-                                  margin: const EdgeInsets.only(right: 8),
-                                  child: Stack(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.file(
-                                          controller.selectedImages[index],
-                                          width: 120,
-                                          height: 120,
-                                          fit: BoxFit.cover,
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: controller.selectedImages.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Image with remove button
+                                    Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.file(
+                                            controller.selectedImages[index],
+                                            width: double.infinity,
+                                            height: 200,
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
-                                      ),
-                                      Positioned(
-                                        top: 4,
-                                        right: 4,
-                                        child: GestureDetector(
-                                          onTap: () => controller.removeImage(index),
+                                        Positioned(
+                                          top: 8,
+                                          right: 8,
+                                          child: GestureDetector(
+                                            onTap: () => controller.removeImage(index),
+                                            child: Container(
+                                              decoration: const BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              padding: const EdgeInsets.all(4),
+                                              child: const Icon(
+                                                Icons.close,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        // Image number badge
+                                        Positioned(
+                                          bottom: 8,
+                                          left: 8,
                                           child: Container(
-                                            decoration: const BoxDecoration(
-                                              color: Colors.red,
-                                              shape: BoxShape.circle,
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.7),
+                                              borderRadius: BorderRadius.circular(12),
                                             ),
-                                            child: const Icon(
-                                              Icons.close,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      // Image number badge
-                                      Positioned(
-                                        bottom: 4,
-                                        left: 4,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(0.7),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            '${index + 1}',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
+                                            child: Text(
+                                              'Image ${index + 1}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
                                         ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    // Caption text field
+                                    Text(
+                                      '${'caption_for_image'.tr} ${index + 1}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: textColor,
                                       ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.grey[300]!),
+                                      ),
+                                      child: TextField(
+                                        controller: controller.imageCaptions[index],
+                                        maxLines: 2,
+                                        decoration: InputDecoration(
+                                          hintText: 'enter_caption_optional'.tr,
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          border: InputBorder.none,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ],
                       );
                     }
                     return const SizedBox.shrink();
                   }),
-                  
+
                   const SizedBox(height: 24),
 
                   // Enhanced Submit Button with Validation
@@ -1105,7 +998,7 @@ _buildSectionCard(
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          'Tap "View Details" to see missing fields',
+                                          'tap_view_details'.tr,
                                           style: TextStyle(
                                             color: Colors.orange.shade600,
                                             fontSize: 12,
@@ -1114,7 +1007,7 @@ _buildSectionCard(
                                       ),
                                       TextButton(
                                         onPressed: () => controller.showValidationSummary(),
-                                        child: const Text('View Details'),
+                                        child: Text('view_details'.tr),
                                       ),
                                     ],
                                   ),
@@ -1151,7 +1044,7 @@ _buildSectionCard(
                               ),
                               const SizedBox(width: 8),
                               Obx(() => Text(
-                                controller.isDraftMode.value ? 'SUBMIT DRAFT REPORT' : 'SUBMIT REPORT',
+                                controller.isDraftMode.value ? 'submit_draft_report'.tr : 'submit_report'.tr,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -1165,6 +1058,7 @@ _buildSectionCard(
                       ],
                     ),
                   ),  
+                  
                   const SizedBox(height: 24),
                 ],
               ),
@@ -1173,138 +1067,210 @@ _buildSectionCard(
   }
 
   // Helper widgets
-Widget _buildSectionCard({
-  required String title, 
-  required List<Widget> children,
-  required Color primaryColor,
-  required Color cardColor,
-  required Color textColor,
-}) {
-  return Card(
-    elevation: 2,
-    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    color: cardColor,
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: title.contains('*') 
-                    ? _buildLabelWithRedAsterisk(title, textColor)
-                    : Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                ),
-              ],
-            ),
-          ),
-          ...children,
-        ],
+  Widget _buildSectionCard({
+    required String title, 
+    required List<Widget> children,
+    required Color primaryColor,
+    required Color cardColor,
+    required Color textColor,
+  }) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-    ),
-  );
-}
+      color: cardColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: title.contains('*') 
+                      ? _buildLabelWithRedAsterisk(title, textColor)
+                      : Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
 
-Widget _buildLabelWithRedAsterisk(String text, Color textColor) {
-  if (text.contains('*')) {
-    List<String> parts = text.split('*');
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: parts[0],
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
-          ),
-          TextSpan(
-            text: '*',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.red,
-            ),
-          ),
-          if (parts.length > 1)
+  Widget _buildLabelWithRedAsterisk(String text, Color textColor) {
+    if (text.contains('*')) {
+      List<String> parts = text.split('*');
+      return RichText(
+        text: TextSpan(
+          children: [
             TextSpan(
-              text: parts[1],
+              text: parts[0],
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
                 color: textColor,
               ),
             ),
+            TextSpan(
+              text: '*',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.red,
+              ),
+            ),
+            if (parts.length > 1)
+              TextSpan(
+                text: parts[1],
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+    
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: textColor,
+      ),
+    );
+  }
+
+  Widget _buildCollapsibleSectionCard({
+    required String title, 
+    required List<Widget> children,
+    required Color primaryColor,
+    required Color cardColor,
+    required Color textColor,
+    required RxBool isExpanded,
+  }) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      color: cardColor,
+      child: Column(
+        children: [
+          // Header with expand/collapse button
+          InkWell(
+            onTap: () => isExpanded.value = !isExpanded.value,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: title.contains('*') 
+                      ? _buildLabelWithRedAsterisk(title, textColor)
+                      : Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                  ),
+                  Obx(() => Icon(
+                    isExpanded.value ? Icons.expand_less : Icons.expand_more,
+                    color: primaryColor,
+                    size: 24,
+                  )),
+                ],
+              ),
+            ),
+          ),
+          // Collapsible content
+          Obx(() => AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: isExpanded.value ? null : 0,
+            child: isExpanded.value 
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: children,
+                  ),
+                )
+              : const SizedBox.shrink(),
+          )),
         ],
       ),
     );
   }
-  
-  return Text(
-    text,
-    style: TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w500,
-      color: textColor,
-    ),
-  );
-}
 
+  Widget _labelText(String text, Color textColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: _buildLabelWithRedAsterisk(text, textColor),
+    );
+  }
 
-Widget _labelText(String text, Color textColor) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 8.0),
-    child: _buildLabelWithRedAsterisk(text, textColor),
-  );
-}
-
-Widget _buildTextField({
-  required String label,
-  required TextEditingController controller,
-  TextInputType keyboardType = TextInputType.text,
-  bool readOnly = false,
-  int maxLines = 1,
-  String? Function(String?)? validator,
-}) {
-  return TextFormField(
-    controller: controller,
-    keyboardType: keyboardType,
-    readOnly: readOnly,
-    maxLines: maxLines,
-    decoration: InputDecoration(
-      label: label.contains('*') ? _buildLabelWithRedAsterisk(label, Colors.black87) : null,
-      labelText: label.contains('*') ? null : label,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        label: label.contains('*') ? _buildLabelWithRedAsterisk(label, Colors.black87) : null,
+        labelText: label.contains('*') ? null : label,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
-    ),
-    validator: validator,
-  );
-}
+      validator: validator,
+    );
+  }
 
   Widget _buildReadOnlyField({
     required String label,
@@ -1351,41 +1317,62 @@ Widget _buildTextField({
   Widget _buildDropdown({
     required String? value,
     required List<String> items,
-    required void Function(String?)? onChanged, 
+    required void Function(String?)? onChanged,
     IconData? icon,
     String? hint,
+    bool hasInfoIcon = false,
+    VoidCallback? onInfoTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          if (icon != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Icon(icon, color: const Color(0xFF1976D2)),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
             ),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                hint: Text(hint ?? ""),
-                items: items.map((String item) {
-                  return DropdownMenuItem<String>(
-                    value: item,
-                    child: Text(item),
-                  );
-                }).toList(),
-                onChanged: onChanged,
+            child: Row(
+              children: [
+                if (icon != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Icon(icon, color: const Color(0xFF1976D2)),
+                  ),
+                Expanded(
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: value,
+                      isExpanded: true,
+                      hint: Text(hint ?? ""),
+                      items: items.map((String item) {
+                        return DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(item),
+                        );
+                      }).toList(),
+                      onChanged: onChanged,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (hasInfoIcon)
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: InkWell(
+              onTap: onInfoTap,
+              child: const Icon(
+                Icons.info_outline,
+                color: Colors.blue,
+                size: 24,
               ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -1610,34 +1597,33 @@ Widget _buildTextField({
     );
   }
 
-  // Add this widget method at the bottom of the file, before the closing }
-Widget _buildLocationModeSwitch(PublicLandslideReportController controller, Color primaryColor) {
-  return Obx(() {
-    if (controller.isLocationAutoPopulated.value) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton.icon(
-              onPressed: () {
-                controller.isLocationAutoPopulated.value = false;
-                controller.stateController.clear();
-                controller.districtController.clear();
-              },
-              icon: const Icon(Icons.edit, size: 16),
-              label: const Text('Manual Selection'),
-              style: TextButton.styleFrom(
-                foregroundColor: primaryColor,
+  Widget _buildLocationModeSwitch(PublicLandslideReportController controller, Color primaryColor) {
+    return Obx(() {
+      if (controller.isLocationAutoPopulated.value) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  controller.isLocationAutoPopulated.value = false;
+                  controller.stateController.clear();
+                  controller.districtController.clear();
+                },
+                icon: const Icon(Icons.edit, size: 16),
+                label: Text('manual_selection'.tr),
+                style: TextButton.styleFrom(
+                  foregroundColor: primaryColor,
+                ),
               ),
-            ),
-          ],
-        ),
-      );
-    }
-    return const SizedBox.shrink();
-  });
-}
+            ],
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    });
+  }
 
   Widget _buildRoadDamageFields(PublicLandslideReportController controller, Color primaryColor) {
     return Row(
@@ -1647,7 +1633,7 @@ Widget _buildLocationModeSwitch(PublicLandslideReportController controller, Colo
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Road type',
+                'road_type'.tr,
                 style: TextStyle(
                   fontSize: 12,
                   color: primaryColor,
@@ -1664,23 +1650,22 @@ Widget _buildLocationModeSwitch(PublicLandslideReportController controller, Colo
                 ),
                 child: Obx(() => DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: controller.roadTypeValue.value,
+                    value: controller.getTranslatedValueForDisplay(controller.roadTypeValue.value, PublicLandslideReportController.roadTypeOptions),
                     isExpanded: true,
-                    hint: const Text(
-                      '---Select---',
-                      style: TextStyle(fontSize: 12),
+                    hint: Text(
+                      'select_occurrence_option'.tr,
+                      style: const TextStyle(fontSize: 12),
                     ),
-                    items: ['State Highway', 'National Highway', 'Local'].map((String item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(
-                          item,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      );
-                    }).toList(),
+                    items: PublicLandslideReportController.roadTypeOptions.map((key) => DropdownMenuItem<String>(
+                      value: key.tr,
+                      child: Text(
+                        key.tr,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    )).toList(),
                     onChanged: (String? value) {
-                      controller.roadTypeValue.value = value;
+                      String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, PublicLandslideReportController.roadTypeOptions);
+                      controller.roadTypeValue.value = englishKey;
                     },
                   ),
                 )),
@@ -1694,7 +1679,7 @@ Widget _buildLocationModeSwitch(PublicLandslideReportController controller, Colo
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Extent of damage',
+                'extent_of_damage'.tr,
                 style: TextStyle(
                   fontSize: 12,
                   color: primaryColor,
@@ -1711,23 +1696,22 @@ Widget _buildLocationModeSwitch(PublicLandslideReportController controller, Colo
                 ),
                 child: Obx(() => DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: controller.roadExtentValue.value,
+                    value: controller.getTranslatedValueForDisplay(controller.roadExtentValue.value, PublicLandslideReportController.roadExtentOptions),
                     isExpanded: true,
-                    hint: const Text(
-                      '---Select---',
-                      style: TextStyle(fontSize: 12),
+                    hint: Text(
+                      'select_occurrence_option'.tr,
+                      style: const TextStyle(fontSize: 12),
                     ),
-                    items: ['Full', 'Partial'].map((String item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(
-                          item,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      );
-                    }).toList(),
+                    items: PublicLandslideReportController.roadExtentOptions.map((key) => DropdownMenuItem<String>(
+                      value: key.tr,
+                      child: Text(
+                        key.tr,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    )).toList(),
                     onChanged: (String? value) {
-                      controller.roadExtentValue.value = value;
+                      String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, PublicLandslideReportController.roadExtentOptions);
+                      controller.roadExtentValue.value = englishKey;
                     },
                   ),
                 )),
@@ -1738,60 +1722,4 @@ Widget _buildLocationModeSwitch(PublicLandslideReportController controller, Colo
       ],
     );
   }
-
-  // Add this helper method at the bottom of PublicLandslideReportingScreen class
-Widget _buildRainfallDurationOption(
-  String title,
-  PublicLandslideReportController controller,
-  Color primaryColor,
-) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 12.0),
-    child: Obx(() => GestureDetector(
-      onTap: () => controller.rainfallDurationValue.value = title,
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: controller.rainfallDurationValue.value == title 
-                    ? primaryColor 
-                    : Colors.grey,
-                width: 2,
-              ),
-              color: controller.rainfallDurationValue.value == title 
-                  ? primaryColor 
-                  : Colors.transparent,
-            ),
-            child: controller.rainfallDurationValue.value == title
-                ? const Icon(
-                    Icons.circle,
-                    color: Colors.white,
-                    size: 12,
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                color: controller.rainfallDurationValue.value == title 
-                    ? primaryColor 
-                    : Colors.black87,
-                fontWeight: controller.rainfallDurationValue.value == title 
-                    ? FontWeight.w600 
-                    : FontWeight.normal,
-              ),
-            ),
-          ),
-        ],
-      ),
-    )),
-  );
-}
 }

@@ -105,16 +105,19 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
       'runtimelite,1000,rud2840189929,none,HC5X0H4AH76HF5KHT190',
     );
     // Set up API key for ArcGIS Online services (optional)
-    if (_apiKey != 'YOUR_API_KEY_HERE' && _apiKey.isNotEmpty) {
-      ArcGISEnvironment.apiKey = _apiKey;
-      print('✓ API key configured for ArcGIS Online services');
-    } else {
-      print('ℹ No API key - using free tier services only');
-    }
+    // if (_apiKey != 'YOUR_API_KEY_HERE' && _apiKey.isNotEmpty) {
+    //   ArcGISEnvironment.apiKey = _apiKey;
+    //   print('api_key_configured'.tr);
+    // } else {
+    //   print('no_api_key'.tr);
+    // }
+
+    // Using GSI proxy - no API key needed
+    print('using_gsi_proxy'.tr);
     
     // Set up authentication challenge handler for Enterprise portals (GSI)
     ArcGISEnvironment.authenticationManager.arcGISAuthenticationChallengeHandler = this;
-    print('✓ Authentication challenge handler configured');
+    print('auth_handler_configured'.tr);
     
     // Create map with Streets view by default
     _createMapWithStreetsView();
@@ -159,17 +162,29 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
     }
   }
 
-  void _createMapWithStreetsView() {
-    try {
-      // Create a map with ArcGIS Streets basemap by default
-      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISTopographic));
-      print('✓ Map created with Streets view as default');
-    } catch (e) {
-      print('Failed to create map with Streets view: $e');
-      // Fallback: create empty map
-      _map = ArcGISMap();
-    }
+Future<void> _createMapWithStreetsView() async {
+  try {
+    // Create portal pointing to GSI portal using the correct constructor
+    final gsiPortal = Portal(
+      Uri.parse('https://bhusanket.gsi.gov.in/gisportal/sharing/rest'),
+      connection: PortalConnection.authenticated
+    );
+    
+    // Create portal item for topographic map using named parameters
+    final topographicItem = PortalItem.withPortalAndItemId(
+      portal: gsiPortal, 
+      itemId: '79873351c4c1462cba9af947be2fdf4c'
+    );
+    
+    // Create map from portal item
+    _map = ArcGISMap.withItem(topographicItem);
+    print('map_configured'.tr);
+  } catch (e) {
+    print('Failed to create map with GSI Topographic view: $e');
+    // Fallback: create empty map with default basemap
+    _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISTopographic));
   }
+}
 
   // Hide all layers except the specified one
   void _hideAllLayersExcept(String? keepVisible) {
@@ -196,20 +211,20 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Layer list',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+                Text(
+                  'layer_list'.tr,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
                 ),
                 TextButton(
                   onPressed: () {
                     // Clear/hide all layers
                     _hideAllLayersExcept(null);
                     Navigator.of(context).pop();
-                    _showError('All layers cleared');
+                    _showError('all_layers_cleared'.tr);
                   },
-                  child: const Text(
-                    'CLEAR',
-                    style: TextStyle(color: Colors.white),
+                  child: Text(
+                    'clear'.tr,
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -220,10 +235,10 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildLayerListItem('Landslide Susceptibility (1:50,000)', 'susceptibility'),
-              _buildLayerListItem('National Landslide Inventory', 'inventory'),
-              _buildLayerListItem('Shortrange Forecast', 'forecast', isShortrangeForecast: true),
-              _buildLayerListItem('India State Boundary', 'state'),
+              _buildLayerListItem('landslide_susceptibility'.tr, 'susceptibility'),
+              _buildLayerListItem('national_landslide_inventory'.tr, 'inventory'),
+              _buildLayerListItem('shortrange_forecast'.tr, 'forecast', isShortrangeForecast: true),
+              _buildLayerListItem('india_state_boundary'.tr, 'state'),
             ],
           ),
         );
@@ -279,10 +294,10 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
           await _loadDistrictBoundaryLayer();
           break;
         default:
-          _showError('Unknown layer type: $layerType');
+          _showError('unknown_layer_type'.trParams({'type': layerType}));
       }
     } catch (e) {
-      _showError('Failed to load $layerType layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layer': layerType, 'error': e.toString()}));
     }
   }
 
@@ -304,7 +319,12 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
         return AlertDialog(
           backgroundColor: Colors.grey[800],
           content: Text(
-            'Only for districts where landslide forecasting is operational. Valid from $fromDate $time to $toDate $time IST',
+            'forecast_dialog_prefix'.trParams({
+              'fromDate': fromDate,
+              'fromTime': time,
+              'toDate': toDate,
+              'toTime': time,
+            }),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -315,9 +335,9 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text(
-                'OK',
-                style: TextStyle(
+              child: Text(
+                'ok'.tr,
+                style: const TextStyle(
                   color: Colors.pink,
                   fontWeight: FontWeight.bold,
                 ),
@@ -361,7 +381,7 @@ Future<void> _loadShortrangeForecastLayer() async {
     });
     
   } catch (e) {
-    _showError('Failed to load Shortrange Forecast layer: $e');
+    _showError('failed_to_load_layer'.trParams({'layer': 'Shortrange Forecast', 'error': e.toString()}));
     print('❌ Shortrange Forecast layer loading error: $e');
   }
 }
@@ -415,20 +435,20 @@ Future<Renderer> _createForecastRenderer() async {
      (
         values: ['Low'],
         symbol: lowRiskSymbol,
-        label: 'Low Risk',
-        description: 'Low landslide risk forecast',
+        label: 'low_risk'.tr,
+        description: 'low_risk_desc'.tr,
       ),
      (
         values: ['Moderate'],
         symbol: moderateRiskSymbol,
-        label: 'Moderate Risk',
-        description: 'Moderate landslide risk forecast',
+        label: 'moderate_risk'.tr,
+        description: 'moderate_risk_desc'.tr,
       ),
       (
         values: ['High'],
         symbol: highRiskSymbol,
-        label: 'High Risk',
-        description: 'High landslide risk forecast',
+        label: 'high_risk'.tr,
+        description: 'high_risk_desc'.tr,
       ),
     ];
     
@@ -438,7 +458,7 @@ Future<Renderer> _createForecastRenderer() async {
       fieldNames: ['Day1_Approved'], // Primary field for classification
       // uniqueValueInfos: uniqueValueInfos,
       defaultSymbol: noDataSymbol,
-      defaultLabel: 'No Forecast Data',
+      defaultLabel: 'no_forecast_data'.tr,
     );
     
     return renderer;
@@ -506,10 +526,10 @@ Future<void> _loadSusceptibilityLayer() async {
       _currentActiveLayer = 'susceptibility';
     });
     
-    _showError('Susceptibility layer enabled');
+    _showError('susceptibility_layer_enabled'.tr);
     
   } catch (e) {
-    _showError('Failed to load Susceptibility layer: $e');
+    _showError('failed_to_load_layer'.trParams({'layer': 'Susceptibility', 'error': e.toString()}));
     print('❌ Susceptibility layer loading error: $e');
     
     // Fallback: Try with rendering rule approach
@@ -559,10 +579,10 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'inventory';
       });
       
-      _showError('National Landslide Inventory layer enabled');
+      _showError('inventory_layer_enabled'.tr);
       
     } catch (e) {
-      _showError('Failed to load National Landslide Inventory layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layer': 'National Landslide Inventory', 'error': e.toString()}));
       print('❌ National Landslide Inventory layer loading error: $e');
     }
   }
@@ -603,10 +623,10 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'state';
       });
       
-      _showError('India State Boundary layer enabled');
+      _showError('state_boundary_enabled'.tr);
       
     } catch (e) {
-      _showError('Failed to load State Boundary layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layer': 'State Boundary', 'error': e.toString()}));
       print('❌ State Boundary layer loading error: $e');
     }
   }
@@ -647,10 +667,10 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'district';
       });
       
-      _showError('District Boundary layer enabled');
+      _showError('district_boundary_enabled'.tr);
       
     } catch (e) {
-      _showError('Failed to load District Boundary layer: $e');
+      _showError('failed_to_load_layer'.trParams({'layer': 'District Boundary', 'error': e.toString()}));
       print('❌ District Boundary layer loading error: $e');
     }
   }
@@ -701,7 +721,7 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'susceptibility';
       });
       
-      _showError('Susceptibility layer enabled (with rendering rule)');
+      _showError('${'susceptibility_layer_enabled'.tr} (with rendering rule)');
       print('✅ Susceptibility layer loaded with rendering rule');
       
     } catch (e) {
@@ -738,12 +758,12 @@ Future<void> _loadSusceptibilityLayer() async {
         _currentActiveLayer = 'susceptibility';
       });
       
-      _showError('Susceptibility layer enabled (simple)');
+      _showError('${'susceptibility_layer_enabled'.tr} (simple)');
       print('✅ Susceptibility layer loaded with default renderer');
       
     } catch (e) {
       print('❌ Simple approach also failed: $e');
-      _showError('Susceptibility layer not available - server may be unreachable');
+      _showError('susceptibility_not_available'.tr);
     }
   }
 
@@ -756,9 +776,9 @@ Future<void> _loadSusceptibilityLayer() async {
           title: Container(
             color: Colors.blue,
             padding: const EdgeInsets.all(16),
-            child: const Text(
-              'Basemap gallery',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            child: Text(
+              'basemap_gallery'.tr,
+              style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
           titlePadding: EdgeInsets.zero,
@@ -766,50 +786,51 @@ Future<void> _loadSusceptibilityLayer() async {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.terrain),
-                title: const Text('Topographic'),
-                subtitle: const Text('Terrain and elevation'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _setMapType(BasemapStyle.arcGISTopographic, 'Topographic');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.satellite),
-                title: const Text('Satellite'),
-                subtitle: const Text('Aerial imagery view'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _setMapType(BasemapStyle.arcGISImageryStandard, 'Satellite');
-                },
-              ),
+             ListTile(
+  leading: const Icon(Icons.terrain),
+  title: Text('topographic'.tr),
+  subtitle: Text('gsi_terrain_elevation'.tr),
+  onTap: () {
+    Navigator.of(context).pop();
+    _setMapType('topographic', 'topographic'.tr);
+  },
+),
+ListTile(
+  leading: const Icon(Icons.satellite),
+  title: Text('imagery'.tr),
+  subtitle: Text('gsi_aerial_imagery'.tr),
+  onTap: () {
+    Navigator.of(context).pop();
+    _setMapType('imagery', 'imagery'.tr);
+  },
+),
               ListTile(
                 leading: const Icon(Icons.map),
-                title: const Text('OpenStreetMap'),
-                subtitle: const Text('Free open-source map'),
+                title: Text('openstreetmap'.tr),
+                subtitle: Text('free_opensource_map'.tr),
                 onTap: () {
                   Navigator.of(context).pop();
                   _setMapToOpenStreetMap();
                 },
               ),
-              if (_apiKey != 'YOUR_API_KEY_HERE') ...[
-                ListTile(
-                  leading: const Icon(Icons.location_city),
-                  title: const Text('Streets'),
-                  subtitle: const Text('Detailed street view'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _setMapType(BasemapStyle.arcGISStreets, 'Streets');
-                  },
-                ),
-              ],
+              
+              // if (_apiKey != 'YOUR_API_KEY_HERE') ...[
+              //   ListTile(
+              //     leading: const Icon(Icons.location_city),
+              //     title: const Text('Streets'),
+              //     subtitle: const Text('Detailed street view'),
+              //     onTap: () {
+              //       Navigator.of(context).pop();
+              //       _setMapType(BasemapStyle.arcGISStreets, 'Streets');
+              //     },
+              //   ),
+              // ],
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text('close'.tr),
             ),
           ],
         );
@@ -832,9 +853,9 @@ Future<void> _recenterToIndia() async {
       scale: 40000000, // Wider zoom to show full India
     );
 
-    _showError('Recentered to India');
+    _showError('recentered_to_india'.tr);
   } catch (e) {
-    _showError('Failed to recenter to India: $e');
+    _showError('failed_to_recenter'.trParams({'error': e.toString()}));
   }
 }
 
@@ -846,7 +867,7 @@ Future<void> _recenterToIndia() async {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
-        title: const Text('Location'),
+        title: Text('location'.tr),
         elevation: 0,
       ),
       body: Stack(
@@ -996,9 +1017,9 @@ Future<void> _recenterToIndia() async {
                         ),
                         child: Column(
                           children: [
-                            const Text(
-                              'LAT',
-                              style: TextStyle(
+                            Text(
+                              'lat'.tr,
+                              style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -1035,9 +1056,9 @@ Future<void> _recenterToIndia() async {
                         ),
                         child: Column(
                           children: [
-                            const Text(
-                              'LONG',
-                              style: TextStyle(
+                            Text(
+                              'long'.tr,
+                              style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -1105,7 +1126,7 @@ Future<void> _recenterToIndia() async {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  child: const Text('REPORT LANDSLIDE'),
+                  child: Text('report_landslide'.tr),
                 ),
               ),
       ),
@@ -1155,7 +1176,7 @@ Future<void> _recenterToIndia() async {
       await _startLocationAutomatically();
       
     } catch (e) {
-      _showError('Failed to initialize map: $e');
+      _showError('failed_initialize_map'.trParams({'error': e.toString()}));
     }
   }
 
@@ -1164,7 +1185,7 @@ void _onMapTap(Offset screenPoint) async {
   try {
     final mapPoint = _mapViewController.screenToLocation(screen: screenPoint);
     if (mapPoint == null) {
-      _showError('Unable to get coordinates from map tap');
+      _showError('failed_to_get_coordinates'.tr);
       return;
     }
 
@@ -1239,13 +1260,19 @@ void _onMapTap(Offset screenPoint) async {
       }
       
       print('✅ Valid coordinates selected: Lat=${wgs84Point.y}, Lng=${wgs84Point.x}');
-      _showError('Location selected: ${wgs84Point.y.toStringAsFixed(4)}, ${wgs84Point.x.toStringAsFixed(4)}');
+      _showError('location_selected'.trParams({
+        'lat': wgs84Point.y.toStringAsFixed(4),
+        'lng': wgs84Point.x.toStringAsFixed(4),
+      }));
     } else {
-      _showError('Please select a location within India (Current: ${wgs84Point.y.toStringAsFixed(4)}, ${wgs84Point.x.toStringAsFixed(4)})');
+      _showError('invalid_location_bounds'.trParams({
+        'lat': wgs84Point.y.toStringAsFixed(4),
+        'lng': wgs84Point.x.toStringAsFixed(4),
+      }));
       print('❌ Invalid coordinates: Lat=${wgs84Point.y}, Lng=${wgs84Point.x}');
     }
   } catch (e) {
-    _showError('Failed to get map coordinates: $e');
+    _showError('failed_map_coordinates'.trParams({'error': e.toString()}));
     print('❌ Map tap error: $e');
   }
 }
@@ -1400,10 +1427,10 @@ void _updateLandslideLocationMarker() {
         );
         
          _mapViewController.setViewpoint(newViewpoint);
-        _showError('Map rotation reset to north');
+        _showError('map_rotation_reset'.tr);
       }
     } catch (e) {
-      _showError('Failed to reset map rotation: $e');
+      _showError('failed_to_reset_rotation'.trParams({'error': e.toString()}));
     }
   }
 
@@ -1419,17 +1446,17 @@ void _updateLandslideLocationMarker() {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
-            'Location',
-            style: TextStyle(
+          title: Text(
+            'location'.tr,
+            style: const TextStyle(
               color: Colors.red,
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),
           ),
-          content: const Text(
-            'If the landslide location is not your current location (for example, landslide occurring on the other side of the slope, above or below the road or across the valley), tap on the map to choose the correct location. A new red colour location symbol will appear.',
-            style: TextStyle(fontSize: 16),
+          content: Text(
+            'location_info_dialog'.tr,
+            style: const TextStyle(fontSize: 16),
           ),
           actions: [
             TextButton(
@@ -1442,7 +1469,7 @@ void _updateLandslideLocationMarker() {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
-              child: const Text('OK'),
+              child: Text('ok'.tr),
             ),
           ],
         );
@@ -1457,24 +1484,19 @@ void _updateLandslideLocationMarker() {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
-            'ATTENTION !',
-            style: TextStyle(
+          title: Text(
+            'attention'.tr,
+            style: const TextStyle(
               color: Colors.red,
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),
           ),
           content: RichText(
-            text: const TextSpan(
-              style: TextStyle(fontSize: 16, color: Colors.black),
+            text: TextSpan(
+              style: const TextStyle(fontSize: 16, color: Colors.black),
               children: [
-                TextSpan(text: 'Are you certain this is the correct landslide location?\n\nPlease '),
-                TextSpan(
-                  text: 'click on the map to select correct location if needed.',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(text: ' Your accurate input is crucial for precise reporting. Thank you!'),
+                TextSpan(text: 'attention_dialog'.tr),
               ],
             ),
           ),
@@ -1486,7 +1508,7 @@ void _updateLandslideLocationMarker() {
               style: TextButton.styleFrom(
                 foregroundColor: Colors.blue,
               ),
-              child: const Text('BACK'),
+              child: Text('back'.tr),
             ),
             TextButton(
               onPressed: () {
@@ -1498,7 +1520,7 @@ void _updateLandslideLocationMarker() {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
-              child: const Text('OK'),
+              child: Text('ok'.tr),
             ),
           ],
         );
@@ -1513,16 +1535,16 @@ void _updateLandslideLocationMarker() {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
-            'Message',
-            style: TextStyle(
+          title: Text(
+            'message'.tr,
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
           ),
-          content: const Text(
-            'Would you like to explore the susceptibility conditions in your surroundings?',
-            style: TextStyle(fontSize: 16),
+          content: Text(
+            'susceptibility_dialog'.tr,
+            style: const TextStyle(fontSize: 16),
           ),
           actions: [
             TextButton(
@@ -1534,7 +1556,7 @@ void _updateLandslideLocationMarker() {
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red,
               ),
-              child: const Text('NO'),
+              child: Text('no'.tr),
             ),
             TextButton(
               onPressed: () {
@@ -1547,7 +1569,7 @@ void _updateLandslideLocationMarker() {
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red,
               ),
-              child: const Text('YES'),
+              child: Text('yes'.tr),
             ),
           ],
         );
@@ -1576,7 +1598,7 @@ void _updateLandslideLocationMarker() {
     
     // Show instruction toast that disappears after 1 second
     ScaffoldMessenger.of(context).clearSnackBars();
-    _showError('Tap on map to select landslide location');
+    _showError('tap_to_select'.tr);
   }
 
   // Step 4: Proceed to Report Form
@@ -1626,7 +1648,10 @@ Future<void> _proceedToReportForm() async {
   
   // Final validation
   if (!_isValidIndianCoordinate(reportLat!, reportLng!)) {
-    _showError('Invalid location: ${reportLat.toStringAsFixed(4)}, ${reportLng.toStringAsFixed(4)}. Please select a location within India.');
+    _showError('invalid_location_validation'.trParams({
+      'lat': reportLat.toStringAsFixed(4),
+      'lng': reportLng.toStringAsFixed(4),
+    }));
     print('❌ Final validation failed');
     return;
   }
@@ -1669,9 +1694,9 @@ Future<void> _proceedToReportForm() async {
   Future<void> _startLocationAutomatically() async {
     try {
       _locationDisplay.start();
-      _showError('Current location loaded');
+      _showError('current_location_loaded'.tr);
     } catch (e) {
-      _showError('Failed to get current location: $e');
+      _showError('failed_current_location'.trParams({'error': e.toString()}));
     }
   }
 
@@ -1688,7 +1713,7 @@ Future<void> _proceedToReportForm() async {
           location!.position!,
           scale: 10000,
         );
-        _showError('Recentered to current location');
+        _showError('recentered_to_current'.tr);
       } else {
         // If location is not immediately available, wait a moment and try again
         await Future.delayed(const Duration(milliseconds: 1000));
@@ -1698,13 +1723,13 @@ Future<void> _proceedToReportForm() async {
             updatedLocation!.position!,
             scale: 10000,
           );
-          _showError('Recentered to current location');
+          _showError('recentered_to_current'.tr);
         } else {
-          _showError('Current location not available');
+          _showError('location_not_available'.tr);
         }
       }
     } catch (e) {
-      _showError('Failed to recenter to location: $e');
+      _showError('failed_to_recenter'.trParams({'error': e.toString()}));
     }
   }
 
@@ -1733,7 +1758,7 @@ Future<void> _proceedToReportForm() async {
         );
       }
     } catch (e) {
-      _showError('Failed to zoom in: $e');
+      _showError('failed_to_zoom_in'.trParams({'error': e.toString()}));
     }
   }
 
@@ -1748,30 +1773,59 @@ Future<void> _proceedToReportForm() async {
         );
       }
     } catch (e) {
-      _showError('Failed to zoom out: $e');
+      _showError('failed_to_zoom_out'.trParams({'error': e.toString()}));
     }
   }
 
   // Set map back to OpenStreetMap
   void _setMapToOpenStreetMap() {
     try { 
-      _showError('Switched to OpenStreetMap');
+      _showError('switched_to_osm'.tr);
     } catch (e) {
-      _showError('Failed to switch to OpenStreetMap: $e');
+      _showError('failed_to_change_map'.trParams({'error': e.toString()}));
     }
   }
 
   // Set specific map type (requires API key)
-  void _setMapType(BasemapStyle basemapStyle, String typeName) {
-    try {
-      if (_apiKey == 'YOUR_API_KEY_HERE') {
-        _showError('API key required for $typeName view');
+Future<void> _setMapType(String mapType, String typeName) async {
+  try {
+    String itemId;
+    switch (mapType) {
+      case 'topographic':
+        itemId = '79873351c4c1462cba9af947be2fdf4c';
+        break;
+      case 'imagery':
+        itemId = '72d22cd267a141fba0e35f9913f34736';
+        break;
+      default:
+        _showError('Unknown map type: $mapType');
         return;
-      }
-      _map.basemap = Basemap.withStyle(basemapStyle);
-      _showError('Switched to $typeName view');
-    } catch (e) {
-      _showError('Failed to change map type: $e');
     }
+    
+    // Create portal pointing to GSI portal using the correct constructor
+    final gsiPortal = Portal(
+      Uri.parse('https://bhusanket.gsi.gov.in/gisportal/sharing/rest'),
+      connection: PortalConnection.authenticated
+    );
+    
+    // Create portal item using named parameters
+    final portalItem = PortalItem.withPortalAndItemId(
+      portal: gsiPortal, 
+      itemId: itemId
+    );
+    
+    // Create new map from portal item
+    _map = ArcGISMap.withItem(portalItem);
+    _mapViewController.arcGISMap = _map;
+    
+    if (mapType == 'topographic') {
+      _showError('switched_to_topographic'.tr);
+    } else if (mapType == 'imagery') {
+      _showError('switched_to_imagery'.tr);
+    }
+  } catch (e) {
+    _showError('failed_to_change_map'.trParams({'error': e.toString()}));
   }
+}
+
 }

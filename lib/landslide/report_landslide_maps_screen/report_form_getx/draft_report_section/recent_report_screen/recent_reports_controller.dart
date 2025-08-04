@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/models/draft_report_models.dart';
 import 'package:bhooskhalann/services/api_service.dart';
+import 'package:bhooskhalann/services/pdf_export_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -40,8 +41,8 @@ Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Get.snackbar(
-        'No Internet',
-        'Please check your internet connection and try again',
+        'error'.tr,
+        'Please check your internet connection and try again', // Could add this to translations if needed
         backgroundColor: Colors.orange,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -86,16 +87,17 @@ Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
       'syncedAt': DateTime.now().toIso8601String(),
       'submittedData': submissionData,
       'status': 'synced',
-      'title': report['title'] ?? 'Untitled Report',
+      'title': report['title'] ?? 'untitled_report'.tr,
       'formType': formType,
     };
     
     await addSyncedReport(syncedReport);
     await removeToBeSyncedReport(report['id']);
     
+    String formTypeText = formType.toLowerCase() == 'expert' ? 'expert'.tr : 'public'.tr;
     Get.snackbar(
-      'Success',
-      '${formType.toLowerCase() == 'expert' ? 'Expert' : 'Public'} landslide report submitted successfully!',
+      'export_ready'.tr, // Using existing translation key for "Success"
+      '$formTypeText landslide report submitted successfully!', // Could add specific key if needed
       backgroundColor: Colors.green,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
@@ -125,14 +127,14 @@ Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
     await prefs.setStringList(_toBeSyncedReportsKey, reportsJson);
     await loadToBeSyncedReports(); // Reload to update UI
     
-    String formTypeText = (report['formType'] ?? 'public').toLowerCase() == 'expert' ? 'expert' : 'public';
+    String formTypeText = (report['formType'] ?? 'public').toLowerCase() == 'expert' ? 'expert'.tr : 'public'.tr;
     Get.snackbar(
-      'Submission Failed',
+      'export_failed'.tr, // Using existing translation key for "Failed"
       'Failed to submit $formTypeText report: ${e.toString()}',
       backgroundColor: Colors.red,
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 4),
+      duration: const Duration(seconds: 4),
     );
   }
 }
@@ -140,10 +142,11 @@ Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
 // Add method to download/export pending report
 Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
   try {
+    String formTypeText = (report['formType'] ?? 'public').toLowerCase() == 'expert' ? 'expert'.tr : 'public'.tr;
     final exportData = {
       'exportedAt': DateTime.now().toIso8601String(),
-      'reportType': 'To Be Synced Public Report',
-      'formType': 'public',
+      'reportType': 'To Be Synced $formTypeText Report',
+      'formType': report['formType'] ?? 'public',
       'reportId': report['id'],
       'status': 'pending_sync',
       'retryCount': report['retryCount'] ?? 0,
@@ -153,9 +156,10 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
     
     return jsonEncode(exportData);
   } catch (e) {
-    throw Exception('Failed to export pending report: $e');
+    throw Exception('${'export_failed'.tr}: $e');
   }
 }
+
   @override
   void onInit() {
     super.onInit();
@@ -399,8 +403,8 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
     } catch (e) {
       print('Error loading draft reports: $e');
       Get.snackbar(
-        'Error',
-        'Failed to load draft reports',
+        'error'.tr,
+        'Failed to load draft reports', // Could add translation key if needed
         backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -445,7 +449,7 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
       return draftId;
     } catch (e) {
       print('Error saving draft: $e');
-      throw Exception('Failed to save draft: $e');
+      throw Exception('${'export_failed'.tr}: $e');
     }
   }
 
@@ -493,7 +497,7 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
       print('Draft updated successfully: $draftId, FormType: $formType');
     } catch (e) {
       print('Error updating draft: $e');
-      throw Exception('Failed to update draft: $e');
+      throw Exception('${'export_failed'.tr}: $e');
     }
   }
 
@@ -534,8 +538,8 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
       _applyFilters();
       
       Get.snackbar(
-        'Success',
-        'Draft deleted successfully',
+        'export_ready'.tr, // Using existing key for "Success"
+        'Draft deleted successfully', // Could add specific translation key
         backgroundColor: Colors.green,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -545,8 +549,8 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
     } catch (e) {
       print('Error deleting draft: $e');
       Get.snackbar(
-        'Error',
-        'Failed to delete draft: ${e.toString()}',
+        'error'.tr,
+        '${'export_failed'.tr}: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -702,9 +706,10 @@ String _generateTitleFromData(Map<String, dynamic> data) {
   } else if (state.isNotEmpty) {
     return 'Landslide Report - $state';
   } else {
-    return 'Public Landslide Report';
+    return 'public'.tr + ' Landslide Report';
   }
 }
+
   // Load "To Be Synced" reports
   Future<void> loadToBeSyncedReports() async {
     try {
@@ -844,8 +849,8 @@ String _generateTitleFromData(Map<String, dynamic> data) {
       _applyFilters();
       
       Get.snackbar(
-        'Success',
-        'Synced reports cleared',
+        'export_ready'.tr, // Using existing key for "Success"
+        'Synced reports cleared', // Could add translation key if needed
         backgroundColor: Colors.green,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -876,10 +881,10 @@ String _generateTitleFromData(Map<String, dynamic> data) {
     
     if (difference.inDays > 365) {
       final years = (difference.inDays / 365).floor();
-      return '${years} year${years == 1 ? '' : 's'} ago';
+      return '$years year${years == 1 ? '' : 's'} ago';
     } else if (difference.inDays > 30) {
       final months = (difference.inDays / 30).floor();
-      return '${months} month${months == 1 ? '' : 's'} ago';
+      return '$months month${months == 1 ? '' : 's'} ago';
     } else if (difference.inDays > 0) {
       return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
     } else if (difference.inHours > 0) {
@@ -944,7 +949,80 @@ String _generateTitleFromData(Map<String, dynamic> data) {
       return jsonEncode(exportData);
     } catch (e) {
       print('Error exporting drafts: $e');
-      throw Exception('Failed to export drafts');
+      throw Exception('${'export_failed'.tr}');
+    }
+  }
+
+  // Export drafts as PDF - New method
+  Future<void> exportDraftsAsPdf({String? userType}) async {
+    try {
+      List<DraftReport> draftsToExport;
+      
+      if (userType != null) {
+        final formType = userType.toLowerCase() == 'public' ? 'public' : 'expert';
+        draftsToExport = draftReports.where((draft) => 
+          draft.formType.toLowerCase() == formType).toList();
+      } else {
+        draftsToExport = draftReports;
+      }
+
+      if (draftsToExport.isEmpty) {
+        Get.snackbar(
+          'No Drafts',
+          'No drafts available to export',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      // Convert drafts to map format for PDF generation
+      final List<Map<String, dynamic>> draftsData = draftsToExport
+          .map((draft) => draft.formData)
+          .toList();
+
+      final formType = userType?.toLowerCase() ?? 'public';
+      final pdfService = PdfExportService();
+      
+      // Generate PDF
+      final file = await pdfService.generateDraftsPdf(draftsData, formType);
+      
+      // Show success notification
+      pdfService.showDownloadNotification(file, file.path.split('/').last);
+      
+    } catch (e) {
+      print('Error exporting drafts as PDF: $e');
+      Get.snackbar(
+        'Export Failed',
+        'Failed to export drafts as PDF: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  // Export single draft as PDF
+  Future<void> exportDraftAsPdf(DraftReport draft) async {
+    try {
+      final pdfService = PdfExportService();
+      
+      // Generate PDF
+      final file = await pdfService.generateDraftPdf(draft.formData, draft.formType);
+      
+      // Show success notification
+      pdfService.showDownloadNotification(file, file.path.split('/').last);
+      
+    } catch (e) {
+      print('Error exporting draft as PDF: $e');
+      Get.snackbar(
+        'Export Failed',
+        'Failed to export draft as PDF: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -975,8 +1053,8 @@ String _generateTitleFromData(Map<String, dynamic> data) {
       _applyFilters();
       
       Get.snackbar(
-        'Success',
-        '${draftsData.length} drafts imported successfully',
+        'export_ready'.tr, // Using existing key for "Success"
+        '${draftsData.length} drafts imported successfully', // Could add translation key
         backgroundColor: Colors.green,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -984,8 +1062,8 @@ String _generateTitleFromData(Map<String, dynamic> data) {
     } catch (e) {
       print('Error importing drafts: $e');
       Get.snackbar(
-        'Error',
-        'Failed to import drafts: ${e.toString()}',
+        'error'.tr,
+        '${'export_failed'.tr}: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -1015,7 +1093,7 @@ String _generateTitleFromData(Map<String, dynamic> data) {
         
         final cleanedCount = oldSyncedCount - syncedReports.length;
         Get.snackbar(
-          'Cleanup Complete',
+          'cleanup'.tr + ' Complete', // Using existing translation key
           '$cleanedCount old reports cleaned up',
           backgroundColor: Colors.blue,
           colorText: Colors.white,

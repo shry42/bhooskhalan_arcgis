@@ -1,6 +1,5 @@
 package com.example.bhooskhalann
 
-
 import android.content.Context
 import android.provider.Settings
 import android.os.Build
@@ -34,6 +33,10 @@ class MainActivity: FlutterActivity() {
                 }
                 "checkEmulator" -> {
                     result.success(checkEmulator())
+                }
+                // ✅ Added comprehensive emulator detection method for VAPT compliance
+                "isEmulatorDetected" -> {
+                    result.success(isEmulatorDetected())
                 }
                 else -> {
                     result.notImplemented()
@@ -177,5 +180,108 @@ class MainActivity: FlutterActivity() {
         } catch (e: Exception) {
             false
         }
+    }
+
+    // ✅ Enhanced emulator detection method for VAPT compliance
+    private fun isEmulatorDetected(): Boolean {
+        return (checkBasicTelephony() ||
+                checkFiles() ||
+                checkQEmuDrivers() ||
+                checkPipes() ||
+                checkIP() ||
+                checkBuild() ||
+                checkEmulator()) // Also includes existing emulator check
+    }
+
+    private fun checkBasicTelephony(): Boolean {
+        return Build.FINGERPRINT.startsWith("generic") ||
+               Build.FINGERPRINT.lowercase().contains("unknown") ||
+               Build.MODEL.contains("google_sdk") ||
+               Build.MODEL.contains("Emulator") ||
+               Build.MODEL.contains("Android SDK built for x86") ||
+               Build.MANUFACTURER.contains("Genymotion") ||
+               Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic") ||
+               "google_sdk" == Build.PRODUCT
+    }
+
+    private fun checkFiles(): Boolean {
+        val known_files = arrayOf(
+            "/system/lib/libc_malloc_debug_qemu.so",
+            "/sys/qemu_trace",
+            "/system/bin/qemu-props",
+            "/dev/socket/qemud",
+            "/dev/qemu_pipe",
+            "/dev/socket/baseband_genyd",
+            "/dev/socket/genyd"
+        )
+        
+        for (file_name in known_files) {
+            val file = File(file_name)
+            if (file.exists()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun checkQEmuDrivers(): Boolean {
+        val drivers = arrayOf(
+            "goldfish"
+        )
+        
+        val file = File("/proc/tty/drivers")
+        if (file.exists() && file.canRead()) {
+            try {
+                val data = file.readText()
+                for (driver in drivers) {
+                    if (data.contains(driver)) {
+                        return true
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore exception
+            }
+        }
+        return false
+    }
+
+    private fun checkPipes(): Boolean {
+        val pipes = arrayOf(
+            "/dev/socket/qemud",
+            "/dev/qemu_pipe"
+        )
+        
+        for (pipe in pipes) {
+            val file = File(pipe)
+            if (file.exists()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun checkIP(): Boolean {
+        try {
+            val networkInterfaces = java.net.NetworkInterface.getNetworkInterfaces()
+            while (networkInterfaces.hasMoreElements()) {
+                val networkInterface = networkInterfaces.nextElement()
+                val addresses = networkInterface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val address = addresses.nextElement()
+                    val hostAddress = address.hostAddress
+                    if (hostAddress == "10.0.2.15" || hostAddress == "10.0.3.2") {
+                        return true
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore exception
+        }
+        return false
+    }
+
+    private fun checkBuild(): Boolean {
+        val buildTags = Build.TAGS
+        return buildTags?.contains("test-keys") == true
     }
 }

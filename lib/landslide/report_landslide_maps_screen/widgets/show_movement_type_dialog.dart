@@ -1,6 +1,7 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_movement_sub_section.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_movement_type_section.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showMovementTypeDialog(BuildContext context) {
   showDialog(
@@ -20,8 +21,8 @@ void showMovementTypeDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Type of Movement',
+                  Text(
+                    'type_of_movement'.tr,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -41,38 +42,38 @@ void showMovementTypeDialog(BuildContext context) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       buildMovementTypeSection(
-                        title: 'Slide',
-                        description: 'A slide-type landslide is a downslope movement of material that occurs along a distinctive rupture or slip surface.',
+                        title: 'slide'.tr,
+                        description: 'slide_desc'.tr,
                       ),
                       
                       buildMovementTypeSection(
-                        title: 'Falls',
-                        description: 'Falls are abrupt movements of masses of geologic materials, such as rocks and boulders, which become detached from steep slopes or cliffs. Separation occurs along discontinuities such as fractures, joints, and bedding planes and movement occurs by free-fall, bouncing, and rolling.',
+                        title: 'falls'.tr,
+                        description: 'falls_desc'.tr,
                       ),
                       
                       buildMovementTypeSection(
-                        title: 'Topples',
-                        description: 'Toppling failures are distinguished by the forward rotation of a unit or units about some pivotal point, below or low in the unit, under the actions of gravity and forces exerted by adjacent units or by fluids in cracks.',
+                        title: 'topples'.tr,
+                        description: 'topples_desc'.tr,
                       ),
                       
                       buildMovementTypeSection(
-                        title: 'Subsidence',
-                        description: 'Surface subsidence is the gradual or sometimes abrupt collapse of rock and soil layers. Subsidence can be caused by mining, pumping of groundwater, underground coal fires, piping etc.',
+                        title: 'subsidence'.tr,
+                        description: 'subsidence_desc'.tr,
                       ),
                       
                       buildMovementTypeSection(
-                        title: 'Creep',
-                        description: 'Creep is the imperceptibly slow, steady downward movement of slope-forming soil or rock.',
+                        title: 'creep'.tr,
+                        description: 'creep_desc'.tr,
                       ),
                       
                       buildMovementTypeSection(
-                        title: 'Lateral Spreads',
-                        description: 'Lateral spreads are distinctive because they usually occur on very gentle slopes or flat terrain. The dominant mode of movement is lateral extension accompanied by shear or tensile fractures. The failure is caused by liquefaction, the process whereby saturated, loose, cohesionless sediments (usually sands and silts) are transformed from a solid into a liquefied state. Failure is usually triggered by rapid ground motion, such as that experienced during an earthquake, but can also be artificially induced. When coherent material, either bedrock or soil, rests on materials that liquefy, the upper units may undergo fracturing and extension and may then subside, translate, rotate, disintegrate, or liquefy and flow. Lateral spreading in fine-grained materials on shallow slopes is usually progressive.',
+                        title: 'lateral_spreads'.tr,
+                        description: 'lateral_spreads_desc'.tr,
                       ),
                       
                       buildMovementTypeSection(
-                        title: 'Flows',
-                        description: 'There are five basic categories of flows that differ from one another in fundamental ways:',
+                        title: 'flows'.tr,
+                        description: 'flows_desc'.tr,
                       ),
                       
                       Padding(
@@ -81,23 +82,23 @@ void showMovementTypeDialog(BuildContext context) {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             buildMovementSubSection(
-                              title: 'a. Debris flow',
-                              description: 'A debris flow is a form of rapid mass movement in which a combination of loose soil, rock, organic matter, air, and water mobilize as slurry that flows down slope.',
+                              title: 'debris_flow'.tr,
+                              description: 'debris_flow_desc'.tr,
                             ),
                             
                             buildMovementSubSection(
-                              title: 'b. Debris avalanche',
-                              description: 'This is a variety of very rapid to extremely rapid debris flow.',
+                              title: 'debris_avalanche'.tr,
+                              description: 'debris_avalanche_desc'.tr,
                             ),
                             
                             buildMovementSubSection(
-                              title: 'c. Earthflow',
-                              description: 'Earthflows have a characteristic \'hourglass\' shape. The slope material liquefies and runs out, forming a bowl or depression at the head. The flow itself is elongate and usually occurs in fine-grained materials or clay-bearing rocks on moderate slopes and under saturated conditions. However, dry flows of granular material are also possible.',
+                              title: 'earthflow'.tr,
+                              description: 'earthflow_desc'.tr,
                             ),
                             
                             buildMovementSubSection(
-                              title: 'd. Mudflow',
-                              description: 'A mudflow is an earthflow consisting of material that is wet enough to flow rapidly and that contains at least 50 percent sand, silt, and clay-sized particles.',
+                              title: 'mudflow'.tr,
+                              description: 'mudflow_desc'.tr,
                             ),
                           ],
                         ),

@@ -41,10 +41,10 @@ class LandslideReportingScreen extends StatelessWidget {
         ),
     title: Obx(() => Text(
   controller.isDraftMode.value 
-    ? 'Edit Draft Report' 
+    ? 'edit_draft_report_expert'.tr 
     : controller.isPendingEditMode.value 
-      ? 'Edit Pending Report'
-      : 'Report Landslide',
+      ? 'edit_pending_report_expert'.tr
+      : 'report_landslide_expert'.tr,
   style: const TextStyle(fontWeight: FontWeight.w600),
 )),
         actions: [
@@ -60,7 +60,7 @@ class LandslideReportingScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  controller.isDraftMode.value ? 'UPDATE' : 'SAVE',
+                  controller.isDraftMode.value ? 'update'.tr : 'save'.tr,
                   style: const TextStyle(
                     color: Colors.white, 
                     fontWeight: FontWeight.bold
@@ -79,7 +79,7 @@ class LandslideReportingScreen extends StatelessWidget {
                   CircularProgressIndicator(color: primaryColor),
                   const SizedBox(height: 16),
                   Text(
-                    'Submitting report...',
+                    'submitting_report'.tr,
                     style: TextStyle(
                       color: textColor,
                       fontSize: 16,
@@ -111,7 +111,7 @@ class LandslideReportingScreen extends StatelessWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'You are editing a draft report. Your changes will be saved automatically.',
+                                'editing_draft_expert_message'.tr,
                                 style: TextStyle(
                                   color: primaryColor,
                                   fontSize: 14,
@@ -129,23 +129,23 @@ class LandslideReportingScreen extends StatelessWidget {
                   // Location Information Section
         // Location Information Section - REPLACE the existing section with this
 _buildSectionCard(
-  title: 'Location Information',
+  title: 'location_information'.tr,
   primaryColor: primaryColor,
   cardColor: cardColor,
   textColor: textColor,
   children: [
     _buildTextField(
-      label: 'Latitude *',
+      label: 'latitude_required'.tr,
       controller: controller.latitudeController,
       readOnly: true,
-      validator: (value) => controller.validateRequired(value, 'Latitude'),
+      validator: (value) => controller.validateRequired(value, 'latitude'.tr),
     ),
     const SizedBox(height: 16),
     _buildTextField(
-      label: 'Longitude *',
+      label: 'longitude_required'.tr,
       controller: controller.longitudeController,
       readOnly: true,
-      validator: (value) => controller.validateRequired(value, 'Longitude'),
+      validator: (value) => controller.validateRequired(value, 'longitude'.tr),
     ),
     const SizedBox(height: 16),
 
@@ -157,19 +157,19 @@ _buildLocationModeSwitch(controller, primaryColor),
       if (controller.isLocationAutoPopulated.value && controller.stateController.text.isNotEmpty) {
         // Show text field when auto-populated
         return _buildTextField(
-          label: 'State *',
+          label: 'state_required'.tr,
           controller: controller.stateController,
           readOnly: true,
-          validator: (value) => controller.validateRequired(value, 'State'),
+          validator: (value) => controller.validateRequired(value, 'state'.tr),
         );
       } else {
         // Show dropdown when manual selection needed
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _labelText('State *', textColor),
+            _labelText('state_required'.tr, textColor),
             _buildDropdown(
-              hint: 'Select State',
+              hint: 'select_state'.tr,
               value: controller.selectedStateFromDropdown.value,
               items: controller.indianStates,
               onChanged: (value) => controller.onStateSelected(value),
@@ -187,21 +187,21 @@ _buildLocationModeSwitch(controller, primaryColor),
       if (controller.isLocationAutoPopulated.value && controller.districtController.text.isNotEmpty) {
         // Show text field when auto-populated
         return _buildTextField(
-          label: 'District *',
+          label: 'district_required'.tr,
           controller: controller.districtController,
           readOnly: true,
-          validator: (value) => controller.validateRequired(value, 'District'),
+          validator: (value) => controller.validateRequired(value, 'district'.tr),
         );
       } else {
         // Show dropdown when manual selection needed
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _labelText('District *', textColor),
+            _labelText('district_required'.tr, textColor),
             _buildDropdown(
               hint: controller.selectedStateFromDropdown.value == null 
-                  ? 'Select State first' 
-                  : 'Select District',
+                  ? 'select_state_first'.tr 
+                  : 'select_district'.tr,
               value: controller.selectedDistrictFromDropdown.value,
               items: controller.getDistrictsForState(controller.selectedStateFromDropdown.value),
               onChanged: controller.selectedStateFromDropdown.value == null 
@@ -216,17 +216,17 @@ _buildLocationModeSwitch(controller, primaryColor),
     
     const SizedBox(height: 16),
     _buildTextField(
-      label: 'Subdivision/Taluk',
+      label: 'subdivision_taluk'.tr,
       controller: controller.subdivisionController,
     ),
     const SizedBox(height: 16),
     _buildTextField(
-      label: 'Village',
+      label: 'village'.tr,
       controller: controller.villageController,
     ),
     const SizedBox(height: 16),
     _buildTextField(
-      label: 'Other relevant location details \nif any such as landmark etc',
+      label: 'other_relevant_location_details_landmark'.tr,
       controller: controller.locationDetailsController,
       maxLines: 3,
     ),
@@ -236,21 +236,19 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Occurrence Information Section
                   _buildSectionCard(
-                    title: 'Occurrence of Landslide \n(Date & Time) *',
+                    title: 'occurrence_of_landslide_datetime_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: '---Select---',
-                        value: controller.landslideOccurrenceValue.value,
-                        items: [
-                          'I know the EXACT occurrence date',
-                          'I know the APPROXIMATE occurrence date', 
-                          'I DO NOT know the occurrence date'
-                        ],
+                        hint: 'select_occurrence_option'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.landslideOccurrenceValue.value, LandslideReportController.landslideOccurrenceOptions),
+                        items: LandslideReportController.landslideOccurrenceOptions.map((key) => key.tr).toList(),
                         onChanged: (value) {
-                          controller.landslideOccurrenceValue.value = value;
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.landslideOccurrenceOptions);
+                          controller.landslideOccurrenceValue.value = englishKey;
                           controller.dateController.clear();
                           controller.timeController.clear();
                           controller.howDoYouKnowValue.value = null;
@@ -261,7 +259,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                       
                       // Conditional fields based on selection
                       Obx(() {
-                        if (controller.landslideOccurrenceValue.value == 'I know the EXACT occurrence date') {
+                        if (controller.landslideOccurrenceValue.value == 'exact_occurrence_date') {
                           return Column(
                             children: [
                               const SizedBox(height: 16),
@@ -271,7 +269,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        _labelText('Date *', textColor),
+                                        _labelText('date_required'.tr, textColor),
                                         GestureDetector(
                                           onTap: () => controller.selectDate(),
                                           child: Container(
@@ -285,7 +283,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Text(
-                                                  controller.selectedDateText.value.isEmpty ? 'Select Date' : controller.selectedDateText.value,
+                                                  controller.selectedDateText.value.isEmpty ? 'select_date'.tr : controller.selectedDateText.value,
                                                   style: TextStyle(
                                                     color: controller.selectedDateText.value.isEmpty ? Colors.grey[600] : Colors.black,
                                                   ),
@@ -303,7 +301,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        _labelText('Time', textColor),
+                                        _labelText('time'.tr, textColor),
                                         GestureDetector(
                                           onTap: () => controller.selectTime(),
                                           child: Container(
@@ -317,7 +315,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Text(
-                                                  controller.selectedTimeText.value.isEmpty ? 'Select Time' : controller.selectedTimeText.value,
+                                                  controller.selectedTimeText.value.isEmpty ? 'select_time'.tr : controller.selectedTimeText.value,
                                                   style: TextStyle(
                                                     color: controller.selectedTimeText.value.isEmpty ? Colors.grey[600] : Colors.black,
                                                   ),
@@ -333,18 +331,16 @@ _buildLocationModeSwitch(controller, primaryColor),
                                 ],
                               ),
                               const SizedBox(height: 16),
-                              _labelText('How do you know this Information? *', textColor),
+                              _labelText('how_do_you_know_info_required'.tr, textColor),
                               _buildDropdown(
-                                hint: 'Select source',
-                                value: controller.howDoYouKnowValue.value,
-                                items: [
-                                  'I observed it',
-                                  'Through a local',
-                                  'Social media',
-                                  'News',
-                                  'I don\'t know',
-                                ],
-                                onChanged: (value) => controller.howDoYouKnowValue.value = value,
+                                hint: 'select_source'.tr,
+                                value: controller.getTranslatedValueForDisplay(controller.howDoYouKnowValue.value, LandslideReportController.howDoYouKnowOptions),
+                                items: LandslideReportController.howDoYouKnowOptions.map((key) => key.tr).toList(),
+                                onChanged: (value) {
+                                  // Convert translated value back to English key
+                                  String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.howDoYouKnowOptions);
+                                  controller.howDoYouKnowValue.value = englishKey;
+                                },
                                 icon: Icons.info,
                               ),
                             ],
@@ -353,17 +349,17 @@ _buildLocationModeSwitch(controller, primaryColor),
   return Column(
     children: [
       const SizedBox(height: 16),
-      _labelText('Occurrence Date Range *', textColor),
+      _labelText('occurrence_date_range_required'.tr, textColor),
       _buildDropdown(
-        hint: '---Select---',
+        hint: 'select_occurrence_option'.tr,
         value: controller.occurrenceDateRange.value.isEmpty ? null : controller.occurrenceDateRange.value,
         items: [
-          'In the last 3 days',
-          'In the last week', 
-          'In the last month',
-          'In the last 3 months',
-          'In the last year',
-          'Older than a year',                        
+          'last_3_days'.tr,
+          'last_week'.tr, 
+          'last_month'.tr,
+          'last_3_months'.tr,
+          'last_year'.tr,
+          'older_than_year'.tr,                        
         ],
         onChanged: (value) => controller.occurrenceDateRange.value = value ?? '',
         icon: Icons.date_range,
@@ -382,16 +378,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Landslide Location Type
                   _buildSectionCard(
-                    title: 'Where did landslide take place\n(Landuse/Landcover) *',
+                    title: 'where_landslide_occurred_landuse_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select location type',
-                        value: controller.whereDidLandslideOccurValue.value,
-                        items: ['Near/onroad', 'Next to river', 'Settlement', 'Plantation (tea,rubber .... etc.)', 'Forest Area', 'Cultivation','Barren Land','Other (Specify)'],
-                        onChanged: (value) => controller.whereDidLandslideOccurValue.value = value,
+                        hint: 'select_location_type'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.whereDidLandslideOccurValue.value, LandslideReportController.whereDidLandslideOccurOptions),
+                        items: LandslideReportController.whereDidLandslideOccurOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.whereDidLandslideOccurOptions);
+                          controller.whereDidLandslideOccurValue.value = englishKey;
+                        },
                         icon: Icons.landscape,
                       )),
                     ],
@@ -401,16 +401,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Type of Material
                   _buildSectionCard(
-                    title: 'Type of Material *',
+                    title: 'type_of_material_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select material type',
-                        value: controller.typeOfMaterialValue.value,
-                        items: ['Rock', 'Soil', 'Debris (mixture of Rock and Soil)'],
-                        onChanged: (value) => controller.typeOfMaterialValue.value = value,
+                        hint: 'select_material_type'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.typeOfMaterialValue.value, LandslideReportController.typeOfMaterialOptions),
+                        items: LandslideReportController.typeOfMaterialOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.typeOfMaterialOptions);
+                          controller.typeOfMaterialValue.value = englishKey;
+                        },
                         icon: Icons.move_down,
                         hasInfoIcon: true,
                         onInfoTap: () => showMaterialTypeDialog(context),
@@ -422,16 +426,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Type of Movement
                   _buildSectionCard(
-                    title: 'Type of Movement *',
+                    title: 'type_of_movement_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select movement type',
-                        value: controller.typeOfMovementValue.value,
-                        items: ['Slide','Fall', 'Topple','Subsidence','Creep','Lateral spread', 'Flow','Complex'],
-                        onChanged: (value) => controller.typeOfMovementValue.value = value,
+                        hint: 'select_movement_type'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.typeOfMovementValue.value, LandslideReportController.typeOfMovementOptions),
+                        items: LandslideReportController.typeOfMovementOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.typeOfMovementOptions);
+                          controller.typeOfMovementValue.value = englishKey;
+                        },
                         icon: Icons.move_down,
                         hasInfoIcon: true,
                         onInfoTap: () => showMovementTypeDialog(context),
@@ -443,63 +451,63 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Dimensions Section
                   _buildSectionCard(
-                    title: 'Dimensions',
+                    title: 'dimensions'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       _buildTextField(
-                        label: 'Length (in meters) *',
+                        label: 'length_meters_required'.tr,
                         controller: controller.lengthController,
                         keyboardType: TextInputType.number,
                         hasInfoIcon: true,
                         onInfoTap: () => _showDimensionsDialog(context),
-                        validator: (value) => controller.validateNumber(value, 'Length'),
+                        validator: (value) => controller.validateNumber(value, 'length'.tr),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        label: 'Width (in meters) *',
+                        label: 'width_meters_required'.tr,
                         controller: controller.widthController,
                         keyboardType: TextInputType.number,
                         hasInfoIcon: true,
                         onInfoTap: () => _showDimensionsDialog(context),
-                        validator: (value) => controller.validateNumber(value, 'Width'),
+                        validator: (value) => controller.validateNumber(value, 'width'.tr),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        label: 'Height (in meters) *',
+                        label: 'height_meters_required'.tr,
                         controller: controller.heightController,
                         keyboardType: TextInputType.number,
                         hasInfoIcon: true,
                         onInfoTap: () => _showDimensionsDialog(context),
-                        validator: (value) => controller.validateNumber(value, 'Height'),
+                        validator: (value) => controller.validateNumber(value, 'height'.tr),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         readOnly: true,
-                        label: 'Area (in sq.meters) *',
+                        label: 'area_sq_meters_required'.tr,
                         controller: controller.areaController,
                         keyboardType: TextInputType.number,
-                        validator: (value) => controller.validateNumber(value, 'Area'),
+                        validator: (value) => controller.validateNumber(value, 'area'.tr),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        label: 'Depth (in meters)*',
+                        label: 'depth_meters_required'.tr,
                         controller: controller.depthController,
                         keyboardType: TextInputType.number,
-                        validator: (value) => controller.validateNumber(value, 'Depth'),
+                        validator: (value) => controller.validateNumber(value, 'depth'.tr),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         readOnly: true,
-                        label: 'Volume (in cu.meters) *',
+                        label: 'volume_cubic_meters_required'.tr,
                         controller: controller.volumeController,
                         keyboardType: TextInputType.number,
-                        validator: (value) => controller.validateNumber(value, 'Volume'),
+                        validator: (value) => controller.validateNumber(value, 'volume'.tr),
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        label: 'Run-out distance (in meters)',
+                        label: 'runout_distance_meters'.tr,
                         controller: controller.runoutDistanceController,
                         keyboardType: TextInputType.number,
                       ),
@@ -510,16 +518,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Rate of Movement
                   _buildSectionCard(
-                    title: 'Rate of Movement',
+                    title: 'rate_of_movement'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select rate of movement',
-                        value: controller.rateOfMovementValue.value,
-                        items: ['Extremely Rapid', 'Very Rapid', 'Rapid', 'Moderate', 'Slow', 'Very Slow', 'Extremely Slow'],
-                        onChanged: (value) => controller.rateOfMovementValue.value = value,
+                        hint: 'select_rate_movement'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.rateOfMovementValue.value, LandslideReportController.rateOfMovementOptions),
+                        items: LandslideReportController.rateOfMovementOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.rateOfMovementOptions);
+                          controller.rateOfMovementValue.value = englishKey;
+                        },
                         icon: Icons.speed,
                         hasInfoIcon: true,
                         onInfoTap: () => showRateOfMovementDialog(context),
@@ -531,16 +543,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Activity
                   _buildSectionCard(
-                    title: 'Activity *',
+                    title: 'activity_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select activity status',
-                        value: controller.activityValue.value,
-                        items: ['Active', 'Reactivated','Suspended','Dormant','Abandoned','Stabilised', 'Relict'],
-                        onChanged: (value) => controller.activityValue.value = value,
+                        hint: 'select_activity_status'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.activityValue.value, LandslideReportController.activityOptions),
+                        items: LandslideReportController.activityOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.activityOptions);
+                          controller.activityValue.value = englishKey;
+                        },
                         icon: Icons.monitor_heart,
                         hasInfoIcon: true,
                         onInfoTap: () => showActivityDialog(context),
@@ -552,16 +568,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Distribution
                   _buildSectionCard(
-                    title: 'Distribution',
+                    title: 'distribution'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select distribution pattern',
-                        value: controller.distributionValue.value,
-                        items: ['Advancing', 'Retrogressive', 'Widening','Enlarging','Confined', 'Diminishing','Moving', ],
-                        onChanged: (value) => controller.distributionValue.value = value,
+                        hint: 'select_distribution_pattern'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.distributionValue.value, LandslideReportController.distributionOptions),
+                        items: LandslideReportController.distributionOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.distributionOptions);
+                          controller.distributionValue.value = englishKey;
+                        },
                         icon: Icons.scatter_plot,
                         hasInfoIcon: true,
                         onInfoTap: () => showDistributionDialog(context),
@@ -573,16 +593,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Style
                   _buildSectionCard(
-                    title: 'Style *',
+                    title: 'style_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select style',
-                        value: controller.styleValue.value,
-                        items: ['Complex','Successive', 'Multiple','Single','Composite'],
-                        onChanged: (value) => controller.styleValue.value = value,
+                        hint: 'select_style'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.styleValue.value, LandslideReportController.styleOptions),
+                        items: LandslideReportController.styleOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.styleOptions);
+                          controller.styleValue.value = englishKey;
+                        },
                         icon: Icons.style,
                         hasInfoIcon: true,
                         onInfoTap: () => showStyleDialog(context),
@@ -594,16 +618,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Failure Mechanism
                   _buildSectionCard(
-                    title: 'Failure Mechanism *',
+                    title: 'failure_mechanism_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select failure mechanism',
-                        value: controller.failureMechanismValue.value,
-                        items: ['Translational', 'Rotational', 'Planar', 'Wedge', 'Topple'],
-                        onChanged: (value) => controller.failureMechanismValue.value = value,
+                        hint: 'select_failure_mechanism'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.failureMechanismValue.value, LandslideReportController.failureMechanismOptions),
+                        items: LandslideReportController.failureMechanismOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.failureMechanismOptions);
+                          controller.failureMechanismValue.value = englishKey;
+                        },
                         icon: Icons.broken_image,
                       )),
                     ],
@@ -613,7 +641,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // History
                   _buildSectionCard(
-                    title: 'History',
+                    title: 'history'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
@@ -622,7 +650,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Dates of past movement, if any reactivation date and time',
+                            'dates_past_movement_reactivation'.tr,
                             style: TextStyle(
                               color: hintColor,
                               fontSize: 14,
@@ -700,14 +728,14 @@ _buildLocationModeSwitch(controller, primaryColor),
                                   elevation: 2,
                                 ),
                                 onPressed: () => controller.selectHistoryDate(),
-                                child: const Row(
+                                child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.add, size: 20),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.add, size: 20),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'Add Date',
-                                      style: TextStyle(
+                                      'add_date'.tr,
+                                      style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -733,7 +761,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                                     Icon(Icons.history, color: primaryColor),
                                     const SizedBox(width: 12),
                                     Text(
-                                      'No historical dates added',
+                                      'no_historical_dates_added'.tr,
                                       style: TextStyle(color: hintColor, fontSize: 15),
                                     ),
                                   ],
@@ -751,13 +779,13 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Geomorphology      
                   _buildSectionCard(
-                    title: 'Geomorphology',
+                    title: 'geomorphology'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       _buildTextField(
-                        label: 'Enter geomorphology',
+                        label: 'enter_geomorphology'.tr,
                         controller: controller.geomorphologyController,
                         maxLines: 2,
                       ),
@@ -768,13 +796,13 @@ _buildLocationModeSwitch(controller, primaryColor),
 
                   // Geology
                   _buildSectionCard(
-                    title: 'Geology',
+                    title: 'geology'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       _buildTextField(
-                        label: 'Enter geology details',
+                        label: 'enter_geology_details'.tr,
                         controller: controller.geologyController,
                         maxLines: 2,
                         // validator: (value) => controller.validateRequired(value, 'Geology'),
@@ -789,7 +817,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                         children: [
                           const SizedBox(height: 16),
                           _buildSectionCard(
-                            title: 'Structure *',  // Add asterisk to show it's mandatory for Rock
+                            title: 'structure_required'.tr,  // Add asterisk to show it's mandatory for Rock
                             primaryColor: primaryColor,
                             cardColor: cardColor,
                             textColor: textColor,
@@ -808,7 +836,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'This section is mandatory for Rock material',
+                                        'structure_mandatory_rock'.tr,
                                         style: TextStyle(
                                           color: Colors.orange.shade700,
                                           fontWeight: FontWeight.w500,
@@ -819,7 +847,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                                 ),
                               ),
                               Obx(() => _buildStructureCheckboxWithFields(
-                                title: 'Bedding',
+                                title: 'bedding'.tr,
                                 value: controller.bedding.value,
                                 onChanged: (value) {
                                   controller.bedding.value = value ?? false;
@@ -841,7 +869,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                               const SizedBox(height: 16),
                               
                               Obx(() => _buildStructureCheckboxWithFields(
-                                title: 'Joints',
+                                title: 'joints'.tr,
                                 value: controller.joints.value,
                                 onChanged: (value) {
                                   controller.joints.value = value ?? false;
@@ -863,7 +891,7 @@ _buildLocationModeSwitch(controller, primaryColor),
                               const SizedBox(height: 16),
                               
                               Obx(() => _buildStructureCheckboxWithFields(
-                                title: 'RMR',
+                                title: 'rmr'.tr,
                                 value: controller.rmr.value,
                                 onChanged: (value) {
                                   controller.rmr.value = value ?? false;
@@ -894,16 +922,20 @@ _buildLocationModeSwitch(controller, primaryColor),
                   
                   // Hydrological Condition
                   _buildSectionCard(
-                    title: 'Hydrological Condition',
+                    title: 'hydrological_condition'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select hydrological condition',
-                        value: controller.hydrologicalConditionValue.value,
-                        items: ['Dry', 'Damp', 'Wet', 'Dipping', 'Flowing'],
-                        onChanged: (value) => controller.hydrologicalConditionValue.value = value,
+                        hint: 'select_hydrological_condition'.tr,
+                        value: controller.getTranslatedValueForDisplay(controller.hydrologicalConditionValue.value, LandslideReportController.hydrologicalConditionOptions),
+                        items: LandslideReportController.hydrologicalConditionOptions.map((key) => key.tr).toList(),
+                        onChanged: (value) {
+                          // Convert translated value back to English key
+                          String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.hydrologicalConditionOptions);
+                          controller.hydrologicalConditionValue.value = englishKey;
+                        },
                         icon: Icons.water_drop,
                         hasInfoIcon: true,
                         onInfoTap: () => showHydrologicalConditionDialog(context),
@@ -916,19 +948,21 @@ _buildLocationModeSwitch(controller, primaryColor),
                  // What induced/triggered the landslide
 // What induced/triggered the landslide
 _buildSectionCard(
-  title: 'What induced landslide?*',
+  title: 'what_induced_landslide_required'.tr,
   primaryColor: primaryColor,
   cardColor: cardColor,
   textColor: textColor,
   children: [
     Obx(() => _buildDropdown(
-      hint: 'Select trigger',
-      value: controller.whatInducedLandslideValue.value,
-      items: ['Rainfall', 'Earthquake', 'Man made', 'Snow melt', 'Vibration', 'Toe erosion', 'I don\'t know'],
+      hint: 'select_trigger'.tr,
+      value: controller.getTranslatedValueForDisplay(controller.whatInducedLandslideValue.value, LandslideReportController.whatInducedLandslideOptions),
+      items: LandslideReportController.whatInducedLandslideOptions.map((key) => key.tr).toList(),
       onChanged: (value) {
-        controller.whatInducedLandslideValue.value = value;
+        // Convert translated value back to English key
+        String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.whatInducedLandslideOptions);
+        controller.whatInducedLandslideValue.value = englishKey;
         // Clear rainfall fields if not rainfall
-        if (value != 'Rainfall') {
+        if (englishKey != 'rainfall') {
           controller.rainfallAmountController.clear();
           controller.rainfallDurationValue.value = null;
         }
@@ -938,7 +972,7 @@ _buildSectionCard(
     
     // Conditional rainfall fields
     Obx(() {
-      if (controller.whatInducedLandslideValue.value == 'Rainfall') {
+      if (controller.whatInducedLandslideValue.value == 'rainfall') {
         return Column(
           children: [
             const SizedBox(height: 20),
@@ -947,7 +981,7 @@ _buildSectionCard(
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _labelText('Amount of rainfall(in mm), if known', textColor),
+                _labelText('amount_rainfall_mm'.tr, textColor),
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
@@ -958,10 +992,10 @@ _buildSectionCard(
                   child: TextField(
                     controller: controller.rainfallAmountController,
                     keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       border: InputBorder.none,
-                      hintText: 'Enter amount (e.g., 25.0, 25-30, 100+)',
+                      hintText: 'enter_amount_rainfall'.tr,
                     ),
                   ),
                 ),
@@ -974,37 +1008,37 @@ _buildSectionCard(
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _labelText('Duration of rainfall', textColor),
+                _labelText('duration_of_rainfall'.tr, textColor),
                 const SizedBox(height: 12),
                 
                 // Radio button options
                 _buildRainfallDurationOption(
-                  'No rainfall on the day of landslide',
+                  'no_rainfall_day_landslide'.tr,
                   controller,
                   primaryColor,
                 ),
                 _buildRainfallDurationOption(
-                  'Half of the day or less',
+                  'half_day_or_less'.tr,
                   controller,
                   primaryColor,
                 ),
                 _buildRainfallDurationOption(
-                  'The whole day',
+                  'whole_day'.tr,
                   controller,
                   primaryColor,
                 ),
                 _buildRainfallDurationOption(
-                  'The last few days, but less than a week',
+                  'few_days_less_week'.tr,
                   controller,
                   primaryColor,
                 ),
                 _buildRainfallDurationOption(
-                  'A week or more',
+                  'week_or_more'.tr,
                   controller,
                   primaryColor,
                 ),
                 _buildRainfallDurationOption(
-                  'I don\'t know',
+                  'i_dont_know'.tr,
                   controller,
                   primaryColor,
                 ),
@@ -1021,13 +1055,13 @@ _buildSectionCard(
 
                   // Geo-Scientific causes
                   _buildSectionCard(
-                    title: 'Geo-Scientific Causes *',
+                    title: 'geo_scientific_causes_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Geological Causes',
+                        title: 'geological_causes'.tr,
                         value: controller.geologicalCauses.value,
                         onChanged: (value) {
                           controller.geologicalCauses.value = value ?? false;
@@ -1042,7 +1076,7 @@ _buildSectionCard(
                         },
                         subItems: controller.geologicalCauses.value ? [
                           Obx(() => _buildSubCheckbox(
-                            title: 'Weak or sensitive materials',
+                            title: 'weak_sensitive_materials'.tr,
                             value: controller.weakOrSensitiveMaterials.value,
                             onChanged: (value) => controller.weakOrSensitiveMaterials.value = value ?? false,
                             primaryColor: primaryColor,
@@ -1060,12 +1094,16 @@ _buildSectionCard(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        _labelText('Weathered materials', textColor),
+                                        _labelText('weathered_materials'.tr, textColor),
                                         _buildDropdown(
-                                          hint: 'Select weathering grade',
-                                          value: controller.weatheredMaterialsValue.value,
-                                          items: ['W1 - Fresh', 'W2 - Slightly weathered', 'W3 - Moderately weathered', 'W4 - Highly weathered', 'W5 - Completely weathered'],
-                                          onChanged: (value) => controller.weatheredMaterialsValue.value = value,
+                                          hint: 'select_weathering_grade'.tr,
+                                          value: controller.getTranslatedValueForDisplay(controller.weatheredMaterialsValue.value, LandslideReportController.weatheringGradeOptions),
+                                          items: LandslideReportController.weatheringGradeOptions.map((key) => key.tr).toList(),
+                                          onChanged: (value) {
+                                            // Convert translated value back to English key
+                                            String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.weatheringGradeOptions);
+                                            controller.weatheredMaterialsValue.value = englishKey;
+                                          },
                                           icon: Icons.layers,
                                         ),
                                       ],
@@ -1083,14 +1121,14 @@ _buildSectionCard(
                               return Column(
                                 children: [
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Sheared, jointed, or fissured materials',
+                                    title: 'sheared_jointed_fissured'.tr,
                                     value: controller.shearedJointedFissuredMaterials.value,
                                     onChanged: (value) => controller.shearedJointedFissuredMaterials.value = value ?? false,
                                     primaryColor: primaryColor,
                                     textColor: textColor,
                                   )),
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Adversely oriented discontinuity (bedding, schistosity, fault, unconformity, contact, and so forth)',
+                                    title: 'adversely_oriented_discontinuity'.tr,
                                     value: controller.adverselyOrientedDiscontinuity.value,
                                     onChanged: (value) => controller.adverselyOrientedDiscontinuity.value = value ?? false,
                                     primaryColor: primaryColor,
@@ -1103,7 +1141,7 @@ _buildSectionCard(
                           }),
                           
                           Obx(() => _buildSubCheckbox(
-                            title: 'Contrast in permeability and/or stiffness of materials',
+                            title: 'contrast_permeability_stiffness'.tr,
                             value: controller.contrastInPermeability.value,
                             onChanged: (value) => controller.contrastInPermeability.value = value ?? false,
                             primaryColor: primaryColor,
@@ -1112,7 +1150,7 @@ _buildSectionCard(
                           
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.geologicalOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -1123,7 +1161,7 @@ _buildSectionCard(
                       const SizedBox(height: 16),
                       
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Morphological Causes',
+                        title: 'morphological_causes'.tr,
                         value: controller.morphologicalCauses.value,
                         onChanged: (value) {
                           controller.morphologicalCauses.value = value ?? false;
@@ -1142,49 +1180,49 @@ _buildSectionCard(
                         },
                         subItems: controller.morphologicalCauses.value ? [
                           Obx(() => _buildSubCheckbox(
-                            title: 'Tectonic or volcanic uplift',
+                            title: 'tectonic_volcanic_uplift'.tr,
                             value: controller.tectonicOrVolcanicUplift.value,
                             onChanged: (value) => controller.tectonicOrVolcanicUplift.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Glacial rebound',
+                            title: 'glacial_rebound'.tr,
                             value: controller.glacialRebound.value,
                             onChanged: (value) => controller.glacialRebound.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Fluvial, wave, or glacial erosion of slope toe or lateral margins',
+                            title: 'fluvial_wave_glacial_erosion'.tr,
                             value: controller.fluvialWaveGlacialErosion.value,
                             onChanged: (value) => controller.fluvialWaveGlacialErosion.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Subterranean erosion (solution, piping)',
+                            title: 'subterranean_erosion'.tr,
                             value: controller.subterraneanErosion.value,
                             onChanged: (value) => controller.subterraneanErosion.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Deposition loading slope or its crest',
+                            title: 'deposition_loading_slope'.tr,
                             value: controller.depositionLoading.value,
                             onChanged: (value) => controller.depositionLoading.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Vegetation removal (by fire, drought)',
+                            title: 'vegetation_removal_fire_drought'.tr,
                             value: controller.vegetationRemoval.value,
                             onChanged: (value) => controller.vegetationRemoval.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Thawing',
+                            title: 'thawing'.tr,
                             value: controller.thawing.value,
                             onChanged: (value) => controller.thawing.value = value ?? false,
                             primaryColor: primaryColor,
@@ -1195,7 +1233,7 @@ _buildSectionCard(
                           Obx(() {
                             if (controller.isRockSelected() && controller.morphologicalCauses.value) {
                               return Obx(() => _buildSubCheckbox(
-                                title: 'Freeze-and-thaw weathering',
+                                title: 'freeze_thaw_weathering'.tr,
                                 value: controller.freezeThawWeathering.value,
                                 onChanged: (value) => controller.freezeThawWeathering.value = value ?? false,
                                 primaryColor: primaryColor,
@@ -1209,7 +1247,7 @@ _buildSectionCard(
                           Obx(() {
                             if (controller.isSoilSelected() && controller.morphologicalCauses.value) {
                               return Obx(() => _buildSubCheckbox(
-                                title: 'Shrink-and-swell weathering',
+                                title: 'shrink_swell_weathering'.tr,
                                 value: controller.shrinkSwellWeathering.value,
                                 onChanged: (value) => controller.shrinkSwellWeathering.value = value ?? false,
                                 primaryColor: primaryColor,
@@ -1221,7 +1259,7 @@ _buildSectionCard(
                           
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.morphologicalOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -1232,7 +1270,7 @@ _buildSectionCard(
                       const SizedBox(height: 16),
                       
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Human Causes',
+                        title: 'human_causes'.tr,
                         value: controller.humanCauses.value,
                         onChanged: (value) {
                           controller.humanCauses.value = value ?? false;
@@ -1250,56 +1288,56 @@ _buildSectionCard(
                         },
                         subItems: controller.humanCauses.value ? [
                           Obx(() => _buildSubCheckbox(
-                            title: 'Excavation of slope or its toe',
+                            title: 'excavation_slope_toe'.tr,
                             value: controller.excavationOfSlope.value,
                             onChanged: (value) => controller.excavationOfSlope.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Loading of slope or its crest',
+                            title: 'loading_slope_crest'.tr,
                             value: controller.loadingOfSlope.value,
                             onChanged: (value) => controller.loadingOfSlope.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Drawdown (of reservoirs)',
+                            title: 'drawdown_reservoirs'.tr,
                             value: controller.drawdown.value,
                             onChanged: (value) => controller.drawdown.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Deforestation',
+                            title: 'deforestation'.tr,
                             value: controller.deforestation.value,
                             onChanged: (value) => controller.deforestation.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Irrigation',
+                            title: 'irrigation'.tr,
                             value: controller.irrigation.value,
                             onChanged: (value) => controller.irrigation.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Mining',
+                            title: 'mining'.tr,
                             value: controller.mining.value,
                             onChanged: (value) => controller.mining.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Artificial vibration',
+                            title: 'artificial_vibration'.tr,
                             value: controller.artificialVibration.value,
                             onChanged: (value) => controller.artificialVibration.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Water leakage from utilities',
+                            title: 'water_leakage_utilities'.tr,
                             value: controller.waterLeakage.value,
                             onChanged: (value) => controller.waterLeakage.value = value ?? false,
                             primaryColor: primaryColor,
@@ -1307,7 +1345,7 @@ _buildSectionCard(
                           )),
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.humanOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -1318,7 +1356,7 @@ _buildSectionCard(
                       const SizedBox(height: 16),
                       
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'For any other Information',
+                        title: 'for_any_other_information'.tr,
                         value: controller.otherCauses.value,
                         onChanged: (value) {
                           controller.otherCauses.value = value ?? false;
@@ -1328,7 +1366,7 @@ _buildSectionCard(
                         },
                         subItems: controller.otherCauses.value ? [
                           _buildOtherTextField(
-                            label: 'Specify other causes',
+                            label: 'specify_other_causes'.tr,
                             controller: controller.otherCausesController,
                             primaryColor: primaryColor,
                           ),
@@ -1342,15 +1380,16 @@ _buildSectionCard(
                   const SizedBox(height: 16),
 
                   // Enhanced Impact/Damage Section
-                  _buildSectionCard(
-                    title: 'What is Impact/Damage \nCaused by Landslide ?',
+                  _buildCollapsibleSectionCard(
+                    title: 'impact_damage_caused_landslide'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
+                    controller: controller,
                     children: [
                       // People affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'People affected',
+                        title: 'people_affected'.tr,
                         value: controller.peopleAffected.value,
                         onChanged: (value) {
                           controller.peopleAffected.value = value ?? false;
@@ -1362,8 +1401,8 @@ _buildSectionCard(
                         subItems: controller.peopleAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDamageDetailRow(
-                            label1: 'Dead',
-                            label2: 'Injured',
+                            label1: 'dead'.tr,
+                            label2: 'injured'.tr,
                             controller1: controller.peopleDeadController,
                             controller2: controller.peopleInjuredController,
                             primaryColor: primaryColor,
@@ -1376,7 +1415,7 @@ _buildSectionCard(
                       
                       // Livestock affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Livestock affected',
+                        title: 'livestock_affected'.tr,
                         value: controller.livestockAffected.value,
                         onChanged: (value) {
                           controller.livestockAffected.value = value ?? false;
@@ -1388,8 +1427,8 @@ _buildSectionCard(
                         subItems: controller.livestockAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDamageDetailRow(
-                            label1: 'Dead',
-                            label2: 'Injured',
+                            label1: 'dead'.tr,
+                            label2: 'injured'.tr,
                             controller1: controller.livestockDeadController,
                             controller2: controller.livestockInjuredController,
                             primaryColor: primaryColor,
@@ -1402,7 +1441,7 @@ _buildSectionCard(
                       
                       // Houses and buildings affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Houses and buildings affected',
+                        title: 'houses_buildings_affected'.tr,
                         value: controller.housesBuildingAffected.value,
                         onChanged: (value) {
                           controller.housesBuildingAffected.value = value ?? false;
@@ -1414,8 +1453,8 @@ _buildSectionCard(
                         subItems: controller.housesBuildingAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDamageDetailRow(
-                            label1: 'Number of houses / buildings affected FULLY',
-                            label2: 'Number of houses / buildings affected PARTIALLY',
+                            label1: 'houses_buildings_fully'.tr,
+                            label2: 'houses_buildings_partially'.tr,
                             controller1: controller.housesFullyController,
                             controller2: controller.housesPartiallyController,
                             primaryColor: primaryColor,
@@ -1428,7 +1467,7 @@ _buildSectionCard(
                       
                       // Dams / Barrages affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Dams / Barrages affected',
+                        title: 'dams_barrages_affected'.tr,
                         value: controller.damsBarragesAffected.value,
                         onChanged: (value) {
                           controller.damsBarragesAffected.value = value ?? false;
@@ -1440,14 +1479,16 @@ _buildSectionCard(
                         subItems: controller.damsBarragesAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDamageDetailRowMixed(
-                            label1: 'Name of Dams / Barrages',
-                            label2: 'Extent of damage',
+                            label1: 'name_dams_barrages'.tr,
+                            label2: 'extent_of_damage'.tr,
                             controller1: controller.damsNameController,
-                            dropdownValue: controller.damsExtentValue.value,
-                            dropdownItems: ['Full', 'Partial'],
-                            onDropdownChanged: (String? value) {
-                              controller.damsExtentValue.value = value;
-                            },
+                            dropdownValue: controller.getTranslatedValueForDisplay(controller.damsExtentValue.value, LandslideReportController.extentOptions),
+                            dropdownItems: LandslideReportController.extentOptions.map((key) => key.tr).toList(),
+                                                          onDropdownChanged: (String? value) {
+                                // Convert translated value back to English key
+                                String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.extentOptions);
+                                controller.damsExtentValue.value = englishKey;
+                              },
                             primaryColor: primaryColor,
                           ),
                         ] : [],
@@ -1458,7 +1499,7 @@ _buildSectionCard(
                       
                       // Roads affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Roads affected',
+                        title: 'roads_affected'.tr,
                         value: controller.roadsAffected.value,
                         onChanged: (value) {
                           controller.roadsAffected.value = value ?? false;
@@ -1478,7 +1519,7 @@ _buildSectionCard(
                       
                       // Roads blocked
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Roads blocked',
+                        title: 'roads_blocked'.tr,
                         value: controller.roadsBlocked.value,
                         onChanged: (value) {
                           controller.roadsBlocked.value = value ?? false;
@@ -1489,18 +1530,14 @@ _buildSectionCard(
                         subItems: controller.roadsBlocked.value ? [
                           const SizedBox(height: 8),
                           _buildDropdownDamageField(
-                            label: 'Road Blockage',
-                            value: controller.roadBlockageValue.value,
-                            items: [
-                              'Yes, for few hours',
-                              'Yes, half a day',
-                              'Yes, one day',
-                              'Yes, more than a day',
-                              'No blockage'
-                            ],
-                            onChanged: (String? value) {
-                              controller.roadBlockageValue.value = value;
-                            },
+                            label: 'road_blockage'.tr,
+                            value: controller.getTranslatedValueForDisplay(controller.roadBlockageValue.value, LandslideReportController.roadBlockageOptions),
+                            items: LandslideReportController.roadBlockageOptions.map((key) => key.tr).toList(),
+                                                          onChanged: (String? value) {
+                                // Convert translated value back to English key
+                                String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.roadBlockageOptions);
+                                controller.roadBlockageValue.value = englishKey;
+                              },
                             primaryColor: primaryColor,
                           ),
                         ] : [],
@@ -1511,7 +1548,7 @@ _buildSectionCard(
                       
                       // Road benches damaged
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Road benches damaged',
+                        title: 'road_benches_damaged'.tr,
                         value: controller.roadBenchesDamaged.value,
                         onChanged: (value) {
                           controller.roadBenchesDamaged.value = value ?? false;
@@ -1522,12 +1559,14 @@ _buildSectionCard(
                         subItems: controller.roadBenchesDamaged.value ? [
                           const SizedBox(height: 8),
                           _buildDropdownDamageField(
-                            label: 'Extent of damage',
-                            value: controller.roadBenchesExtentValue.value,
-                            items: ['Full', 'Partial'],
-                            onChanged: (String? value) {
-                              controller.roadBenchesExtentValue.value = value;
-                            },
+                            label: 'extent_of_damage'.tr,
+                            value: controller.getTranslatedValueForDisplay(controller.roadBenchesExtentValue.value, LandslideReportController.extentOptions),
+                            items: LandslideReportController.extentOptions.map((key) => key.tr).toList(),
+                                                          onChanged: (String? value) {
+                                // Convert translated value back to English key
+                                String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.extentOptions);
+                                controller.roadBenchesExtentValue.value = englishKey;
+                              },
                             primaryColor: primaryColor,
                           ),
                         ] : [],
@@ -1538,7 +1577,7 @@ _buildSectionCard(
                       
                       // Railway line affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Railway line affected',
+                        title: 'railway_line_affected'.tr,
                         value: controller.railwayLineAffected.value,
                         onChanged: (value) {
                           controller.railwayLineAffected.value = value ?? false;
@@ -1549,7 +1588,7 @@ _buildSectionCard(
                         subItems: controller.railwayLineAffected.value ? [
                           const SizedBox(height: 8),
                           _buildSingleDamageField(
-                            label: 'Mention details',
+                            label: 'mention_details'.tr,
                             controller: controller.railwayDetailsController,
                             primaryColor: primaryColor,
                           ),
@@ -1561,7 +1600,7 @@ _buildSectionCard(
                       
                       // Railway blocked
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Railway blocked',
+                        title: 'railway_blocked'.tr,
                         value: controller.railwayBlocked.value,
                         onChanged: (value) {
                           controller.railwayBlocked.value = value ?? false;
@@ -1572,18 +1611,14 @@ _buildSectionCard(
                         subItems: controller.railwayBlocked.value ? [
                           const SizedBox(height: 8),
                           _buildDropdownDamageField(
-                            label: 'Railway Blockage',
-                            value: controller.railwayBlockageValue.value,
-                            items: [
-                              'Yes, for few hours',
-                              'Yes, half a day',
-                              'Yes, one day',
-                              'Yes, more than a day',
-                              'No blockage'
-                            ],
-                            onChanged: (String? value) {
-                              controller.railwayBlockageValue.value = value;
-                            },
+                            label: 'railway_blockage'.tr,
+                            value: controller.getTranslatedValueForDisplay(controller.railwayBlockageValue.value, LandslideReportController.roadBlockageOptions),
+                            items: LandslideReportController.roadBlockageOptions.map((key) => key.tr).toList(),
+                                                          onChanged: (String? value) {
+                                // Convert translated value back to English key
+                                String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.roadBlockageOptions);
+                                controller.railwayBlockageValue.value = englishKey;
+                              },
                             primaryColor: primaryColor,
                           ),
                         ] : [],
@@ -1594,7 +1629,7 @@ _buildSectionCard(
                       
                       // Railway benches damaged
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Railway benches damaged',
+                        title: 'railway_benches_damaged'.tr,
                         value: controller.railwayBenchesDamaged.value,
                         onChanged: (value) {
                           controller.railwayBenchesDamaged.value = value ?? false;
@@ -1605,12 +1640,14 @@ _buildSectionCard(
                         subItems: controller.railwayBenchesDamaged.value ? [
                           const SizedBox(height: 8),
                           _buildDropdownDamageField(
-                            label: 'Extent of damage',
-                            value: controller.railwayBenchesExtentValue.value,
-                            items: ['Full', 'Partial'],
-                            onChanged: (String? value) {
-                              controller.railwayBenchesExtentValue.value = value;
-                            },
+                            label: 'extent_of_damage'.tr,
+                            value: controller.getTranslatedValueForDisplay(controller.railwayBenchesExtentValue.value, LandslideReportController.extentOptions),
+                            items: LandslideReportController.extentOptions.map((key) => key.tr).toList(),
+                                                          onChanged: (String? value) {
+                                // Convert translated value back to English key
+                                String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.extentOptions);
+                                controller.railwayBenchesExtentValue.value = englishKey;
+                              },
                             primaryColor: primaryColor,
                           ),
                         ] : [],
@@ -1622,7 +1659,7 @@ _buildSectionCard(
                       
                       // Power infrastructure affected
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Power infrastructure and\ntelecommunication affected',
+                        title: 'power_infrastructure_telecommunication'.tr,
                         value: controller.powerInfrastructureAffected.value,
                         onChanged: (value) {
                           controller.powerInfrastructureAffected.value = value ?? false;
@@ -1633,12 +1670,14 @@ _buildSectionCard(
                         subItems: controller.powerInfrastructureAffected.value ? [
                           const SizedBox(height: 8),
                           _buildDropdownDamageField(
-                            label: 'Extent of damage',
-                            value: controller.powerExtentValue.value,
-                            items: ['Full', 'Partial'],
-                            onChanged: (String? value) {
-                              controller.powerExtentValue.value = value;
-                            },
+                            label: 'extent_of_damage'.tr,
+                            value: controller.getTranslatedValueForDisplay(controller.powerExtentValue.value, LandslideReportController.extentOptions),
+                            items: LandslideReportController.extentOptions.map((key) => key.tr).toList(),
+                                                          onChanged: (String? value) {
+                                // Convert translated value back to English key
+                                String? englishKey = controller.getEnglishKeyFromTranslatedValue(value, LandslideReportController.extentOptions);
+                                controller.powerExtentValue.value = englishKey;
+                              },
                             primaryColor: primaryColor,
                           ),
                         ] : [],
@@ -1649,7 +1688,7 @@ _buildSectionCard(
                       
                       // Damages to Agriculture/Barren/Forest
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'Damages to Agriculture/Barren/Forest',
+                        title: 'damages_agriculture_barren_forest'.tr,
                         value: controller.damagesToAgriculturalForestLand.value,
                         onChanged: (value) {
                           controller.damagesToAgriculturalForestLand.value = value ?? false;
@@ -1660,7 +1699,7 @@ _buildSectionCard(
                       
                       // Other damages
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Other',
+                        title: 'other'.tr,
                         value: controller.other.value,
                         onChanged: (value) {
                           controller.other.value = value ?? false;
@@ -1671,7 +1710,7 @@ _buildSectionCard(
                         subItems: controller.other.value ? [
                           const SizedBox(height: 8),
                           _buildSingleDamageField(
-                            label: 'Mention details *',
+                            label: 'mention_details'.tr,
                             controller: controller.otherDamageDetailsController,
                             primaryColor: primaryColor,
                           ),
@@ -1683,7 +1722,7 @@ _buildSectionCard(
                       
                       // No damages
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'No damages',
+                        title: 'no_damages'.tr,
                         value: controller.noDamages.value,
                         onChanged: (value) {
                           controller.noDamages.value = value ?? false;
@@ -1694,7 +1733,7 @@ _buildSectionCard(
                       
                       // I don't know
                       Obx(() => _buildSimpleCheckboxListTile(
-                        title: 'I don\'t know',
+                        title: 'i_dont_know'.tr,
                         value: controller.iDontKnow.value,
                         onChanged: (value) {
                           controller.iDontKnow.value = value ?? false;
@@ -1709,14 +1748,14 @@ _buildSectionCard(
 
                   // Remedial Measures - Complete Section
                   _buildSectionCard(
-                    title: 'Remedial Measures *',
+                    title: 'remedial_measures_required'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       // Modification of Slope Geometry
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Modification of Slope Geometry',
+                        title: 'modification_slope_geometry'.tr,
                         value: controller.modificationOfSlopeGeometry.value,
                         onChanged: (value) {
                           controller.modificationOfSlopeGeometry.value = value ?? false;
@@ -1729,7 +1768,7 @@ _buildSectionCard(
                         },
                         subItems: controller.modificationOfSlopeGeometry.value ? [
                           Obx(() => _buildSubCheckbox(
-                            title: 'Removing material from the area driving the landslide (with possible substitution by lightweight fill)',
+                            title: 'removing_material_driving'.tr,
                             value: controller.removingMaterial.value,
                             onChanged: (value) {
                               controller.removingMaterial.value = value ?? false;
@@ -1738,7 +1777,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Adding material to the area maintaining stability (counterweight berm or fill)',
+                            title: 'adding_material_maintaining'.tr,
                             value: controller.addingMaterial.value,
                             onChanged: (value) {
                               controller.addingMaterial.value = value ?? false;
@@ -1747,7 +1786,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Reducing general slope angle',
+                            title: 'reducing_general_slope_angle'.tr,
                             value: controller.reducingGeneralSlopeAngle.value,
                             onChanged: (value) {
                               controller.reducingGeneralSlopeAngle.value = value ?? false;
@@ -1757,7 +1796,7 @@ _buildSectionCard(
                           )),
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.slopeGeometryOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -1769,7 +1808,7 @@ _buildSectionCard(
 
                       // Drainage
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Drainage',
+                        title: 'drainage'.tr,
                         value: controller.drainage.value,
                         onChanged: (value) {
                           controller.drainage.value = value ?? false;
@@ -1790,7 +1829,7 @@ _buildSectionCard(
                         },
                         subItems: controller.drainage.value ? [
                           Obx(() => _buildSubCheckbox(
-                            title: 'Surface drains to divert water from flowing onto the slide area (collecting ditches and pipes)',
+                            title: 'surface_drains_divert'.tr,
                             value: controller.surfaceDrains.value,
                             onChanged: (value) {
                               controller.surfaceDrains.value = value ?? false;
@@ -1799,7 +1838,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Shallow or deep trench drains filled with free-draining geomaterials (coarse granular fills and geosynthetics)',
+                            title: 'shallow_deep_trench_drains'.tr,
                             value: controller.shallowDeepTrenchDrains.value,
                             onChanged: (value) {
                               controller.shallowDeepTrenchDrains.value = value ?? false;
@@ -1808,7 +1847,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Buttress counter forts of coarse-grained materials (hydrological effect)',
+                            title: 'buttress_counterfort_drains'.tr,
                             value: controller.buttressCounterfortDrains.value,
                             onChanged: (value) {
                               controller.buttressCounterfortDrains.value = value ?? false;
@@ -1817,7 +1856,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Vertical (small diameter) boreholes with pumping or self draining',
+                            title: 'vertical_small_diameter_boreholes'.tr,
                             value: controller.verticalSmallDiameterBoreholes.value,
                             onChanged: (value) {
                               controller.verticalSmallDiameterBoreholes.value = value ?? false;
@@ -1826,7 +1865,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Vertical (large diameter) wells with gravity draining',
+                            title: 'vertical_large_diameter_wells'.tr,
                             value: controller.verticalLargeDiameterWells.value,
                             onChanged: (value) {
                               controller.verticalLargeDiameterWells.value = value ?? false;
@@ -1835,7 +1874,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Sub horizontal or sub vertical boreholes',
+                            title: 'sub_horizontal_boreholes'.tr,
                             value: controller.subHorizontalBoreholes.value,
                             onChanged: (value) {
                               controller.subHorizontalBoreholes.value = value ?? false;
@@ -1844,7 +1883,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Drainage tunnels, galleries or adits',
+                            title: 'drainage_tunnels_galleries'.tr,
                             value: controller.drainageTunnels.value,
                             onChanged: (value) {
                               controller.drainageTunnels.value = value ?? false;
@@ -1853,7 +1892,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Vacuum dewatering',
+                            title: 'vacuum_dewatering'.tr,
                             value: controller.vacuumDewatering.value,
                             onChanged: (value) {
                               controller.vacuumDewatering.value = value ?? false;
@@ -1862,7 +1901,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Drainage by siphoning',
+                            title: 'drainage_by_siphoning'.tr,
                             value: controller.drainageBySiphoning.value,
                             onChanged: (value) {
                               controller.drainageBySiphoning.value = value ?? false;
@@ -1871,7 +1910,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Electroosmotic dewatering',
+                            title: 'electroosmotic_dewatering'.tr,
                             value: controller.electroosmoticDewatering.value,
                             onChanged: (value) {
                               controller.electroosmoticDewatering.value = value ?? false;
@@ -1880,7 +1919,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Vegetation planting (hydrological effect)',
+                            title: 'vegetation_planting_hydrological'.tr,
                             value: controller.vegetationPlanting.value,
                             onChanged: (value) {
                               controller.vegetationPlanting.value = value ?? false;
@@ -1890,7 +1929,7 @@ _buildSectionCard(
                           )),
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.drainageOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -1902,7 +1941,7 @@ _buildSectionCard(
 
                       // Retaining Structures
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Retaining Structures',
+                        title: 'retaining_structures'.tr,
                         value: controller.retainingStructures.value,
                         onChanged: (value) {
                           controller.retainingStructures.value = value ?? false;
@@ -1922,7 +1961,7 @@ _buildSectionCard(
                         },
                         subItems: controller.retainingStructures.value ? [
                           Obx(() => _buildSubCheckbox(
-                            title: 'Gravity retaining walls',
+                            title: 'gravity_retaining_walls'.tr,
                             value: controller.gravityRetainingWalls.value,
                             onChanged: (value) {
                               controller.gravityRetainingWalls.value = value ?? false;
@@ -1931,7 +1970,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Crib-block walls',
+                            title: 'crib_block_walls'.tr,
                             value: controller.cribBlockWalls.value,
                             onChanged: (value) {
                               controller.cribBlockWalls.value = value ?? false;
@@ -1940,7 +1979,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Gabion walls',
+                            title: 'gabion_walls'.tr,
                             value: controller.gabionWalls.value,
                             onChanged: (value) {
                               controller.gabionWalls.value = value ?? false;
@@ -1949,7 +1988,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Passive piles, piers and caissons',
+                            title: 'passive_piles_piers'.tr,
                             value: controller.passivePilesPiers.value,
                             onChanged: (value) {
                               controller.passivePilesPiers.value = value ?? false;
@@ -1958,7 +1997,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Cast-in situ reinforced concrete walls',
+                            title: 'cast_in_situ_walls'.tr,
                             value: controller.castInSituWalls.value,
                             onChanged: (value) {
                               controller.castInSituWalls.value = value ?? false;
@@ -1967,7 +2006,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Reinforced earth retaining structures with strip/ sheet - polymer/metallic reinforcement elements',
+                            title: 'reinforced_earth_retaining'.tr,
                             value: controller.reinforcedEarthRetaining.value,
                             onChanged: (value) {
                               controller.reinforcedEarthRetaining.value = value ?? false;
@@ -1976,7 +2015,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Buttress counterforts of coarse-grained material (mechanical effect)',
+                            title: 'buttress_counterforts_mechanical'.tr,
                             value: controller.buttressCounterforts.value,
                             onChanged: (value) {
                               controller.buttressCounterforts.value = value ?? false;
@@ -1991,21 +2030,21 @@ _buildSectionCard(
                               return Column(
                                 children: [
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Retention nets for rock slope faces',
+                                    title: 'retention_nets_rock_slope'.tr,
                                     value: controller.retentionNets.value,
                                     onChanged: (value) => controller.retentionNets.value = value ?? false,
                                     primaryColor: primaryColor,
                                     textColor: textColor,
                                   )),
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Rockfall attenuation or stopping systems (rocktrap ditches, benches, fences and walls)',
+                                    title: 'rockfall_attenuation_systems'.tr,
                                     value: controller.rockfallAttenuationSystems.value,
                                     onChanged: (value) => controller.rockfallAttenuationSystems.value = value ?? false,
                                     primaryColor: primaryColor,
                                     textColor: textColor,
                                   )),
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Protective rock/concrete blocks against erosion',
+                                    title: 'protective_rock_blocks'.tr,
                                     value: controller.protectiveRockBlocks.value,
                                     onChanged: (value) => controller.protectiveRockBlocks.value = value ?? false,
                                     primaryColor: primaryColor,
@@ -2019,7 +2058,7 @@ _buildSectionCard(
                           
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.retainingOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -2031,7 +2070,7 @@ _buildSectionCard(
 
                       // Internal Slope Reinforcement
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Internal Slope Reinforcement',
+                        title: 'internal_slope_reinforcement'.tr,
                         value: controller.internalSlopeReinforcement.value,
                         onChanged: (value) {
                           controller.internalSlopeReinforcement.value = value ?? false;
@@ -2054,7 +2093,7 @@ _buildSectionCard(
                           Obx(() {
                             if (controller.isRockSelected() && controller.internalSlopeReinforcement.value) {
                               return Obx(() => _buildSubCheckbox(
-                                title: 'Rock bolts',
+                                title: 'rock_bolts'.tr,
                                 value: controller.rockBolts.value,
                                 onChanged: (value) => controller.rockBolts.value = value ?? false,
                                 primaryColor: primaryColor,
@@ -2070,35 +2109,35 @@ _buildSectionCard(
                               return Column(
                                 children: [
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Micropiles',
+                                    title: 'micropiles'.tr,
                                     value: controller.micropiles.value,
                                     onChanged: (value) => controller.micropiles.value = value ?? false,
                                     primaryColor: primaryColor,
                                     textColor: textColor,
                                   )),
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Soil nailing',
+                                    title: 'soil_nailing'.tr,
                                     value: controller.soilNailing.value,
                                     onChanged: (value) => controller.soilNailing.value = value ?? false,
                                     primaryColor: primaryColor,
                                     textColor: textColor,
                                   )),
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Stone or lime/cement columns',
+                                    title: 'stone_lime_cement_columns'.tr,
                                     value: controller.stoneLimeCementColumns.value,
                                     onChanged: (value) => controller.stoneLimeCementColumns.value = value ?? false,
                                     primaryColor: primaryColor,
                                     textColor: textColor,
                                   )),
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Heat treatment',
+                                    title: 'heat_treatment'.tr,
                                     value: controller.heatTreatment.value,
                                     onChanged: (value) => controller.heatTreatment.value = value ?? false,
                                     primaryColor: primaryColor,
                                     textColor: textColor,
                                   )),
                                   Obx(() => _buildSubCheckbox(
-                                    title: 'Electroosmotic anchors',
+                                    title: 'electroosmotic_anchors'.tr,
                                     value: controller.electroosmoticAnchors.value,
                                     onChanged: (value) => controller.electroosmoticAnchors.value = value ?? false,
                                     primaryColor: primaryColor,
@@ -2114,7 +2153,7 @@ _buildSectionCard(
                           Obx(() {
                             if (controller.isRockOrSoilSelected() && controller.internalSlopeReinforcement.value) {
                               return Obx(() => _buildSubCheckbox(
-                                title: 'Freezing',
+                                title: 'freezing'.tr,
                                 value: controller.freezing.value,
                                 onChanged: (value) => controller.freezing.value = value ?? false,
                                 primaryColor: primaryColor,
@@ -2128,7 +2167,7 @@ _buildSectionCard(
                           Obx(() {
                             if (controller.isSoilOrDebrisSelected() && controller.internalSlopeReinforcement.value) {
                               return Obx(() => _buildSubCheckbox(
-                                title: 'Vegetation planting (root strength mechanical effect)',
+                                title: 'vegetation_planting_root_strength_mechanical'.tr,
                                 value: controller.vegetationPlantingMechanical.value,
                                 onChanged: (value) => controller.vegetationPlantingMechanical.value = value ?? false,
                                 primaryColor: primaryColor,
@@ -2140,14 +2179,14 @@ _buildSectionCard(
 
                           // Options for all material types
                           Obx(() => _buildSubCheckbox(
-                            title: 'Anchors (prestressed or not)',
+                            title: 'anchors_prestressed'.tr,
                             value: controller.anchors.value,
                             onChanged: (value) => controller.anchors.value = value ?? false,
                             primaryColor: primaryColor,
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Grouting',
+                            title: 'grouting'.tr,
                             value: controller.grouting.value,
                             onChanged: (value) => controller.grouting.value = value ?? false,
                             primaryColor: primaryColor,
@@ -2156,7 +2195,7 @@ _buildSectionCard(
                           
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.internalReinforcementOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -2168,7 +2207,7 @@ _buildSectionCard(
 
                       // Remedial measures not required
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Remedial measures not required (why?)',
+                        title: 'remedial_measures_not_required'.tr,
                         value: controller.remedialMeasuresNotRequired.value,
                         onChanged: (value) {
                           controller.remedialMeasuresNotRequired.value = value ?? false;
@@ -2179,7 +2218,7 @@ _buildSectionCard(
                         subItems: controller.remedialMeasuresNotRequired.value ? [
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Why?',
+                            label: 'why'.tr,
                             controller: controller.remedialNotRequiredWhyController,
                             primaryColor: primaryColor,
                           ),
@@ -2191,7 +2230,7 @@ _buildSectionCard(
 
                       // Remedial measures not sufficient to protect the slide
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'Remedial measure is not sufficient to protect the slide',
+                        title: 'remedial_measures_not_sufficient'.tr,
                         value: controller.remedialMeasuresNotAdequate.value,
                         onChanged: (value) {
                           controller.remedialMeasuresNotAdequate.value = value ?? false;
@@ -2205,7 +2244,7 @@ _buildSectionCard(
                         },
                         subItems: controller.remedialMeasuresNotAdequate.value ? [
                           Obx(() => _buildSubCheckbox(
-                            title: 'Shifting of the village is required',
+                            title: 'shifting_village_required'.tr,
                             value: controller.shiftingOfVillage.value,
                             onChanged: (value) {
                               controller.shiftingOfVillage.value = value ?? false;
@@ -2214,7 +2253,7 @@ _buildSectionCard(
                             textColor: textColor,
                           )),
                           Obx(() => _buildSubCheckbox(
-                            title: 'Evacuation of the infrastructure',
+                            title: 'evacuation_infrastructure'.tr,
                             value: controller.evacuationOfInfrastructure.value,
                             onChanged: (value) {
                               controller.evacuationOfInfrastructure.value = value ?? false;
@@ -2228,7 +2267,7 @@ _buildSectionCard(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Obx(() => _buildSubCheckbox(
-                                title: 'Realignment of the communication corridors',
+                                title: 'realignment_communication_corridors'.tr,
                                 value: controller.realignmentOfCommunicationCorridors.value,
                                 onChanged: (value) {
                                   controller.realignmentOfCommunicationCorridors.value = value ?? false;
@@ -2244,9 +2283,9 @@ _buildSectionCard(
                                   return Padding(
                                     padding: const EdgeInsets.only(left: 20.0, top: 8.0),
                                     child: _buildDropdownDamageField(
-                                      label: 'Type of communication corridor',
+                                      label: 'type_communication_corridor'.tr,
                                       value: controller.communicationCorridorType.value,
-                                      items: ['Realignment of road', 'Bridge', 'Tunnel'],
+                                      items: ['realignment_road', 'bridge', 'tunnel'],
                                       onChanged: (String? value) {
                                         controller.communicationCorridorType.value = value;
                                       },
@@ -2261,7 +2300,7 @@ _buildSectionCard(
                     
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other',
+                            label: 'other'.tr,
                             controller: controller.notAdequateOtherController,
                             primaryColor: primaryColor,
                           ),
@@ -2273,7 +2312,7 @@ _buildSectionCard(
 
                       // For any other Information
                       Obx(() => _buildHierarchicalCheckbox(
-                        title: 'For any other Information',
+                        title: 'for_any_other_information'.tr,
                         value: controller.otherInformation.value,
                         onChanged: (value) {
                           controller.otherInformation.value = value ?? false;
@@ -2284,7 +2323,7 @@ _buildSectionCard(
                         subItems: controller.otherInformation.value ? [
                           const SizedBox(height: 8),
                           _buildOtherTextField(
-                            label: 'Other Information',
+                            label: 'other_information'.tr,
                             controller: controller.otherInformationController,
                             primaryColor: primaryColor,
                           ),
@@ -2299,15 +2338,15 @@ _buildSectionCard(
                   
                   // Alert Category
                   _buildSectionCard(
-                    title: 'Alert Category',
+                    title: 'alert_category'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       Obx(() => _buildDropdown(
-                        hint: 'Select Alert level',
+                        hint: 'select_alert_level'.tr,
                         value: controller.alertCategory.value,
-                        items: ['Category 1', 'Category 2', 'Category 3'],
+                        items: ['category_1', 'category_2', 'category_3'].map((item) => item.tr).toList(),
                         onChanged: (value) => controller.alertCategory.value = value,
                         icon: Icons.trending_up,
                         hasInfoIcon: true,
@@ -2320,13 +2359,13 @@ _buildSectionCard(
 
                   // Any other relevant information
                   _buildSectionCard(
-                    title: 'Any other relevant \ninformation on the landslide',
+                    title: 'any_other_relevant_information'.tr,
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
                     children: [
                       _buildTextField(
-                        label: 'Enter any other relevant information',
+                        label: 'enter_other_relevant_information'.tr,
                         controller: controller.otherRelevantInformation,
                         maxLines: 2,
                       ),
@@ -2337,7 +2376,7 @@ _buildSectionCard(
 
 // Image Selection Section with Validation
 _buildSectionCard(
-  title: 'Landslide Images *',
+  title: '${'landslide_images'.tr} *',
   primaryColor: primaryColor,
   cardColor: cardColor,
   textColor: textColor,
@@ -2390,17 +2429,17 @@ _buildSectionCard(
             children: [
               Icon(Icons.info, color: Colors.blue.shade700, size: 20),
               const SizedBox(width: 8),
-              const Text(
-                'Image Requirements',
+              Text(
+                'image_requirements'.tr,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text('• At least 1 image is required to submit the report'),
-          const Text('• You can add up to 5 images'),
-          const Text('• Use the CAMERA or GALLERY buttons below to add images'),
-          const Text('• Good quality images help in better assessment'),
+          Text('• ${'at_least_1_image_required'.tr}'),
+          Text('• ${'up_to_5_images'.tr}'),
+          Text('• ${'use_camera_gallery_buttons'.tr}'),
+          Text('• ${'good_quality_images_help'.tr}'),
         ],
       ),
     ),
@@ -2537,6 +2576,38 @@ Obx(() {
             },
           ),
         ),
+        
+        // Image captions
+        const SizedBox(height: 16),
+        ...List.generate(controller.selectedImages.length, (index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'caption_for_image_number'.trParams({'number': '${index + 1}'}),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: controller.imageCaptions[index],
+                  decoration: InputDecoration(
+                    hintText: 'enter_caption_optional'.tr,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }
@@ -2588,7 +2659,7 @@ Container(
                   children: [
                     Expanded(
                       child: Text(
-                        'Tap "View Details" to see missing fields',
+                        'tap_view_details_missing'.tr,
                         style: TextStyle(
                           color: Colors.orange.shade600,
                           fontSize: 12,
@@ -2597,7 +2668,7 @@ Container(
                     ),
                     TextButton(
                       onPressed: () => controller.showValidationSummary(),
-                      child: const Text('View Details'),
+                      child: Text('view_details'.tr),
                     ),
                   ],
                 ),
@@ -2634,7 +2705,7 @@ Container(
             ),
             const SizedBox(width: 8),
             Obx(() => Text(
-              controller.isDraftMode.value ? 'SUBMIT DRAFT REPORT' : 'SUBMIT REPORT',
+              controller.isDraftMode.value ? 'submit_draft_report'.tr : 'submit_report_caps'.tr,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -2678,14 +2749,14 @@ Container(
               controller.openGallery();
             }
           },
-          items: const [
+          items: [
             BottomNavigationBarItem(
               icon: Icon(Icons.camera_alt),
-              label: 'CAMERA',
+              label: 'camera'.tr,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.image),
-              label: 'GALLERY',
+              label: 'gallery'.tr,
             ),
           ],
         ),
@@ -2747,6 +2818,74 @@ Widget _buildSectionCard({
       ),
     ),
   );
+}
+
+Widget _buildCollapsibleSectionCard({
+  required String title,
+  required Color primaryColor,
+  required Color cardColor,
+  required Color textColor,
+  required List<Widget> children,
+  required LandslideReportController controller,
+}) {
+  return Obx(() => Card(
+    elevation: 2,
+    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    color: cardColor,
+    child: Column(
+      children: [
+        InkWell(
+          onTap: () {
+            controller.isImpactSectionExpanded.value = !controller.isImpactSectionExpanded.value;
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ),
+                Icon(
+                  controller.isImpactSectionExpanded.value 
+                    ? Icons.keyboard_arrow_up 
+                    : Icons.keyboard_arrow_down,
+                  color: primaryColor,
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (controller.isImpactSectionExpanded.value)
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
+          ),
+      ],
+    ),
+  ));
 }
 
 Widget _buildLabelWithRedAsterisk(String text, Color textColor) {
@@ -3493,7 +3632,7 @@ Widget _buildHierarchicalCheckbox({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Road type',
+                'road_type'.tr,
                 style: TextStyle(
                   fontSize: 12,
                   color: primaryColor,
@@ -3512,15 +3651,15 @@ Widget _buildHierarchicalCheckbox({
                   child: DropdownButton<String>(
                     value: controller.roadTypeValue.value,
                     isExpanded: true,
-                    hint: const Text(
-                      '---Select---',
+                    hint: Text(
+                      'select'.tr,
                       style: TextStyle(fontSize: 12),
                     ),
-                    items: ['State Highway', 'National Highway', 'Local'].map((String item) {
+                    items: ['state_highway', 'national_highway', 'local'].map((String item) {
                       return DropdownMenuItem<String>(
-                        value: item,
+                        value: item.tr,
                         child: Text(
-                          item,
+                          item.tr,
                           style: const TextStyle(fontSize: 12),
                         ),
                       );
@@ -3540,7 +3679,7 @@ Widget _buildHierarchicalCheckbox({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Extent of damage',
+                'extent_of_damage'.tr,
                 style: TextStyle(
                   fontSize: 12,
                   color: primaryColor,
@@ -3559,15 +3698,15 @@ Widget _buildHierarchicalCheckbox({
                   child: DropdownButton<String>(
                     value: controller.roadExtentValue.value,
                     isExpanded: true,
-                    hint: const Text(
-                      '---Select---',
+                    hint: Text(
+                      'select'.tr,
                       style: TextStyle(fontSize: 12),
                     ),
-                    items: ['Full', 'Partial'].map((String item) {
+                    items: ['full', 'partial'].map((String item) {
                       return DropdownMenuItem<String>(
-                        value: item,
+                        value: item.tr,
                         child: Text(
-                          item,
+                          item.tr,
                           style: const TextStyle(fontSize: 12),
                         ),
                       );

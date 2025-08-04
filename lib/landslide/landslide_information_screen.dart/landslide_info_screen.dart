@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:get/get.dart';
 
 class LandslideInfoScreen extends StatefulWidget {
   const LandslideInfoScreen({Key? key}) : super(key: key);
@@ -16,28 +17,26 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
   bool _isExpanded = false;
   String _pdfPath = '';
   bool _pdfLoaded = false;
-  
+
   @override
   void initState() {
     super.initState();
     _preparePdf();
   }
-  
-  // Function to copy PDF from assets to local storage
+
   Future<void> _preparePdf() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final filePath = '${directory.path}/basic_info.pdf';
       final file = File(filePath);
-      
+
       if (!file.existsSync()) {
         final byteData = await rootBundle.load('assets/pdfs/basic_info.pdf');
         final buffer = byteData.buffer;
         await file.writeAsBytes(
-          buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes)
-        );
+            buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
       }
-      
+
       setState(() {
         _pdfPath = filePath;
         _pdfLoaded = true;
@@ -57,7 +56,7 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('PDF is still loading, please wait...')),
+        SnackBar(content: Text('pdf_loading_msg'.tr)),
       );
     }
   }
@@ -68,19 +67,19 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
       MaterialPageRoute(
         builder: (context) => WebViewScreen(
           url: 'https://youtu.be/VFakz8MmCwg?si=iKKuQWT7HO62fTmA',
-          title: 'Landslide Video',
+          title: 'landslide_video',
         ),
       ),
     );
   }
 
-  void _openWebLink(String url, String title) {
+  void _openWebLink(String url, String titleKey) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => WebViewScreen(
           url: url,
-          title: title,
+          title: titleKey,
         ),
       ),
     );
@@ -94,7 +93,7 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
         backgroundColor: Color(0xFF1976D2),
         foregroundColor: Colors.white,
         title: Text(
-          'Basic Information on Landslides',
+          'basic_info_title'.tr,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w500,
@@ -110,18 +109,16 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
         child: Column(
           children: [
             Container(
-              color: Color(0xFFF5F5DC), // Light beige background
+              color: Color(0xFFF5F5DC),
               padding: EdgeInsets.all(16),
               child: InkWell(
                 onTap: _openPdf,
                 child: Row(
                   children: [
-                    // PDF Icon
                     Image.asset(
                       'assets/images/pdf_icon.png',
                       width: 80,
                       height: 80,
-                      // If you don't have the PDF icon as an asset, use this:
                       errorBuilder: (context, error, stackTrace) => Container(
                         width: 80,
                         height: 90,
@@ -143,26 +140,17 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                             Container(
                               margin: EdgeInsets.only(top: 5),
                               width: 40,
-                              child: Divider(
-                                color: Colors.white,
-                                thickness: 2,
-                              ),
+                              child: Divider(color: Colors.white, thickness: 2),
                             ),
                             Container(
                               margin: EdgeInsets.only(top: 3),
                               width: 30,
-                              child: Divider(
-                                color: Colors.white,
-                                thickness: 2,
-                              ),
+                              child: Divider(color: Colors.white, thickness: 2),
                             ),
                             Container(
                               margin: EdgeInsets.only(top: 3),
                               width: 20,
-                              child: Divider(
-                                color: Colors.white,
-                                thickness: 2,
-                              ),
+                              child: Divider(color: Colors.white, thickness: 2),
                             ),
                           ],
                         ),
@@ -171,7 +159,7 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                     SizedBox(width: 20),
                     Expanded(
                       child: Text(
-                        'Basic_Information_on_Landslides.pdf',
+                        'pdf_file_name'.tr,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -182,15 +170,13 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                 ),
               ),
             ),
-            
-            // YouTube video section (Optional)
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: ElevatedButton.icon(
                 onPressed: _openYoutubeVideo,
                 icon: Icon(Icons.play_circle_filled),
-                label: Text('Watch Landslide Video'),
+                label: Text('watch_video'.tr),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -198,8 +184,6 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                 ),
               ),
             ),
-            
-            // For further information section
             Container(
               padding: EdgeInsets.all(16),
               child: Column(
@@ -214,7 +198,7 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'For further information :',
+                          'further_info'.tr,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -230,39 +214,30 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                   Divider(color: Colors.grey),
                   if (_isExpanded) ...[
                     _buildLinkItem(
-                      'https://pubs.usgs.gov/fs/2004/3072/fs-2004-3072.html',
-                      'USGS Landslide Information',
-                    ),
+                        'https://pubs.usgs.gov/fs/2004/3072/fs-2004-3072.html',
+                        'usgs_landslide'),
                     _buildLinkItem(
-                      'https://ndma.gov.in/Natural-Hazards/Landslide',
-                      'NDMA Landslide Information',
-                    ),
+                        'https://ndma.gov.in/Natural-Hazards/Landslide',
+                        'ndma_landslide'),
                     _buildLinkItem(
-                      'https://www.nrsc.gov.in/sites/default/files/pdf/ebooks/Chap_14_Landslide.pdf',
-                      'NRSC Landslide Chapter',
-                    ),
+                        'https://www.nrsc.gov.in/sites/default/files/pdf/ebooks/Chap_14_Landslide.pdf',
+                        'nrsc_landslide'),
                     _buildLinkItem(
-                      'https://nerdrr.gov.in/landslide.php#:~:text=In%20India%2C%20Geological%20Survey%20of',
-                      'NERDRR Landslide Information',
-                    ),
+                        'https://nerdrr.gov.in/landslide.php#:~:text=In%20India%2C%20Geological%20Survey%20of',
+                        'nerdrr_landslide'),
                     _buildLinkItem(
-                      'https://www.landslip.org/',
-                      'Landslip Organization',
-                    ),
+                        'https://www.landslip.org/',
+                        'landslip_org'),
                     _buildLinkItem(
-                      'https://pubs.usgs.gov/fs/2004/3072/fs-2004-3072.html',
-                      'USGS Landslide Fact Sheet',
-                    ),
+                        'https://pubs.usgs.gov/fs/2004/3072/fs-2004-3072.html',
+                        'usgs_factsheet'),
                     _buildLinkItem(
-                      'https://www.bgs.ac.uk/discovering-geology/earth-hazards/landslides/how-to-classify-a-landslide/',
-                      'Classifying Landslides - BGS',
-                    ),
+                        'https://www.bgs.ac.uk/discovering-geology/earth-hazards/landslides/how-to-classify-a-landslide/',
+                        'bgs_classify'),
                   ],
                 ],
               ),
             ),
-            
-            // GSI Information
             Container(
               color: Colors.grey[800],
               padding: EdgeInsets.all(16),
@@ -275,7 +250,6 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                       'assets/images/gsi_logo.png',
                       width: 45,
                       height: 45,
-                      // Fallback if image is not available
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.public,
                         size: 30,
@@ -289,7 +263,7 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'History of GSI',
+                          'history_gsi'.tr,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -298,7 +272,7 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Geological Survey of India Central Headquarters',
+                          'gsi_headquarters'.tr,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 14,
@@ -316,19 +290,17 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
     );
   }
 
-  Widget _buildLinkItem(String url, String title) {
+  Widget _buildLinkItem(String url, String titleKey) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: InkWell(
-        onTap: () => _openWebLink(url, title),
+        onTap: () => _openWebLink(url, titleKey),
         child: Text(
-          textAlign: TextAlign.start,
           url,
           style: TextStyle(
             color: Colors.blue,
             decoration: TextDecoration.underline,
             fontSize: 14,
-            
           ),
         ),
       ),
@@ -336,10 +308,9 @@ class _LandslideInfoScreenState extends State<LandslideInfoScreen> {
   }
 }
 
-// PDF Viewer Screen
 class PDFViewerScreen extends StatelessWidget {
   final String filePath;
-  
+
   const PDFViewerScreen({Key? key, required this.filePath}) : super(key: key);
 
   @override
@@ -347,7 +318,7 @@ class PDFViewerScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF1976D2),
-        title: Text('Basic Information on Landslides'),
+        title: Text('basic_info_title'.tr),
         centerTitle: true,
       ),
       body: PDFView(
@@ -357,9 +328,6 @@ class PDFViewerScreen extends StatelessWidget {
         autoSpacing: true,
         pageSnap: true,
         pageFling: true,
-        onRender: (_pages) {
-          // PDF rendered successfully
-        },
         onError: (error) {
           print('Error rendering PDF: $error');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -374,11 +342,10 @@ class PDFViewerScreen extends StatelessWidget {
   }
 }
 
-// WebView Screen for links and YouTube
 class WebViewScreen extends StatefulWidget {
   final String url;
   final String title;
-  
+
   const WebViewScreen({Key? key, required this.url, required this.title}) : super(key: key);
 
   @override
@@ -419,7 +386,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF1976D2),
-        title: Text(widget.title),
+        title: Text(widget.title.tr),
         centerTitle: true,
         actions: [
           IconButton(
@@ -434,9 +401,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
         children: [
           WebViewWidget(controller: controller),
           if (isLoading)
-            Center(
-              child: CircularProgressIndicator(),
-            ),
+            Center(child: CircularProgressIndicator()),
         ],
       ),
     );

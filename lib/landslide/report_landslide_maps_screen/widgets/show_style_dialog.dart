@@ -1,5 +1,6 @@
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_style_section.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showStyleDialog(BuildContext context) {
   showDialog(
@@ -19,8 +20,8 @@ void showStyleDialog(BuildContext context) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Style',
+                  Text(
+                    'style'.tr,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -50,28 +51,28 @@ void showStyleDialog(BuildContext context) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       buildStyleSection(
-                        title: 'Complex',
-                        description: 'A complex landslide exhibits at least two types of movement (falling, toppling, sliding, spreading and flowing) in sequence.',
+                        title: 'complex'.tr,
+                        description: 'complex_desc'.tr,
                       ),
                       
                       buildStyleSection(
-                        title: 'Composite',
-                        description: 'A composite landslide exhibits at least two types of movement simultaneously in different parts of the displacing mass.',
+                        title: 'composite'.tr,
+                        description: 'composite_desc'.tr,
                       ),
                       
                       buildStyleSection(
-                        title: 'Successive',
-                        description: 'A successive landslide is the same type as a nearby, earlier landslide, but does not share displaced material or rupture surface with it.',
+                        title: 'successive'.tr,
+                        description: 'successive_desc'.tr,
                       ),
                       
                       buildStyleSection(
-                        title: 'Multiple',
-                        description: 'A multiple landslide shows repeated development of the same type of movement.',
+                        title: 'multiple'.tr,
+                        description: 'multiple_desc'.tr,
                       ),
                       
                       buildStyleSection(
-                        title: 'Single',
-                        description: 'A single landslide is a single movement of displaced material.',
+                        title: 'single'.tr,
+                        description: 'single_desc'.tr,
                       ),
                     ],
                   ),

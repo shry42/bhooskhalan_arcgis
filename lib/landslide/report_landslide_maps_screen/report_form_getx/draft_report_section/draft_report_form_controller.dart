@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +28,7 @@ class LandslideReportController extends GetxController {
   
   // Images with validation
   var selectedImages = <File>[].obs;
+  var imageCaptions = <TextEditingController>[].obs;
   var imageValidationError = ''.obs;
 
   // Add these after existing draft management properties
@@ -36,6 +38,7 @@ var isPendingEditMode = false.obs;
   var isLocationAutoPopulated = false.obs;
 var selectedStateFromDropdown = Rxn<String>();
 var selectedDistrictFromDropdown = Rxn<String>();
+var isImpactSectionExpanded = false.obs;
 
 Future<bool> _checkInternetConnection() async {
   final connectivityResult = await Connectivity().checkConnectivity();
@@ -776,13 +779,13 @@ void _showLocationNotFound() {
   }
 
   // DRAFT MANAGEMENT METHODS
-  void loadDraftData(Map<String, dynamic> draftData) {
+  Future<void> loadDraftData(Map<String, dynamic> draftData) async {
     try {
       _loadTextControllers(draftData);
       _loadDropdownValues(draftData);
       _loadHistoryDates(draftData);
       loadCheckboxData(draftData);
-      _loadDraftImages(draftData);
+      await _loadDraftImages(draftData);
     } catch (e) {
       print('Error loading draft data: $e');
       Get.snackbar(
@@ -794,18 +797,48 @@ void _showLocationNotFound() {
     }
   }
 
-  void _loadDraftImages(Map<String, dynamic> draftData) {
-    // For drafts, we can't reload actual image files, but we can show placeholder info
-    // or reload from saved paths if available
-    if (draftData['imageCount'] != null && draftData['imageCount'] > 0) {
-      // Show user that images were previously selected
-      Get.snackbar(
-        'Draft Images',
-        'This draft had ${draftData['imageCount']} images. Please re-select images for submission.',
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
+  Future<void> _loadDraftImages(Map<String, dynamic> draftData) async {
+    try {
+      // Clear existing images
+      selectedImages.clear();
+      for (var controller in imageCaptions) {
+        controller.dispose();
+      }
+      imageCaptions.clear();
+      
+      // Load images from base64 data
+      List<dynamic>? imagesData = draftData['images'];
+      List<dynamic>? captionsData = draftData['imageCaptions'];
+      
+      if (imagesData != null && imagesData.isNotEmpty) {
+        for (int i = 0; i < imagesData.length; i++) {
+          try {
+            String base64Image = imagesData[i];
+            if (base64Image.isNotEmpty) {
+              // Convert base64 to File object
+              List<int> bytes = base64Decode(base64Image);
+              String tempPath = '/tmp/draft_image_$i.jpg';
+              File tempFile = File(tempPath);
+              await tempFile.writeAsBytes(bytes);
+              
+              selectedImages.add(tempFile);
+              
+              // Add caption controller
+              TextEditingController captionController = TextEditingController();
+              if (captionsData != null && i < captionsData.length) {
+                captionController.text = captionsData[i] ?? '';
+              }
+              imageCaptions.add(captionController);
+            }
+          } catch (e) {
+            print('Error loading image $i from draft: $e');
+          }
+        }
+      }
+      
+      _validateImages();
+    } catch (e) {
+      print('Error loading images from draft: $e');
     }
   }
 
@@ -1038,7 +1071,7 @@ rainfallDurationValue.value = draftData['rainfallDuration'];
     if (draftData['otherInformationText'] != null) otherInformationController.text = draftData['otherInformationText'];
   }
   
-  Map<String, dynamic> collectFormData() {
+  Future<Map<String, dynamic>> collectFormData() async {
     return {
       // Location data
       'latitude': latitudeController.text,
@@ -1091,9 +1124,11 @@ rainfallDurationValue.value = draftData['rainfallDuration'];
       // History
       'historyDates': historyDates.toList(),
       
-      // Images metadata for draft
+      // Images data for draft - now includes actual images
+      'imageCaptions': imageCaptions.map((controller) => controller.text).toList(),
       'imageCount': selectedImages.length,
       'hasImages': selectedImages.isNotEmpty,
+      'images': await _convertImagesToBase64(),
       
       // Structure checkboxes
       'bedding': bedding.value,
@@ -1242,7 +1277,7 @@ rainfallDurationValue.value = draftData['rainfallDuration'];
   
 Future<void> saveDraft() async {
   try {
-    final formData = collectFormData();
+    final formData = await collectFormData();
     final reportsController = Get.put(RecentReportsController());
   
     if (currentDraftId != null) {
@@ -1288,6 +1323,7 @@ Future<void> saveDraft() async {
       
       if (photo != null) {
         selectedImages.add(File(photo.path));
+        imageCaptions.add(TextEditingController()); // Add caption controller
         _validateImages(); // Clear any validation errors
         Get.snackbar(
           'Success',
@@ -1328,8 +1364,16 @@ Future<void> saveDraft() async {
             snackPosition: SnackPosition.BOTTOM,
           );
           selectedImages.addAll(photos.take(remaining).map((photo) => File(photo.path)));
+          // Add caption controllers for each new image
+          for (int i = 0; i < remaining; i++) {
+            imageCaptions.add(TextEditingController());
+          }
         } else {
           selectedImages.addAll(photos.map((photo) => File(photo.path)));
+          // Add caption controllers for each new image
+          for (int i = 0; i < photos.length; i++) {
+            imageCaptions.add(TextEditingController());
+          }
         }
         
         _validateImages(); // Clear any validation errors
@@ -1354,6 +1398,10 @@ Future<void> saveDraft() async {
   
   void removeImage(int index) {
     selectedImages.removeAt(index);
+    if (index < imageCaptions.length) {
+      imageCaptions[index].dispose();
+      imageCaptions.removeAt(index);
+    }
     _validateImages(); // Re-validate after removal
   }
 
@@ -1705,23 +1753,23 @@ if (whatInducedLandslideValue.value == 'Rainfall') {
     List<String> missing = [];
     
     // Check each required field
-    if (stateController.text.trim().isNotEmpty) completed++; else missing.add('State');
-    if (districtController.text.trim().isNotEmpty) completed++; else missing.add('District');
-    if (landslideOccurrenceValue.value != null) completed++; else missing.add('Landslide Occurrence');
-    if (whereDidLandslideOccurValue.value != null) completed++; else missing.add('Location Type');
-    if (typeOfMaterialValue.value != null) completed++; else missing.add('Material Type');
-    if (typeOfMovementValue.value != null) completed++; else missing.add('Movement Type');
-    if (lengthController.text.trim().isNotEmpty) completed++; else missing.add('Length');
-    if (widthController.text.trim().isNotEmpty) completed++; else missing.add('Width');
-    if (heightController.text.trim().isNotEmpty) completed++; else missing.add('Height');
-    if (areaController.text.trim().isNotEmpty) completed++; else missing.add('Area');
-    if (depthController.text.trim().isNotEmpty) completed++; else missing.add('Depth');
-    if (volumeController.text.trim().isNotEmpty) completed++; else missing.add('Volume');
-    if (activityValue.value != null) completed++; else missing.add('Activity');
-    if (styleValue.value != null) completed++; else missing.add('Style');
-    if (failureMechanismValue.value != null) completed++; else missing.add('Failure Mechanism');
-    if (whatInducedLandslideValue.value != null) completed++; else missing.add('Inducing Factor');
-    if (selectedImages.isNotEmpty) completed++; else missing.add('Images (At least 1)');
+    if (stateController.text.trim().isNotEmpty) completed++; else missing.add('state'.tr);
+    if (districtController.text.trim().isNotEmpty) completed++; else missing.add('district'.tr);
+    if (landslideOccurrenceValue.value != null) completed++; else missing.add('landslide_occurrence'.tr);
+    if (whereDidLandslideOccurValue.value != null) completed++; else missing.add('location_type'.tr);
+    if (typeOfMaterialValue.value != null) completed++; else missing.add('material_type'.tr);
+    if (typeOfMovementValue.value != null) completed++; else missing.add('movement_type'.tr);
+    if (lengthController.text.trim().isNotEmpty) completed++; else missing.add('length'.tr);
+    if (widthController.text.trim().isNotEmpty) completed++; else missing.add('width'.tr);
+    if (heightController.text.trim().isNotEmpty) completed++; else missing.add('height'.tr);
+    if (areaController.text.trim().isNotEmpty) completed++; else missing.add('area'.tr);
+    if (depthController.text.trim().isNotEmpty) completed++; else missing.add('depth'.tr);
+    if (volumeController.text.trim().isNotEmpty) completed++; else missing.add('volume'.tr);
+    if (activityValue.value != null) completed++; else missing.add('activity'.tr);
+    if (styleValue.value != null) completed++; else missing.add('style'.tr);
+    if (failureMechanismValue.value != null) completed++; else missing.add('failure_mechanism'.tr);
+    if (whatInducedLandslideValue.value != null) completed++; else missing.add('inducing_factor'.tr);
+    if (selectedImages.isNotEmpty) completed++; else missing.add('images_at_least_one'.tr);
     
     // Add this check in getValidationSummary method
 // Add this check in getValidationSummary method
@@ -1729,7 +1777,7 @@ if (whatInducedLandslideValue.value == 'Rainfall') {
   if (rainfallDurationValue.value != null) {
     completed++; // Duration is the main requirement
   } else {
-    missing.add('Rainfall Duration');
+    missing.add('rainfall_duration'.tr);
   }
   totalRequired++; // Increase total required when rainfall is selected
 }
@@ -1737,7 +1785,7 @@ if (whatInducedLandslideValue.value == 'Rainfall') {
     if (geologicalCauses.value || morphologicalCauses.value || humanCauses.value || otherCauses.value) {
       completed++;
     } else {
-      missing.add('Geo-Scientific Causes');
+      missing.add('geo_scientific_causes'.tr);
     }
     
     return {
@@ -1783,6 +1831,20 @@ if (whatInducedLandslideValue.value == 'Rainfall') {
   Future<String> imageToBase64(File imageFile) async {
     List<int> imageBytes = await imageFile.readAsBytes();
     return base64Encode(imageBytes);
+  }
+
+  Future<List<String>> _convertImagesToBase64() async {
+    List<String> base64Images = [];
+    for (File image in selectedImages) {
+      try {
+        String base64Image = await imageToBase64(image);
+        base64Images.add(base64Image);
+      } catch (e) {
+        print('Error converting image to base64: $e');
+        base64Images.add(''); // Add empty string to maintain index alignment
+      }
+    }
+    return base64Images;
   }
 
   // FORM SUBMISSION WITH ENHANCED IMAGE VALIDATION
@@ -2349,11 +2411,11 @@ void _showSuccessDialog({required bool isOnline}) {
   // Get image status for UI display
   String getImageStatusText() {
     if (selectedImages.isEmpty) {
-      return 'No images selected (Required)';
+      return 'no_images_selected_required'.tr;
     } else if (selectedImages.length == 1) {
-      return '1 image selected';
+      return 'one_image_selected'.tr;
     } else {
-      return '${selectedImages.length} images selected';
+      return 'images_selected_count'.trParams({'count': '${selectedImages.length}'});
     }
   }
 
@@ -2370,7 +2432,7 @@ void _showSuccessDialog({required bool isOnline}) {
   // Get form completion status for UI
   String getFormCompletionText() {
     final summary = getValidationSummary();
-    return '${summary['completed']}/${summary['totalRequired']} fields completed (${summary['percentage']}%)';
+    return '${summary['completed']} में से ${summary['totalRequired']} आवश्यक फ़ील्ड पूर्ण';
   }
 
   // Show validation summary dialog
@@ -2385,7 +2447,7 @@ void _showSuccessDialog({required bool isOnline}) {
               color: summary['isComplete'] ? Colors.green : Colors.orange,
             ),
             const SizedBox(width: 8),
-            Text('Form Status'),
+            Text('form_status'.tr),
           ],
         ),
         content: SingleChildScrollView(
@@ -2394,16 +2456,16 @@ void _showSuccessDialog({required bool isOnline}) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Completion: ${summary['percentage']}%',
+                'पूर्णता: ${summary['percentage']}%',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              Text('${summary['completed']} of ${summary['totalRequired']} required fields completed'),
+              Text('${summary['completed']} में से ${summary['totalRequired']} आवश्यक फ़ील्ड पूर्ण'),
               const SizedBox(height: 16),
               if (!summary['isComplete']) ...[
-                const Text(
-                  'Missing required fields:',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                Text(
+                  'missing_required_fields'.tr,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
                 ),
                 const SizedBox(height: 8),
                 ...summary['missing'].map((field) => Padding(
@@ -2428,10 +2490,10 @@ void _showSuccessDialog({required bool isOnline}) {
                   children: [
                     Icon(Icons.info, color: Colors.blue.shade700),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'You can save this as a draft and complete it later.',
-                        style: TextStyle(fontSize: 14),
+                        'save_as_draft_info'.tr,
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                   ],
@@ -2447,11 +2509,11 @@ void _showSuccessDialog({required bool isOnline}) {
                 Get.back();
                 saveDraft();
               },
-              child: const Text('Save as Draft'),
+              child: Text('save_as_draft'.tr),
             ),
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close'),
+            child: Text('close'.tr),
           ),
           if (summary['isComplete'])
             ElevatedButton(
@@ -2459,7 +2521,7 @@ void _showSuccessDialog({required bool isOnline}) {
                 Get.back();
                 submitForm();
               },
-              child: const Text('Submit Report'),
+              child: Text('submit_report'.tr),
             ),
         ],
       ),
@@ -2530,6 +2592,250 @@ void _showSuccessDialog({required bool isOnline}) {
     otherInformationController.dispose();
 
     rainfallAmountController.dispose();
+    for (var controller in imageCaptions) {
+      controller.dispose();
+    }
+    imageCaptions.clear();
+  }
 
+  // Add option constants for expert form
+  static const List<String> landslideOccurrenceOptions = [
+    'exact_occurrence_date',
+    'approximate_occurrence_date', 
+    'no_occurrence_date'
+  ];
+
+  static const List<String> howDoYouKnowOptions = [
+    'i_observed_it',
+    'through_local',
+    'social_media',
+    'news',
+    'i_dont_know',
+  ];
+
+  static const List<String> whereDidLandslideOccurOptions = [
+    'near_on_road',
+    'next_to_river',
+    'settlement',
+    'plantation',
+    'forest_area',
+    'cultivation',
+    'barren_land',
+    'other_specify'
+  ];
+
+  static const List<String> typeOfMaterialOptions = [
+    'rock',
+    'soil',
+    'debris_mixture'
+  ];
+
+  static const List<String> typeOfMovementOptions = [
+    'slide',
+    'fall',
+    'topple',
+    'subsidence',
+    'creep',
+    'lateral_spread',
+    'flow',
+    'complex'
+  ];
+
+  static const List<String> rateOfMovementOptions = [
+    'extremely_rapid',
+    'very_rapid',
+    'rapid',
+    'moderate',
+    'slow',
+    'very_slow',
+    'extremely_slow'
+  ];
+
+  static const List<String> activityOptions = [
+    'active',
+    'reactivated',
+    'suspended',
+    'dormant',
+    'abandoned',
+    'stabilised',
+    'relict'
+  ];
+
+  static const List<String> distributionOptions = [
+    'advancing',
+    'retrogressive',
+    'widening',
+    'enlarging',
+    'confined',
+    'diminishing',
+    'moving'
+  ];
+
+  static const List<String> styleOptions = [
+    'successive',
+    'multiple',
+    'single',
+    'composite'
+  ];
+
+  static const List<String> failureMechanismOptions = [
+    'translational',
+    'rotational',
+    'planar',
+    'wedge',
+    'topple_mechanism'
+  ];
+
+  static const List<String> hydrologicalConditionOptions = [
+    'dry',
+    'damp',
+    'wet',
+    'dipping',
+    'flowing'
+  ];
+
+  static const List<String> whatInducedLandslideOptions = [
+    'rainfall',
+    'earthquake',
+    'man_made',
+    'snow_melt',
+    'vibration',
+    'toe_erosion',
+    'i_dont_know'
+  ];
+
+  static const List<String> rainfallDurationOptions = [
+    'no_rainfall_day_landslide',
+    'half_day_or_less',
+    'whole_day',
+    'few_days_less_week',
+    'week_or_more',
+    'i_dont_know'
+  ];
+
+  static const List<String> weatheringGradeOptions = [
+    'w1_fresh',
+    'w2_slightly_weathered',
+    'w3_moderately_weathered',
+    'w4_highly_weathered',
+    'w5_completely_weathered'
+  ];
+
+  static const List<String> extentOptions = [
+    'full',
+    'partial'
+  ];
+
+  static const List<String> roadBlockageOptions = [
+    'few_hours',
+    'half_day',
+    'one_day',
+    'more_than_day',
+    'no_blockage'
+  ];
+
+  static const List<String> roadTypeOptions = [
+    'state_highway',
+    'national_highway',
+    'local'
+  ];
+
+  static const List<String> roadExtentOptions = [
+    'full',
+    'partial'
+  ];
+
+  static const List<String> landslideSizeOptions = [
+    'small_building',
+    'medium_building',
+    'large_building'
+  ];
+
+  // Helper method to get translated value for display
+  String? getTranslatedValueForDisplay(String? englishKey, List<String> optionsList) {
+    if (englishKey == null) return null;
+    
+    // If it's already a translated value, return it
+    if (optionsList.any((key) => key.tr == englishKey)) {
+      return englishKey;
+    }
+    
+    // If it's an English key, return the translated value
+    if (optionsList.contains(englishKey)) {
+      return englishKey.tr;
+    }
+    
+    return null;
+  }
+
+  // Helper method to get English key from translated value
+  String? getEnglishKeyFromTranslatedValue(String? translatedValue, List<String> optionsList) {
+    if (translatedValue == null) return null;
+    
+    // If it's already an English key, return it
+    if (optionsList.contains(translatedValue)) {
+      return translatedValue;
+    }
+    
+    // If it's a translated value, find the English key
+    for (String key in optionsList) {
+      if (key.tr == translatedValue) {
+        return key;
+      }
+    }
+    
+    // Try Hindi to English mapping
+    return _findEnglishKeyFromHindiValue(translatedValue, optionsList);
+  }
+
+  // Helper method to find English key from Hindi value
+  String? _findEnglishKeyFromHindiValue(String? hindiValue, List<String> optionKeys) {
+    if (hindiValue == null) return null;
+    
+    // Create a static mapping of Hindi values to English keys
+    Map<String, String> hindiToEnglishMap = {
+      // Landslide occurrence options
+      'मुझे सटीक घटना तिथि पता है': 'exact_occurrence_date',
+      'मुझे अनुमानित घटना तिथि पता है': 'approximate_occurrence_date',
+      'मुझे घटना की तारीख नहीं पता': 'no_occurrence_date',
+      
+      // How do you know options
+      'मैंने इसे देखा': 'i_observed_it',
+      'स्थानीय व्यक्ति के माध्यम से': 'through_local',
+      'सोशल मीडिया': 'social_media',
+      'समाचार': 'news',
+      'मुझे नहीं पता': 'i_dont_know',
+      
+      // Where did landslide occur options
+      'सड़क के पास/सड़क पर': 'near_on_road',
+      'नदी के बगल में': 'next_to_river',
+      'बस्ती': 'settlement',
+      'बागान': 'plantation',
+      'वन क्षेत्र': 'forest_area',
+      'खेती': 'cultivation',
+      'बंजर भूमि': 'barren_land',
+      'अन्य (विशिष्ट)': 'other_specify',
+      
+      // Material type options
+      'चट्टान': 'rock',
+      'मिट्टी': 'soil',
+      'मलबा (चट्टान और मिट्टी का मिश्रण)': 'debris_mixture',
+      
+      // Extent options
+      'पूर्ण': 'full',
+      'आंशिक': 'partial',
+      
+      // Road type options
+      'राज्य राजमार्ग': 'state_highway',
+      'राष्ट्रीय राजमार्ग': 'national_highway',
+      'स्थानीय': 'local',
+      
+      // Landslide size options
+      'छोटा - (2 मंजिल से कम इमारत) < 6m': 'small_building',
+      'मध्यम - (2 से 5 मंजिल इमारत) 6-15m': 'medium_building',
+      'बड़ा - (5 मंजिल से अधिक इमारत) > 15m': 'large_building',
+    };
+    
+    return hindiToEnglishMap[hindiValue];
   }
 }

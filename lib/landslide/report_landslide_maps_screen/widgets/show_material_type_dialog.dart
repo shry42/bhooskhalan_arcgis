@@ -1,5 +1,6 @@
   import 'package:bhooskhalann/landslide/report_landslide_maps_screen/widgets/build_material_type_section_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showMaterialTypeDialog(BuildContext context) {
     showDialog(
@@ -19,8 +20,8 @@ void showMaterialTypeDialog(BuildContext context) {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Material Types',
+                    Text(
+                      'material_types'.tr,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -40,25 +41,25 @@ void showMaterialTypeDialog(BuildContext context) {
                       children: [
                         // Rock Section
                         buildMaterialTypeSection(
-                          title: 'Rock',
+                          title: 'rock'.tr,
                           imagePath: 'assets/rock_slide.png',
-                          description: 'Rock slide',
+                          description: 'rock_slide'.tr,
                         ),
                         const SizedBox(height: 20),
                         
                         // Soil Section
                         buildMaterialTypeSection(
-                          title: 'Soil',
+                          title: 'soil'.tr,
                           imagePath: 'assets/soil_slide.png',
-                          description: 'Soil slide',
+                          description: 'soil_slide'.tr,
                         ),
                         const SizedBox(height: 20),
                         
                         // Debris Section
                         buildMaterialTypeSection(
-                          title: 'Debris (mixture of Rock and Soil)',
+                          title: 'debris_mixture_rock_soil'.tr,
                           imagePath: 'assets/debris_slide.png',
-                          description: 'Debris slide',
+                          description: 'debris_slide'.tr,
                         ),
                       ],
                     ),

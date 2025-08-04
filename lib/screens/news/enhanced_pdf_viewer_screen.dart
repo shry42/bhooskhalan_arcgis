@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:get/get.dart';
 import 'news_webview_screen.dart';
 
 class EnhancedPdfViewerScreen extends StatefulWidget {
@@ -30,7 +31,6 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
     _pdfViewerController = PdfViewerController();
   }
 
-
   Future<void> _openInExternalApp() async {
     try {
       final Uri url = Uri.parse(widget.url);
@@ -40,10 +40,10 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
           mode: LaunchMode.externalApplication,
         );
       } else {
-        _showErrorSnackBar('Cannot open PDF in external app');
+        _showErrorSnackBar('cannotOpenPdfExternalApp'.tr);
       }
     } catch (e) {
-      _showErrorSnackBar('Error opening external app: $e');
+      _showErrorSnackBar('${'errorOpeningExternalApp'.tr} $e');
     }
   }
 
@@ -59,7 +59,7 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
         ),
       );
     } catch (e) {
-      _showErrorSnackBar('Error opening in WebView: $e');
+      _showErrorSnackBar('${'errorOpeningWebView'.tr} $e');
     }
   }
 
@@ -70,7 +70,7 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
           content: Text(message),
           backgroundColor: Colors.red,
           action: SnackBarAction(
-            label: 'Retry',
+            label: 'retry'.tr,
             textColor: Colors.white,
             onPressed: () {
               setState(() {
@@ -99,13 +99,13 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
               color: Colors.orange.shade400,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'PDF Loading Failed',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            Text(
+              'pdfLoadingFailed'.tr,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
-              'Try one of these alternatives:',
+              'tryAlternatives'.tr,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade600),
             ),
@@ -117,7 +117,7 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
               child: ElevatedButton.icon(
                 onPressed: _openInWebView,
                 icon: const Icon(Icons.web),
-                label: const Text('Open in WebView'),
+                label: Text('openInWebView'.tr),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade600,
                   foregroundColor: Colors.white,
@@ -134,7 +134,7 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
               child: ElevatedButton.icon(
                 onPressed: _openInExternalApp,
                 icon: const Icon(Icons.open_in_new),
-                label: const Text('Open in External App'),
+                label: Text('openInExternalApp'.tr),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green.shade600,
                   foregroundColor: Colors.white,
@@ -158,7 +158,7 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
                   });
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry PDF Viewer'),
+                label: Text('retryPdfViewer'.tr),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                 ),
@@ -175,7 +175,7 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
                   border: Border.all(color: Colors.red.shade200),
                 ),
                 child: Text(
-                  'Error Details: $_errorMessage',
+                  '${'errorDetails'.tr} $_errorMessage',
                   style: TextStyle(
                     color: Colors.red.shade700,
                     fontSize: 12,
@@ -232,35 +232,35 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'external',
                 child: Row(
                   children: [
-                    Icon(Icons.open_in_new),
-                    SizedBox(width: 8),
-                    Text('Open Externally'),
+                    const Icon(Icons.open_in_new),
+                    const SizedBox(width: 8),
+                    Text('openExternally'.tr),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'webview',
                 child: Row(
                   children: [
-                    Icon(Icons.web),
-                    SizedBox(width: 8),
-                    Text('Open in WebView'),
+                    const Icon(Icons.web),
+                    const SizedBox(width: 8),
+                    Text('openInWebView'.tr),
                   ],
                 ),
               ),
               if (!_hasError) ...[
                 const PopupMenuDivider(),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'fit_width',
-                  child: Text('Fit Width'),
+                  child: Text('fitWidth'.tr),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'fit_page',
-                  child: Text('Fit Page'),
+                  child: Text('fitPage'.tr),
                 ),
               ],
             ],
@@ -295,7 +295,9 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
                     // Auto-show fallback options after 2 seconds
                     Future.delayed(const Duration(seconds: 2), () {
                       if (mounted && _hasError) {
-                        _showFallbackOptions;
+                        setState(() {
+                          _showFallbackOptions = true;
+                        });
                       }
                     });
                   },
@@ -305,17 +307,17 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
               if (_isLoading)
                 Container(
                   color: Colors.white.withOpacity(0.9),
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Loading PDF...'),
-                        SizedBox(height: 8),
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        Text('loadingPdf'.tr),
+                        const SizedBox(height: 8),
                         Text(
-                          'This may take a moment for large files',
-                          style: TextStyle(
+                          'loadingPdfSubtitle'.tr,
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
                           ),
@@ -339,12 +341,12 @@ class _EnhancedPdfViewerScreenState extends State<EnhancedPdfViewerScreen> {
                           color: Colors.red.shade400,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'PDF Loading Failed',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        Text(
+                          'pdfLoadingFailed'.tr,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 8),
-                        const Text('Preparing alternative options...'),
+                        Text('preparingAlternatives'.tr),
                         const SizedBox(height: 16),
                         const CircularProgressIndicator(),
                       ],
