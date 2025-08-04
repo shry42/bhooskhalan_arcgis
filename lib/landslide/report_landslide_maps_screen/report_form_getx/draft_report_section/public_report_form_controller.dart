@@ -1291,6 +1291,36 @@ void showLandslideSizeDialog() {
   );
 }
 
+  // Show landslide size info dialog
+  void showLandslideSizeInfoDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.info, color: Colors.blue.shade700),
+            const SizedBox(width: 8),
+            Text('size_categories'.tr),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('• ${'small_size_desc'.tr}'),
+            Text('• ${'medium_size_desc'.tr}'),
+            Text('• ${'large_size_desc'.tr}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('ok'.tr),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSizeOption(String size) {
     return ListTile(
       title: Text(size),
@@ -1504,10 +1534,10 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
         
         await ApiService.postLandslide('/Landslide/create/${mobile.value}/Public', [payload]);
         
-        // If submission is successful and this was a draft, remove it from drafts
+        // If submission is successful and this was a draft, update its status to submitted
         if (currentDraftId != null) {
           final reportsController = Get.find<RecentReportsController>();
-          await reportsController.moveDraftToSynced(currentDraftId!, payload);
+          await reportsController.updateDraftSubmissionStatus(currentDraftId!, 'submitted');
         }
         
         _showSuccessDialog(isOnline: true);
@@ -1545,9 +1575,9 @@ Future<void> _handleOfflineSubmission(Map<String, dynamic> payload) async {
   payload['formType'] = 'public';
   payload['title'] = 'Public Landslide Report - ${payload['District'] ?? payload['State'] ?? 'Unknown Location'}';
   
-  // If this was a draft, remove it from drafts first
+  // If this was a draft, update its status to pending instead of deleting
   if (currentDraftId != null) {
-    await reportsController.deleteDraftReport(currentDraftId!);
+    await reportsController.updateDraftSubmissionStatus(currentDraftId!, 'pending');
   }
   
   // Add to "To Be Synced" queue
@@ -1800,7 +1830,7 @@ String getImageStatusText() {
   // Get form completion status for UI
 String getFormCompletionText() {
   final summary = getValidationSummary();
-  return '${summary['completed']} में से ${summary['totalRequired']} आवश्यक फ़ील्ड पूर्ण';
+  return '${summary['completed']} of ${summary['totalRequired']} required fields completed';
 }
 
   // Show validation summary dialog

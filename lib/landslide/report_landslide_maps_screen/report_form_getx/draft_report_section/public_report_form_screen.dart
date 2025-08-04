@@ -417,6 +417,8 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
+                    hasInfoIcon: true,
+                    onInfoTap: () => controller.showLandslideSizeInfoDialog(),
                     children: [
                       Obx(() => GestureDetector(
                         onTap: () => controller.showLandslideSizeDialog(),
@@ -445,34 +447,6 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                           ),
                         ),
                       )),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.shade200),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.info, color: Colors.blue.shade700, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'size_categories'.tr,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text('• ${'small_size_desc'.tr}'),
-                            Text('• ${'medium_size_desc'.tr}'),
-                            Text('• ${'large_size_desc'.tr}'),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                   
@@ -729,6 +703,8 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                     primaryColor: primaryColor,
                     cardColor: cardColor,
                     textColor: textColor,
+                    hasInfoIcon: true,
+                    onInfoTap: () => controller.showImageRequirementDialog(),
                     children: [
                       // Image status display
                       Obx(() => Container(
@@ -800,36 +776,7 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                         ],
                       ),
                       
-                      const SizedBox(height: 12),
-                      
-                      // Image selection instruction
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.shade200),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.info, color: Colors.blue.shade700, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'image_requirements'.tr,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text('• ${'at_least_1_image_required'.tr}'),
-                            Text('• ${'up_to_5_images'.tr}'),
-                            Text('• ${'good_quality_images_help'.tr}'),
-                          ],
-                        ),
-                      ),
+
                     ],
                   ),
 
@@ -1073,6 +1020,8 @@ class PublicLandslideReportingScreen extends StatelessWidget {
     required Color primaryColor,
     required Color cardColor,
     required Color textColor,
+    bool hasInfoIcon = false,
+    VoidCallback? onInfoTap,
   }) {
     return Card(
       elevation: 2,
@@ -1111,6 +1060,22 @@ class PublicLandslideReportingScreen extends StatelessWidget {
                           ),
                         ),
                   ),
+                  if (hasInfoIcon && onInfoTap != null)
+                    GestureDetector(
+                      onTap: onInfoTap,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.info,
+                          size: 16,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

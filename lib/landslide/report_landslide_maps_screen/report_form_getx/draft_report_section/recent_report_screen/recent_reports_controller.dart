@@ -34,6 +34,42 @@ class RecentReportsController extends GetxController {
   var isLoadingSynced = false.obs;
 
   // Add this method to RecentReportsController
+  Future<void> updateDraftSubmissionStatus(String draftId, String status) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final draftsJson = prefs.getStringList(_draftReportsKey) ?? [];
+      
+      for (int i = 0; i < draftsJson.length; i++) {
+        final draft = DraftReport.fromJsonString(draftsJson[i]);
+        if (draft.id == draftId) {
+          // Create updated draft with new status
+          final updatedDraft = DraftReport(
+            id: draft.id,
+            createdAt: draft.createdAt,
+            updatedAt: DateTime.now(),
+            formData: draft.formData,
+            title: draft.title,
+            description: draft.description,
+            version: draft.version,
+            tags: draft.tags,
+            formType: draft.formType,
+            submissionStatus: status,
+          );
+          
+          // Replace the draft in the list
+          draftsJson[i] = updatedDraft.toJsonString();
+          await prefs.setStringList(_draftReportsKey, draftsJson);
+          
+          // Update the observable list
+          await loadDraftReports();
+          break;
+        }
+      }
+    } catch (e) {
+      print('Error updating draft submission status: $e');
+    }
+  }
+
 // Replace the existing resubmitPendingReport method in RecentReportsController
 Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
   try {

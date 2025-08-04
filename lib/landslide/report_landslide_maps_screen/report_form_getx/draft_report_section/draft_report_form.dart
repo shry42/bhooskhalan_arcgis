@@ -2345,9 +2345,15 @@ _buildSectionCard(
                     children: [
                       Obx(() => _buildDropdown(
                         hint: 'select_alert_level'.tr,
-                        value: controller.alertCategory.value,
+                        value: controller.getTranslatedValueForDisplay(
+                          controller.alertCategory.value, 
+                          ['category_1', 'category_2', 'category_3']
+                        ),
                         items: ['category_1', 'category_2', 'category_3'].map((item) => item.tr).toList(),
-                        onChanged: (value) => controller.alertCategory.value = value,
+                        onChanged: (value) => controller.alertCategory.value = controller.getEnglishKeyFromTranslatedValue(
+                          value, 
+                          ['category_1', 'category_2', 'category_3']
+                        ),
                         icon: Icons.trending_up,
                         hasInfoIcon: true,
                         onInfoTap: () => showAlertCategoryDialog(context),

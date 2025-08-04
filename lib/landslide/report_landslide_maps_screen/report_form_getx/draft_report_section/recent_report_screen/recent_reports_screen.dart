@@ -1039,29 +1039,32 @@ class DraftReportCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  if (draft.isValidForSubmission())
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check_circle, size: 12, color: Colors.green.shade700),
-                          const SizedBox(width: 4),
-                          Text(
-                            'ready'.tr.toUpperCase(),
-                            style: TextStyle(
-                              color: Colors.green.shade700,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: draft.getStatusDisplay()['color'].shade100,
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          draft.getStatusDisplay()['icon'], 
+                          size: 12, 
+                          color: draft.getStatusDisplay()['color'].shade700
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          draft.getStatusDisplay()['text'],
+                          style: TextStyle(
+                            color: draft.getStatusDisplay()['color'].shade700,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   PopupMenuButton<String>(
                     onSelected: (value) => _handleAction(value, context),

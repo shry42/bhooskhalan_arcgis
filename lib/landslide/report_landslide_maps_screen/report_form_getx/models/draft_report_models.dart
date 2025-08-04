@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class DraftReport {
   final String id;
@@ -10,6 +12,7 @@ class DraftReport {
   final int version;
   final List<String> tags;
   final String formType; // Added: 'expert' or 'public'
+  final String? submissionStatus; // Added: 'draft', 'submitted', 'pending'
 
   DraftReport({
     required this.id,
@@ -21,6 +24,7 @@ class DraftReport {
     this.version = 1,
     this.tags = const [],
     required this.formType, // Added
+    this.submissionStatus, // Added
   });
 
   // Convert to JSON for SharedPreferences storage
@@ -35,6 +39,7 @@ class DraftReport {
       'version': version,
       'tags': tags,
       'formType': formType, // Added
+      'submissionStatus': submissionStatus, // Added
     };
   }
 
@@ -50,6 +55,7 @@ class DraftReport {
       version: json['version'] ?? 1,
       tags: List<String>.from(json['tags'] ?? []),
       formType: json['formType'] ?? 'public', // Default to public for backward compatibility
+      submissionStatus: json['submissionStatus'] ?? 'draft', // Default to draft for backward compatibility
     );
   }
 
@@ -373,6 +379,49 @@ class DraftReport {
       return getCompletionPercentage() >= 75.0; // 75% for public form
     } else {
       return getCompletionPercentage() >= 80.0; // 80% for expert form
+    }
+  }
+
+  // Get status display info for public forms
+  Map<String, dynamic> getStatusDisplay() {
+    if (formType != 'public') {
+      // For expert forms, use the existing logic
+      return {
+        'text': isValidForSubmission() ? 'ready'.tr.toUpperCase() : 'pending'.tr.toUpperCase(),
+        'icon': isValidForSubmission() ? Icons.check_circle : Icons.pending,
+        'color': isValidForSubmission() ? Colors.green : Colors.orange,
+      };
+    }
+
+    // For public forms, use submission status
+    switch (submissionStatus) {
+      case 'submitted':
+        return {
+          'text': 'submitted'.tr.toUpperCase(),
+          'icon': Icons.cloud_done,
+          'color': Colors.blue,
+        };
+      case 'pending':
+        return {
+          'text': 'pending'.tr.toUpperCase(),
+          'icon': Icons.pending,
+          'color': Colors.orange,
+        };
+      case 'draft':
+      default:
+        if (isValidForSubmission()) {
+          return {
+            'text': 'ready'.tr.toUpperCase(),
+            'icon': Icons.check_circle,
+            'color': Colors.green,
+          };
+        } else {
+          return {
+            'text': 'draft'.tr.toUpperCase(),
+            'icon': Icons.edit,
+            'color': Colors.grey,
+          };
+        }
     }
   }
 

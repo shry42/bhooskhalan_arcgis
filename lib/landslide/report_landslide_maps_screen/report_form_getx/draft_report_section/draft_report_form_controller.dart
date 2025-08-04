@@ -2432,7 +2432,7 @@ void _showSuccessDialog({required bool isOnline}) {
   // Get form completion status for UI
   String getFormCompletionText() {
     final summary = getValidationSummary();
-    return '${summary['completed']} में से ${summary['totalRequired']} आवश्यक फ़ील्ड पूर्ण';
+    return '${summary['completed']} of ${summary['totalRequired']} required fields completed';
   }
 
   // Show validation summary dialog
@@ -2834,6 +2834,11 @@ void _showSuccessDialog({required bool isOnline}) {
       'छोटा - (2 मंजिल से कम इमारत) < 6m': 'small_building',
       'मध्यम - (2 से 5 मंजिल इमारत) 6-15m': 'medium_building',
       'बड़ा - (5 मंजिल से अधिक इमारत) > 15m': 'large_building',
+      
+      // Alert category options
+      'श्रेणी 1': 'category_1',
+      'श्रेणी 2': 'category_2',
+      'श्रेणी 3': 'category_3',
     };
     
     return hindiToEnglishMap[hindiValue];
