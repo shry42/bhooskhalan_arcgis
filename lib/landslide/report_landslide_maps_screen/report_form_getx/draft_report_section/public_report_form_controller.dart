@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/services/api_service.dart';
+import 'package:path_provider/path_provider.dart';
 import 'recent_report_screen/recent_reports_controller.dart';
 
 class PublicLandslideReportController extends GetxController {
@@ -1173,13 +1174,16 @@ bool _validateImages() {
       List<dynamic>? captionsData = formData['imageCaptions'];
       
       if (imagesData != null && imagesData.isNotEmpty) {
+        // Get temporary directory for proper file storage
+        final tempDir = await getTemporaryDirectory();
+        
         for (int i = 0; i < imagesData.length; i++) {
           try {
             String base64Image = imagesData[i];
             if (base64Image.isNotEmpty) {
               // Convert base64 to File object
               List<int> bytes = base64Decode(base64Image);
-              String tempPath = '/tmp/draft_image_$i.jpg';
+              String tempPath = '${tempDir.path}/draft_image_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
               File tempFile = File(tempPath);
               await tempFile.writeAsBytes(bytes);
               
