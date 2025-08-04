@@ -117,6 +117,7 @@ class DraftReport {
     int? version,
     List<String>? tags,
     String? formType,
+    String? submissionStatus,
   }) {
     return DraftReport(
       id: id ?? this.id,
@@ -128,6 +129,7 @@ class DraftReport {
       version: version ?? this.version,
       tags: tags ?? List<String>.from(this.tags),
       formType: formType ?? this.formType,
+      submissionStatus: submissionStatus ?? this.submissionStatus,
     );
   }
 

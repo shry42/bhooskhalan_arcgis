@@ -467,6 +467,7 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
         formData: formData,
         title: DraftReport.generateTitle(formData),
         formType: formType, // ADD this required parameter
+        submissionStatus: 'draft', // Set initial status
       );
       
       // Add to list
@@ -506,6 +507,7 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
               updatedAt: DateTime.now(),
               title: DraftReport.generateTitle(formData),
               formType: formType, // ADD this parameter
+              submissionStatus: draft.submissionStatus, // Preserve existing status
             );
             
             draftsJson[i] = updatedDraft.toJsonString();

@@ -813,13 +813,17 @@ void _showLocationNotFound() {
   }
 
   Future<void> _loadDraftImages(Map<String, dynamic> draftData) async {
-    if (draftData['imageCount'] != null && draftData['imageCount'] > 0) {
+    // Check for images in the draft data
+    List<dynamic>? imagesData = draftData['images'];
+    int imageCount = draftData['imageCount'] ?? 0;
+    
+    if ((imagesData != null && imagesData.isNotEmpty) || imageCount > 0) {
       // Load images from draft data
       await loadImagesFromDraft(draftData);
       
       Get.snackbar(
         'Draft Images Loaded',
-        '${draftData['imageCount']} images loaded from draft',
+        '${selectedImages.length} images loaded from draft',
         backgroundColor: Colors.green,
         colorText: Colors.white,
         duration: const Duration(seconds: 2),
