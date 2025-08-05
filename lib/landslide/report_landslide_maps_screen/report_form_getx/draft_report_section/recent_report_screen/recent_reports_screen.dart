@@ -3,10 +3,12 @@ import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/draft_report_section/recent_report_screen/recent_reports_controller.dart';
 import 'package:bhooskhalann/user_profile/profile_controller.dart';
 import 'package:bhooskhalann/screens/homescreen.dart';
+import 'package:bhooskhalann/services/pdf_export_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/models/draft_report_models.dart';
+import 'package:open_file/open_file.dart';
 
 class RecentReportsPage extends StatefulWidget {
   const RecentReportsPage({super.key});
@@ -2146,7 +2148,21 @@ class SyncedReportCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Icon(Icons.check_circle, size: 20, color: Colors.green.shade600),
+                PopupMenuButton<String>(
+                  onSelected: (value) => _handleAction(value, context),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'download',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.download, size: 18, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text('download_report'.tr),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -2182,4 +2198,58 @@ class SyncedReportCard extends StatelessWidget {
   Color _getUserTypeColor() {
     return userType == 'Public' ? Colors.blue : Colors.green;
   }
+
+  void _handleAction(String action, BuildContext context) async {
+    switch (action) {
+      case 'download':
+        await _downloadReport();
+        break;
+    }
+  }
+
+  Future<void> _downloadReport() async {
+    try {
+      // Show loading indicator
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      // Generate PDF from synced report data
+      final pdfService = PdfExportService();
+      final reportData = report['data'] ?? report;
+      final formType = reportData['formType'] ?? userType.toLowerCase();
+      
+      final pdfFile = await pdfService.generateDraftPdf(reportData, formType);
+      
+      // Close loading dialog
+      Get.back();
+      
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Report downloaded successfully',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      
+      // Open the PDF file
+      await OpenFile.open(pdfFile.path);
+    } catch (e) {
+      // Close loading dialog
+      Get.back();
+      
+      // Show error message
+      Get.snackbar(
+        'Error',
+        'Failed to download report: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+
 }

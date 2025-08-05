@@ -1113,6 +1113,10 @@ String _generateTitleFromData(Map<String, dynamic> data) {
   Future<void> cleanupOldReports({int maxAgeInDays = 90}) async {
     try {
       final cutoffDate = DateTime.now().subtract(Duration(days: maxAgeInDays));
+      int totalCleaned = 0;
+      
+      print('🧹 Starting cleanup for reports older than $maxAgeInDays days (before ${cutoffDate.toString()})');
+      print('📊 Before cleanup - Drafts: ${draftReports.length}, ToBeSynced: ${toBeSyncedReports.length}, Synced: ${syncedReports.length}');
       
       // Clean up old synced reports
       final oldSyncedCount = syncedReports.length;
@@ -1120,26 +1124,70 @@ String _generateTitleFromData(Map<String, dynamic> data) {
         final syncedAt = DateTime.parse(report['syncedAt']);
         return syncedAt.isBefore(cutoffDate);
       });
+      totalCleaned += (oldSyncedCount - syncedReports.length);
       
-      if (syncedReports.length < oldSyncedCount) {
+      // Clean up old to-be-synced reports
+      final oldToBeSyncedCount = toBeSyncedReports.length;
+      toBeSyncedReports.removeWhere((report) {
+        final createdAt = DateTime.parse(report['createdAt']);
+        return createdAt.isBefore(cutoffDate);
+      });
+      totalCleaned += (oldToBeSyncedCount - toBeSyncedReports.length);
+      
+      // Clean up old draft reports
+      final oldDraftCount = draftReports.length;
+      draftReports.removeWhere((draft) {
+        return draft.updatedAt.isBefore(cutoffDate);
+      });
+      totalCleaned += (oldDraftCount - draftReports.length);
+      
+      print('📊 After cleanup - Drafts: ${draftReports.length}, ToBeSynced: ${toBeSyncedReports.length}, Synced: ${syncedReports.length}');
+      print('🧹 Total cleaned: $totalCleaned reports');
+      
+      // Save changes to SharedPreferences
+      if (totalCleaned > 0) {
         final prefs = await SharedPreferences.getInstance();
+        
+        // Save synced reports
         await prefs.setStringList(_syncedReportsKey, 
           syncedReports.map((report) => jsonEncode(report)).toList());
+        
+        // Save to-be-synced reports
+        await prefs.setStringList(_toBeSyncedReportsKey, 
+          toBeSyncedReports.map((report) => jsonEncode(report)).toList());
+        
+        // Save draft reports
+        final draftsJson = draftReports.map((draft) => jsonEncode(draft.toJson())).toList();
+        await prefs.setStringList(_draftReportsKey, draftsJson);
         
         // Apply filters after cleanup
         _applyFilters();
         
-        final cleanedCount = oldSyncedCount - syncedReports.length;
         Get.snackbar(
-          'cleanup'.tr + ' Complete', // Using existing translation key
-          '$cleanedCount old reports cleaned up',
+          'cleanup'.tr + ' Complete',
+          '$totalCleaned old reports cleaned up',
           backgroundColor: Colors.blue,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar(
+          'cleanup'.tr + ' Complete',
+          'No old reports found to clean up',
+          backgroundColor: Colors.green,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       print('Error during cleanup: $e');
+      Get.snackbar(
+        'cleanup'.tr + ' Error',
+        'Failed to clean up reports: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 

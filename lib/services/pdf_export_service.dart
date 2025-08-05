@@ -113,7 +113,7 @@ class PdfExportService {
               ),
               pw.SizedBox(width: 15),
               pw.Text(
-                'LANDSLIDE INCIDENT REPORT',
+                'LANDSLIDE REPORT',
                 style: pw.TextStyle(
                   fontSize: 28,
                   fontWeight: pw.FontWeight.bold,
@@ -173,7 +173,7 @@ class PdfExportService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            'LANDSLIDE DRAFTS REPORT',
+            'LANDSLIDE REPORTS',
             style: pw.TextStyle(
               fontSize: 24,
               fontWeight: pw.FontWeight.bold,
@@ -187,7 +187,7 @@ class PdfExportService {
           ),
           pw.SizedBox(height: 10),
           pw.Text(
-            'Total Drafts: $draftCount',
+            'Total Reports: $draftCount',
             style: pw.TextStyle(fontSize: 16),
           ),
           pw.SizedBox(height: 10),
@@ -429,20 +429,20 @@ class PdfExportService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            'Contact Information',
+            'Reporter Information',
             style: pw.TextStyle(
               fontSize: 16,
               fontWeight: pw.FontWeight.bold,
             ),
           ),
           pw.SizedBox(height: 10),
-          _buildInfoRow('Username', draftData['username'] ?? 'N/A'),
+          _buildInfoRow('Name', draftData['username'] ?? draftData['name'] ?? 'N/A'),
           _buildInfoRow('Email', draftData['email'] ?? 'N/A'),
           _buildInfoRow('Mobile', draftData['mobile'] ?? 'N/A'),
           _buildInfoRow('Affiliation', draftData['affiliation'] ?? 'N/A'),
-          _buildInfoRow('Form Type', draftData['formType'] ?? 'N/A'),
-          _buildInfoRow('Created At', draftData['createdAt'] ?? 'N/A'),
-          _buildInfoRow('Updated At', draftData['updatedAt'] ?? 'N/A'),
+          _buildInfoRow('User Type', draftData['userType'] ?? draftData['formType'] ?? 'N/A'),
+          if (draftData['createdAt'] != null)
+            _buildInfoRow('Report Date', draftData['createdAt'] ?? 'N/A'),
         ],
       ),
     );

@@ -471,9 +471,9 @@ var rainfallDurationValue = Rxn<String>(); // Changed to reactive variable for r
   final otherInformationController = TextEditingController();
 
   // Helper methods to check material type for conditional UI
-  bool isRockSelected() => typeOfMaterialValue.value == 'Rock';
-  bool isSoilSelected() => typeOfMaterialValue.value == 'Soil';
-  bool isDebrisSelected() => typeOfMaterialValue.value == 'Debris (mixture of Rock and Soil)';
+  bool isRockSelected() => typeOfMaterialValue.value == 'rock';
+  bool isSoilSelected() => typeOfMaterialValue.value == 'soil';
+  bool isDebrisSelected() => typeOfMaterialValue.value == 'debris_mixture';
   bool isSoilOrDebrisSelected() => isSoilSelected() || isDebrisSelected();
   bool isRockOrSoilSelected() => isRockSelected() || isSoilSelected();
 
@@ -616,7 +616,7 @@ void setupDimensionListeners() {
 // Updated method using ArcGIS API instead of native geocoding
 // Updated method using Google Maps Geocoding API (Most Accurate)
 // Simple dynamic location fetching without hardcoded values
-// Simple dynamic location fetching without hardcoded values
+// Enhanced location fetching with subdivision and village support
 Future<void> fetchLocationFromCoordinates() async {
   try {
     if (latitudeController.text.isNotEmpty && longitudeController.text.isNotEmpty) {
@@ -641,7 +641,7 @@ Future<void> fetchLocationFromCoordinates() async {
         
         if (data['status'] == 'OK' && data['results'] != null && data['results'].isNotEmpty) {
           
-          String? state, district;
+          String? state, district, subdivision, village;
           List<String> populatedFields = [];
           
           // Parse all results to find best components
@@ -672,6 +672,30 @@ Future<void> fetchLocationFromCoordinates() async {
                   district = _cleanLocationName(longName);
                 }
               }
+              
+              // Extract SUBDIVISION/TALUK
+              if (subdivision == null) {
+                // Look for sublocality_level_1 or administrative_area_level_4
+                if (types.contains('sublocality_level_1') || types.contains('administrative_area_level_4')) {
+                  subdivision = _cleanLocationName(longName);
+                }
+                // Fallback to sublocality if it seems like a subdivision
+                else if (types.contains('sublocality') && _seemsLikeSubdivision(longName)) {
+                  subdivision = _cleanLocationName(longName);
+                }
+              }
+              
+              // Extract VILLAGE
+              if (village == null) {
+                // Look for sublocality_level_2 or sublocality_level_3
+                if (types.contains('sublocality_level_2') || types.contains('sublocality_level_3')) {
+                  village = _cleanLocationName(longName);
+                }
+                // Fallback to premise or neighborhood if it seems like a village
+                else if ((types.contains('premise') || types.contains('neighborhood')) && _seemsLikeVillage(longName)) {
+                  village = _cleanLocationName(longName);
+                }
+              }
             }
           }
           
@@ -690,6 +714,20 @@ Future<void> fetchLocationFromCoordinates() async {
             populatedFields.add('District: $district');
             populated = true;
             print('✅ District set: $district');
+          }
+          
+          if (subdivision != null && subdivision.isNotEmpty) {
+            subdivisionController.text = subdivision;
+            populatedFields.add('Subdivision/Taluk: $subdivision');
+            populated = true;
+            print('✅ Subdivision/Taluk set: $subdivision');
+          }
+          
+          if (village != null && village.isNotEmpty) {
+            villageController.text = village;
+            populatedFields.add('Village: $village');
+            populated = true;
+            print('✅ Village set: $village');
           }
           
           if (populated) {
@@ -737,6 +775,22 @@ bool _seemsLikeDistrict(String name) {
          !lower.contains('ward') && !lower.contains('road');
 }
 
+// Check if name seems like a subdivision/taluk
+bool _seemsLikeSubdivision(String name) {
+  String lower = name.toLowerCase();
+  return lower.contains('taluk') || lower.contains('tehsil') || lower.contains('subdivision') ||
+         lower.contains('block') || lower.contains('mandal') || lower.contains('tahsil') ||
+         (lower.length > 3 && lower.length < 15 && !lower.contains('ward') && !lower.contains('road'));
+}
+
+// Check if name seems like a village
+bool _seemsLikeVillage(String name) {
+  String lower = name.toLowerCase();
+  return lower.contains('village') || lower.contains('gram') || lower.contains('gaon') ||
+         lower.contains('pur') || lower.contains('nagar') || lower.contains('colony') ||
+         (lower.length > 2 && lower.length < 12 && !lower.contains('ward') && !lower.contains('road'));
+}
+
 // Clean location names
 String _cleanLocationName(String name) {
   return name
@@ -775,8 +829,8 @@ void _showLocationNotFound() {
   void setCoordinates(double latitude, double longitude) {
     latitudeController.text = latitude.toStringAsFixed(7);
     longitudeController.text = longitude.toStringAsFixed(7);
-    // Automatically fetch state and district from ArcGIS
-    // fetchIndianStateDistrictFromArcGIS();
+    // Automatically fetch state, district, subdivision and village from Google Maps API
+    fetchLocationFromCoordinates();
   }
 
   // DRAFT MANAGEMENT METHODS
