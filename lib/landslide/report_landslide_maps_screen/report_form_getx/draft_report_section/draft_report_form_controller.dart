@@ -40,6 +40,7 @@ var isPendingEditMode = false.obs;
 var selectedStateFromDropdown = Rxn<String>();
 var selectedDistrictFromDropdown = Rxn<String>();
 var isImpactSectionExpanded = false.obs;
+var isLocationFetching = false.obs; // Flag to prevent duplicate location fetching
 
 Future<bool> _checkInternetConnection() async {
   final connectivityResult = await Connectivity().checkConnectivity();
@@ -618,6 +619,14 @@ void setupDimensionListeners() {
 // Simple dynamic location fetching without hardcoded values
 // Enhanced location fetching with subdivision and village support
 Future<void> fetchLocationFromCoordinates() async {
+  // Prevent duplicate calls
+  if (isLocationFetching.value) {
+    print('⚠️ Location fetching already in progress, skipping duplicate call');
+    return;
+  }
+  
+  isLocationFetching.value = true;
+  
   try {
     if (latitudeController.text.isNotEmpty && longitudeController.text.isNotEmpty) {
       final double lat = double.parse(latitudeController.text);
@@ -756,6 +765,9 @@ Future<void> fetchLocationFromCoordinates() async {
   } catch (e) {
     isLocationAutoPopulated.value = false;
     // _showLocationError(e.toString());
+  } finally {
+    // Reset the flag to allow future calls
+    isLocationFetching.value = false;
   }
 }
 
@@ -830,7 +842,10 @@ void _showLocationNotFound() {
     latitudeController.text = latitude.toStringAsFixed(7);
     longitudeController.text = longitude.toStringAsFixed(7);
     // Automatically fetch state, district, subdivision and village from Google Maps API
-    fetchLocationFromCoordinates();
+    // Only fetch if not already fetching
+    if (!isLocationFetching.value) {
+      fetchLocationFromCoordinates();
+    }
   }
 
   // DRAFT MANAGEMENT METHODS

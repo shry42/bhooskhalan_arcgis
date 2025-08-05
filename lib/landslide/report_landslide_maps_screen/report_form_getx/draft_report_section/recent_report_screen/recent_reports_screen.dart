@@ -1611,6 +1611,31 @@ class ToBeSyncedReportCard extends StatelessWidget {
                 ],
               ),
             ],
+            // Show images preview if available
+            if (_hasImages()) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.image, color: Colors.blue.shade600, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_countImages()} images attached',
+                      style: TextStyle(
+                        color: Colors.blue.shade600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             // Action buttons
             Row(
@@ -1625,7 +1650,7 @@ class ToBeSyncedReportCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    onPressed: () => controller.resubmitPendingReport(report),
+                    onPressed: () => _syncWithProgress(),
                     icon: const Icon(Icons.sync, size: 16),
                     label: Text('sync'.tr.toUpperCase()),
                   ),
@@ -1725,17 +1750,20 @@ class ToBeSyncedReportCard extends StatelessWidget {
         duration: const Duration(seconds: 2),
       );
       
-      // Get report data
+      // Get report data and convert to properly mapped format
       final reportData = report['data'] ?? report;
       final formType = _getFormTypeText().toLowerCase();
       
-      // Export pending report as PDF
+      // Convert API format to form format for proper PDF generation
+      final mappedData = _convertPendingToFormData(reportData);
+      
+      // Export pending report as PDF with properly mapped data
       await controller.exportDraftAsPdf(DraftReport(
         id: report['id'] ?? '',
         title: report['title'] ?? 'Landslide Report',
         formType: formType,
-        formData: reportData,
-        createdAt: DateTime.now(),
+        formData: mappedData, // Use mapped data instead of raw API data
+        createdAt: DateTime.parse(report['createdAt'] ?? DateTime.now().toIso8601String()),
         updatedAt: DateTime.now(),
       ));
       
@@ -1796,72 +1824,299 @@ class ToBeSyncedReportCard extends StatelessWidget {
 
   // Helper method to convert pending report data to form data format
   Map<String, dynamic> _convertPendingToFormData(Map<String, dynamic> reportData) {
+    print('🔄 Converting pending report data to form data format');
+    print('📊 Available fields: ${reportData.keys.toList()}');
+    
     return {
-      // Location data
-      'latitude': reportData['Latitude'],
-      'longitude': reportData['Longitude'],
-      'state': reportData['State'],
-      'district': reportData['District'],
-      'subdivision': reportData['SubdivisionOrTaluk'],
-      'village': reportData['Village'],
-      'locationDetails': reportData['LocationDetails'],
+      // Location data - map API keys to form keys
+      'latitude': reportData['Latitude'] ?? reportData['latitude'],
+      'longitude': reportData['Longitude'] ?? reportData['longitude'],
+      'state': reportData['State'] ?? reportData['state'],
+      'district': reportData['District'] ?? reportData['district'],
+      'subdivision': reportData['SubdivisionOrTaluk'] ?? reportData['subdivision'],
+      'village': reportData['Village'] ?? reportData['village'],
+      'locationDetails': reportData['LocationDetails'] ?? reportData['locationDetails'],
       
       // Occurrence data
-      'landslideOccurrence': reportData['DateTimeType'],
-      'date': _convertApiDateToDisplayDate(reportData['LandslideDate']),
-      'time': _convertApiTimeToDisplayTime(reportData['LandslideTime']),
-      'howDoYouKnow': reportData['ExactDateInfo'],
-      'occurrenceDateRange': reportData['Date_and_time_Range'],
+      'landslideOccurrence': reportData['DateTimeType'] ?? reportData['landslideOccurrence'],
+      'date': _convertApiDateToDisplayDate(reportData['LandslideDate'] ?? reportData['date']),
+      'time': _convertApiTimeToDisplayTime(reportData['LandslideTime'] ?? reportData['time']),
+      'howDoYouKnow': reportData['ExactDateInfo'] ?? reportData['howDoYouKnow'],
+      'occurrenceDateRange': reportData['Date_and_time_Range'] ?? reportData['occurrenceDateRange'],
       
-      // Basic landslide data
-      'whereDidLandslideOccur': reportData['LanduseOrLandcover'],
-      'typeOfMaterial': reportData['MaterialInvolved'],
-      'typeOfMovement': reportData['MovementType'],
-      'landslideSize': reportData['LandslideSize'], // For public form
-      'whatInducedLandslide': reportData['InducingFactor'],
-      'otherRelevantInfo': reportData['OtherInformation'],
+      // Basic landslide data - ensure proper mapping
+      'whereDidLandslideOccur': reportData['LanduseOrLandcover'] ?? reportData['whereDidLandslideOccur'],
+      'typeOfMaterial': reportData['MaterialInvolved'] ?? reportData['typeOfMaterial'],
+      'typeOfMovement': reportData['MovementType'] ?? reportData['typeOfMovement'],
+      'landslideSize': reportData['LandslideSize'] ?? reportData['landslideSize'], // For public form
+      'whatInducedLandslide': reportData['InducingFactor'] ?? reportData['whatInducedLandslide'],
+      'otherRelevantInfo': reportData['OtherInformation'] ?? reportData['otherRelevantInfo'],
       
-      // Rainfall data
-      'rainfallAmount': reportData['Amount_of_rainfall'],
-      'rainfallDuration': reportData['Duration_of_rainfall'],
+      // Expert form specific fields
+      'activity': reportData['Activity'] ?? reportData['activity'],
+      'style': reportData['Style'] ?? reportData['style'],
+      'length': reportData['LengthInMeters'] ?? reportData['length'],
+      'width': reportData['WidthInMeters'] ?? reportData['width'],
+      'height': reportData['HeightInMeters'] ?? reportData['height'],
+      'area': reportData['AreaInSqMeters'] ?? reportData['area'],
+      'depth': reportData['DepthInMeters'] ?? reportData['depth'],
+      'volume': reportData['VolumeInCubicMeters'] ?? reportData['volume'],
+      'runoutDistance': reportData['RunoutDistanceInMeters'] ?? reportData['runoutDistance'],
+      'rateOfMovement': reportData['RateOfMovement'] ?? reportData['rateOfMovement'],
+      'distribution': reportData['Distribution'] ?? reportData['distribution'],
+      'failureMechanism': reportData['FailureMechanism'] ?? reportData['failureMechanism'],
+      'hydrologicalCondition': reportData['HydrologicalCondition'] ?? reportData['hydrologicalCondition'],
+      'geology': reportData['Geology'] ?? reportData['geology'],
+      'geomorphology': reportData['Geomorphology'] ?? reportData['geomorphology'],
       
-      // Impact/Damage data (parse from string if needed)
-      'peopleAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'People affected'),
-      'livestockAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Livestock affected'),
-      'housesBuildingAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Houses and buildings affected'),
-      'roadsAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Roads affected'),
-      'roadsBlocked': _extractImpactValue(reportData['ImpactOrDamage'], 'Roads blocked'),
-      'railwayLineAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Railway line affected'),
-      'powerInfrastructureAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Power infrastructure'),
-      'damagesToAgriculturalForestLand': _extractImpactValue(reportData['ImpactOrDamage'], 'Agriculture'),
-      'other': _extractImpactValue(reportData['ImpactOrDamage'], 'Other'),
-      'noDamages': _extractImpactValue(reportData['ImpactOrDamage'], 'No damages'),
-      'iDontKnow': _extractImpactValue(reportData['ImpactOrDamage'], 'I don\'t know'),
+      // Rainfall data - map both possible keys
+      'rainfallAmount': reportData['Amount_of_rainfall'] ?? reportData['rainfallAmount'],
+      'rainfallDuration': reportData['Duration_of_rainfall'] ?? reportData['rainfallDuration'],
       
-      // Damage details
-      'peopleDead': reportData['PeopleDead'],
-      'peopleInjured': reportData['PeopleInjured'],
-      'livestockDead': reportData['LivestockDead'],
-      'livestockInjured': reportData['LivestockInjured'],
-      'housesFullyAffected': reportData['HousesBuildingfullyaffected'],
-      'housesPartiallyAffected': reportData['HousesBuildingpartialaffected'],
-      'damsName': reportData['DamsBarragesName'],
-      'damsExtent': reportData['DamsBarragesExtentOfDamage'],
-      'roadType': reportData['RoadsAffectedType'],
-      'roadExtent': reportData['RoadsAffectedExtentOfDamage'],
-      'railwayDetails': reportData['RailwayLineAffected'],
-      'otherDamageDetails': reportData['OthersAffected'],
+      // Impact/Damage data - handle both boolean and string formats
+      'peopleAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'People affected') || (reportData['peopleAffected'] == true),
+      'livestockAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Livestock affected') || (reportData['livestockAffected'] == true),
+      'housesBuildingAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Houses and buildings affected') || (reportData['housesBuildingAffected'] == true),
+      'roadsAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Roads affected') || (reportData['roadsAffected'] == true),
+      'roadsBlocked': _extractImpactValue(reportData['ImpactOrDamage'], 'Roads blocked') || (reportData['roadsBlocked'] == true),
+      'railwayLineAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Railway line affected') || (reportData['railwayLineAffected'] == true),
+      'powerInfrastructureAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'Power infrastructure') || (reportData['powerInfrastructureAffected'] == true),
+      'damagesToAgriculturalForestLand': _extractImpactValue(reportData['ImpactOrDamage'], 'Agriculture') || (reportData['damagesToAgriculturalForestLand'] == true),
+      'other': _extractImpactValue(reportData['ImpactOrDamage'], 'Other') || (reportData['other'] == true),
+      'noDamages': _extractImpactValue(reportData['ImpactOrDamage'], 'No damages') || (reportData['noDamages'] == true),
+      'iDontKnow': _extractImpactValue(reportData['ImpactOrDamage'], 'I don\'t know') || (reportData['iDontKnow'] == true),
       
-      // Contact information (for public form)
-      'username': reportData['ContactName'],
-      'email': reportData['ContactEmailId'],
-      'mobile': reportData['ContactMobile'],
-      'affiliation': reportData['ContactAffiliation'],
+      // Damage details - map API keys to form keys with fallbacks
+      'peopleDead': reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0',
+      'peopleInjured': reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0',
+      'livestockDead': reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0',
+      'livestockInjured': reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0',
+      'housesFullyAffected': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0',
+      'housesPartiallyAffected': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0',
+      'damsName': reportData['DamsBarragesName'] ?? reportData['damsName'] ?? '',
+      'damsExtent': reportData['DamsBarragesExtentOfDamage'] ?? reportData['damsExtent'] ?? '',
+      'roadType': reportData['RoadsAffectedType'] ?? reportData['roadType'] ?? '',
+      'roadExtent': reportData['RoadsAffectedExtentOfDamage'] ?? reportData['roadExtent'] ?? '',
+      'railwayDetails': reportData['RailwayLineAffected'] ?? reportData['railwayDetails'] ?? '',
+      'otherDamageDetails': reportData['OthersAffected'] ?? reportData['otherDamageDetails'] ?? '',
       
-      // Images metadata
-      'imageCount': _countImages(reportData),
-      'hasImages': _hasImages(reportData),
+      // Contact information - map both possible key formats
+      'username': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
+      'email': reportData['ContactEmailId'] ?? reportData['email'] ?? '',
+      'mobile': reportData['ContactMobile'] ?? reportData['mobile'] ?? '',
+      'affiliation': reportData['ContactAffiliation'] ?? reportData['affiliation'] ?? '',
+      'userType': reportData['UserType'] ?? reportData['userType'] ?? reportData['formType'] ?? 'Public',
+      'formType': reportData['formType'] ?? 'public',
+      
+      // Images metadata and data
+      'imageCount': _countImagesFromData(reportData),
+      'hasImages': _countImagesFromData(reportData) > 0,
+      'images': _convertApiImagesToFormImages(reportData),
+      'imageCaptions': _getImageCaptionsFromApi(reportData),
+      
+      // Timestamps
+      'createdAt': reportData['createdAt'] ?? DateTime.now().toIso8601String(),
+      'updatedAt': reportData['updatedAt'] ?? DateTime.now().toIso8601String(),
     };
+  }
+
+  // Helper methods for image detection
+  bool _hasImages() {
+    return _countImages() > 0;
+  }
+
+  int _countImages() {
+    final reportData = report['data'] ?? report;
+    int count = 0;
+    if (reportData['LandslidePhotographs'] != null && reportData['LandslidePhotographs'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph1'] != null && reportData['LandslidePhotograph1'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph2'] != null && reportData['LandslidePhotograph2'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph3'] != null && reportData['LandslidePhotograph3'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph4'] != null && reportData['LandslidePhotograph4'].toString().isNotEmpty) count++;
+    return count;
+  }
+  
+  int _countImagesFromData(Map<String, dynamic> reportData) {
+    int count = 0;
+    if (reportData['LandslidePhotographs'] != null && reportData['LandslidePhotographs'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph1'] != null && reportData['LandslidePhotograph1'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph2'] != null && reportData['LandslidePhotograph2'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph3'] != null && reportData['LandslidePhotograph3'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph4'] != null && reportData['LandslidePhotograph4'].toString().isNotEmpty) count++;
+    return count;
+  }
+  
+  // Convert API image fields to form-expected image array
+  List<String> _convertApiImagesToFormImages(Map<String, dynamic> reportData) {
+    List<String> images = [];
+    
+    print('🖼️ Converting API images to form images');
+    print('🔍 Available API image fields: LandslidePhotographs=${reportData['LandslidePhotographs'] != null}, LandslidePhotograph1=${reportData['LandslidePhotograph1'] != null}');
+    
+    // Add images in order from API fields
+    if (reportData['LandslidePhotographs'] != null && reportData['LandslidePhotographs'].toString().isNotEmpty) {
+      String imageData = reportData['LandslidePhotographs'].toString();
+      // Clean base64 string - remove data:image/jpeg;base64, prefix if present
+      imageData = _cleanBase64String(imageData);
+      images.add(imageData);
+      print('✅ Added LandslidePhotographs (length: ${imageData.length})');
+    }
+    if (reportData['LandslidePhotograph1'] != null && reportData['LandslidePhotograph1'].toString().isNotEmpty) {
+      String imageData = reportData['LandslidePhotograph1'].toString();
+      imageData = _cleanBase64String(imageData);
+      images.add(imageData);
+      print('✅ Added LandslidePhotograph1 (length: ${imageData.length})');
+    }
+    if (reportData['LandslidePhotograph2'] != null && reportData['LandslidePhotograph2'].toString().isNotEmpty) {
+      String imageData = reportData['LandslidePhotograph2'].toString();
+      imageData = _cleanBase64String(imageData);
+      images.add(imageData);
+      print('✅ Added LandslidePhotograph2 (length: ${imageData.length})');
+    }
+    if (reportData['LandslidePhotograph3'] != null && reportData['LandslidePhotograph3'].toString().isNotEmpty) {
+      String imageData = reportData['LandslidePhotograph3'].toString();
+      imageData = _cleanBase64String(imageData);
+      images.add(imageData);
+      print('✅ Added LandslidePhotograph3 (length: ${imageData.length})');
+    }
+    if (reportData['LandslidePhotograph4'] != null && reportData['LandslidePhotograph4'].toString().isNotEmpty) {
+      String imageData = reportData['LandslidePhotograph4'].toString();
+      imageData = _cleanBase64String(imageData);
+      images.add(imageData);
+      print('✅ Added LandslidePhotograph4 (length: ${imageData.length})');
+    }
+    
+    print('🖼️ Total images converted: ${images.length}');
+    return images;
+  }
+  
+  // Clean base64 string by removing data URL prefix if present
+  String _cleanBase64String(String base64String) {
+    if (base64String.contains('data:image')) {
+      // Remove data:image/jpeg;base64, or similar prefix
+      return base64String.split(',').last;
+    }
+    return base64String;
+  }
+  
+  // Get image captions (if available) or create empty list
+  List<dynamic> _getImageCaptionsFromApi(Map<String, dynamic> reportData) {
+    // API doesn't usually store captions separately, so create empty captions
+    // matching the number of images
+    final imageCount = _countImagesFromData(reportData);
+    
+    // Check if captions exist in API data first
+    List<String> captionStrings = [];
+    
+    // Try to get captions from various possible API fields
+    if (reportData['imageCaptions'] != null && reportData['imageCaptions'] is List) {
+      captionStrings = List<String>.from(reportData['imageCaptions']);
+    } else if (reportData['ImageCaptions'] != null && reportData['ImageCaptions'] is List) {
+      captionStrings = List<String>.from(reportData['ImageCaptions']);
+    } else {
+      // Generate default captions
+      captionStrings = List.generate(imageCount, (index) => 'Image ${index + 1}');
+    }
+    
+    // Ensure we have the right number of captions
+    while (captionStrings.length < imageCount) {
+      captionStrings.add('Image ${captionStrings.length + 1}');
+    }
+    
+    print('🏷️ Generated ${captionStrings.length} image captions: $captionStrings');
+    return captionStrings; // Return as List<dynamic> so it can be used flexibly
+  }
+
+  // Sync with progress indicator
+  void _syncWithProgress() async {
+    print('🔄 Starting sync with progress for report: ${report['id']}');
+    
+    // Show progress dialog
+    Get.dialog(
+      AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: Colors.orange),
+            const SizedBox(height: 16),
+            Text('Syncing ${_getFormTypeText()} report...'),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      print('🚀 Starting resubmitPendingReport...');
+      // Perform the actual sync with timeout
+      await controller.resubmitPendingReport(report).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          print('⏰ Sync operation timed out');
+          throw Exception('Sync operation timed out. Please try again.');
+        },
+      );
+      
+      print('✅ Sync completed successfully');
+      
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Report synced successfully',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+      
+    } catch (e) {
+      print('❌ Sync failed with error: $e');
+      // Show error message
+      Get.snackbar(
+        'Sync Failed',
+        'Failed to sync report: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      // Force close any open dialogs
+      print('🔒 Force closing all dialogs...');
+      
+      // Multiple attempts to close the dialog
+      for (int i = 0; i < 3; i++) {
+        try {
+          if (Get.isDialogOpen ?? false) {
+            Get.back();
+            print('✅ Dialog closed via Get.back() - attempt ${i + 1}');
+            break;
+          }
+          
+          // Try Navigator approach
+          Navigator.of(Get.context!).pop();
+          print('✅ Dialog closed via Navigator.pop() - attempt ${i + 1}');
+          break;
+          
+        } catch (closeError) {
+          print('⚠️ Error closing dialog attempt ${i + 1}: $closeError');
+        }
+        
+        // Wait a bit before next attempt
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      
+      // Final check and force close
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (Get.isDialogOpen ?? false) {
+        try {
+          Get.back();
+          print('✅ Final dialog close attempt successful');
+        } catch (e) {
+          print('❌ Final dialog close attempt failed: $e');
+        }
+      }
+    }
   }
 
   // Helper methods for data conversion
@@ -1893,19 +2148,6 @@ class ToBeSyncedReportCard extends StatelessWidget {
     return impactString.toString().toLowerCase().contains(searchTerm.toLowerCase());
   }
 
-  int _countImages(Map<String, dynamic> reportData) {
-    int count = 0;
-    if (reportData['LandslidePhotographs'] != null && reportData['LandslidePhotographs'].toString().isNotEmpty) count++;
-    if (reportData['LandslidePhotograph1'] != null && reportData['LandslidePhotograph1'].toString().isNotEmpty) count++;
-    if (reportData['LandslidePhotograph2'] != null && reportData['LandslidePhotograph2'].toString().isNotEmpty) count++;
-    if (reportData['LandslidePhotograph3'] != null && reportData['LandslidePhotograph3'].toString().isNotEmpty) count++;
-    if (reportData['LandslidePhotograph4'] != null && reportData['LandslidePhotograph4'].toString().isNotEmpty) count++;
-    return count;
-  }
-
-  bool _hasImages(Map<String, dynamic> reportData) {
-    return _countImages(reportData) > 0;
-  }
 
   void _downloadReport() async {
     try {
@@ -2215,12 +2457,18 @@ class SyncedReportCard extends StatelessWidget {
         barrierDismissible: false,
       );
 
-      // Generate PDF from synced report data
+      // Generate PDF from synced report data with proper mapping
       final pdfService = PdfExportService();
       final reportData = report['data'] ?? report;
       final formType = reportData['formType'] ?? userType.toLowerCase();
       
-      final pdfFile = await pdfService.generateDraftPdf(reportData, formType);
+      print('📄 Generating PDF for synced report - Form type: $formType');
+      print('🔍 Report data keys: ${reportData.keys.toList()}');
+      
+      // Use the comprehensive data mapping (same as pending reports)
+      final mappedData = _convertSyncedToFormData(reportData, formType);
+      
+      final pdfFile = await pdfService.generateDraftPdf(mappedData, formType);
       
       // Close loading dialog
       Get.back();
@@ -2249,6 +2497,145 @@ class SyncedReportCard extends StatelessWidget {
         duration: const Duration(seconds: 3),
       );
     }
+  }
+  
+  // Helper method to count images
+  int _countImages(Map<String, dynamic> reportData) {
+    int count = 0;
+    if (reportData['LandslidePhotographs'] != null && reportData['LandslidePhotographs'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph1'] != null && reportData['LandslidePhotograph1'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph2'] != null && reportData['LandslidePhotograph2'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph3'] != null && reportData['LandslidePhotograph3'].toString().isNotEmpty) count++;
+    if (reportData['LandslidePhotograph4'] != null && reportData['LandslidePhotograph4'].toString().isNotEmpty) count++;
+    return count;
+  }
+  
+  // Comprehensive data mapping for synced reports (same as pending reports)
+  Map<String, dynamic> _convertSyncedToFormData(Map<String, dynamic> reportData, String formType) {
+    print('🔄 Converting synced report data to form data format');
+    print('📊 Available fields: ${reportData.keys.toList()}');
+    
+    return {
+      // Location data - map API keys to form keys
+      'latitude': reportData['Latitude'] ?? reportData['latitude'] ?? '',
+      'longitude': reportData['Longitude'] ?? reportData['longitude'] ?? '',
+      'state': reportData['State'] ?? reportData['state'] ?? '',
+      'district': reportData['District'] ?? reportData['district'] ?? '',
+      'subdivision': reportData['SubdivisionOrTaluk'] ?? reportData['subdivision'] ?? '',
+      'village': reportData['Village'] ?? reportData['village'] ?? '',
+      'locationDetails': reportData['LocationDetails'] ?? reportData['locationDetails'] ?? '',
+      
+      // Occurrence data
+      'landslideOccurrence': reportData['DateTimeType'] ?? reportData['landslideOccurrence'] ?? '',
+      'date': _convertApiDateToDisplayDate(reportData['LandslideDate'] ?? reportData['date']),
+      'time': _convertApiTimeToDisplayTime(reportData['LandslideTime'] ?? reportData['time']),
+      'howDoYouKnow': reportData['ExactDateInfo'] ?? reportData['howDoYouKnow'] ?? '',
+      'occurrenceDateRange': reportData['Date_and_time_Range'] ?? reportData['occurrenceDateRange'] ?? '',
+      
+      // Basic landslide data - ensure proper mapping
+      'whereDidLandslideOccur': reportData['LanduseOrLandcover'] ?? reportData['whereDidLandslideOccur'] ?? '',
+      'typeOfMaterial': reportData['MaterialInvolved'] ?? reportData['typeOfMaterial'] ?? '',
+      'typeOfMovement': reportData['MovementType'] ?? reportData['typeOfMovement'] ?? '',
+      'landslideSize': reportData['LandslideSize'] ?? reportData['landslideSize'] ?? '', // For public form
+      'whatInducedLandslide': reportData['InducingFactor'] ?? reportData['whatInducedLandslide'] ?? '',
+      'otherRelevantInfo': reportData['OtherInformation'] ?? reportData['otherRelevantInfo'] ?? '',
+      
+      // Expert form specific fields
+      'activity': reportData['Activity'] ?? reportData['activity'] ?? '',
+      'style': reportData['Style'] ?? reportData['style'] ?? '',
+      'length': reportData['LengthInMeters'] ?? reportData['length'] ?? '',
+      'width': reportData['WidthInMeters'] ?? reportData['width'] ?? '',
+      'height': reportData['HeightInMeters'] ?? reportData['height'] ?? '',
+      'area': reportData['AreaInSqMeters'] ?? reportData['area'] ?? '',
+      'depth': reportData['DepthInMeters'] ?? reportData['depth'] ?? '',
+      'volume': reportData['VolumeInCubicMeters'] ?? reportData['volume'] ?? '',
+      'runoutDistance': reportData['RunoutDistanceInMeters'] ?? reportData['runoutDistance'] ?? '',
+      'rateOfMovement': reportData['RateOfMovement'] ?? reportData['rateOfMovement'] ?? '',
+      'distribution': reportData['Distribution'] ?? reportData['distribution'] ?? '',
+      'failureMechanism': reportData['FailureMechanism'] ?? reportData['failureMechanism'] ?? '',
+      'hydrologicalCondition': reportData['HydrologicalCondition'] ?? reportData['hydrologicalCondition'] ?? '',
+      'geology': reportData['Geology'] ?? reportData['geology'] ?? '',
+      'geomorphology': reportData['Geomorphology'] ?? reportData['geomorphology'] ?? '',
+      
+      // Rainfall data - map both possible keys
+      'rainfallAmount': reportData['Amount_of_rainfall'] ?? reportData['rainfallAmount'] ?? '',
+      'rainfallDuration': reportData['Duration_of_rainfall'] ?? reportData['rainfallDuration'] ?? '',
+      
+      // Impact/Damage data - handle both boolean and string formats
+      'peopleAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'People affected') || (reportData['peopleAffected'] == true),
+      'livestockAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Livestock affected') || (reportData['livestockAffected'] == true),
+      'housesBuildingAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Houses and buildings affected') || (reportData['housesBuildingAffected'] == true),
+      'roadsAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Roads affected') || (reportData['roadsAffected'] == true),
+      'roadsBlocked': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Roads blocked') || (reportData['roadsBlocked'] == true),
+      'railwayLineAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Railway line affected') || (reportData['railwayLineAffected'] == true),
+      'powerInfrastructureAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Power infrastructure') || (reportData['powerInfrastructureAffected'] == true),
+      'damagesToAgriculturalForestLand': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Agriculture') || (reportData['damagesToAgriculturalForestLand'] == true),
+      'other': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Other') || (reportData['other'] == true),
+      'noDamages': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'No damages') || (reportData['noDamages'] == true),
+      'iDontKnow': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'I don\'t know') || (reportData['iDontKnow'] == true),
+      
+      // Damage details - map API keys to form keys with fallbacks
+      'peopleDead': reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0',
+      'peopleInjured': reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0',
+      'livestockDead': reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0',
+      'livestockInjured': reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0',
+      'housesFullyAffected': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0',
+      'housesPartiallyAffected': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0',
+      'housesFully': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? reportData['housesFully'] ?? '0',
+      'housesPartially': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? reportData['housesPartially'] ?? '0',
+      'damsName': reportData['DamsBarragesName'] ?? reportData['damsName'] ?? '',
+      'damsExtent': reportData['DamsBarragesExtentOfDamage'] ?? reportData['damsExtent'] ?? '',
+      'roadType': reportData['RoadsAffectedType'] ?? reportData['roadType'] ?? '',
+      'roadExtent': reportData['RoadsAffectedExtentOfDamage'] ?? reportData['roadExtent'] ?? '',
+      'railwayDetails': reportData['RailwayLineAffected'] ?? reportData['railwayDetails'] ?? '',
+      'otherDamageDetails': reportData['OthersAffected'] ?? reportData['otherDamageDetails'] ?? '',
+      
+      // Contact information - map both possible key formats
+      'username': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
+      'name': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
+      'email': reportData['ContactEmailId'] ?? reportData['email'] ?? '',
+      'mobile': reportData['ContactMobile'] ?? reportData['mobile'] ?? '',
+      'affiliation': reportData['ContactAffiliation'] ?? reportData['affiliation'] ?? '',
+      'userType': reportData['UserType'] ?? reportData['userType'] ?? formType,
+      'formType': formType,
+      
+      // Images metadata
+      'imageCount': _countImages(reportData),
+      'hasImages': _countImages(reportData) > 0,
+      
+      // Timestamps
+      'createdAt': reportData['createdAt'] ?? DateTime.now().toIso8601String(),
+      'updatedAt': reportData['updatedAt'] ?? DateTime.now().toIso8601String(),
+    };
+  }
+  
+  // Helper methods for data conversion (same as ToBeSyncedReportCard)
+  String _convertApiDateToDisplayDate(dynamic apiDate) {
+    if (apiDate == null || apiDate.toString().isEmpty) return '';
+    try {
+      DateTime dateTime = DateTime.parse(apiDate.toString());
+      return "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
+    } catch (e) {
+      return apiDate.toString();
+    }
+  }
+
+  String _convertApiTimeToDisplayTime(dynamic apiTime) {
+    if (apiTime == null || apiTime.toString().isEmpty) return '';
+    try {
+      String timeStr = apiTime.toString();
+      if (timeStr.length >= 5) {
+        return timeStr.substring(0, 5); // Extract HH:MM
+      }
+      return timeStr;
+    } catch (e) {
+      return apiTime.toString();
+    }
+  }
+
+  bool _extractImpactValueFromString(dynamic impactString, String searchTerm) {
+    if (impactString == null) return false;
+    return impactString.toString().toLowerCase().contains(searchTerm.toLowerCase());
   }
 
 

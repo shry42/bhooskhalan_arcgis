@@ -36,12 +36,14 @@ class RecentReportsController extends GetxController {
   // Add this method to RecentReportsController
   Future<void> updateDraftSubmissionStatus(String draftId, String status) async {
     try {
+      print('🔄 Updating draft $draftId status to: $status');
       final prefs = await SharedPreferences.getInstance();
       final draftsJson = prefs.getStringList(_draftReportsKey) ?? [];
       
       for (int i = 0; i < draftsJson.length; i++) {
         final draft = DraftReport.fromJsonString(draftsJson[i]);
         if (draft.id == draftId) {
+          print('📝 Found draft $draftId, updating status from ${draft.submissionStatus} to $status');
           // Create updated draft with new status
           final updatedDraft = DraftReport(
             id: draft.id,
@@ -62,11 +64,12 @@ class RecentReportsController extends GetxController {
           
           // Update the observable list
           await loadDraftReports();
+          print('✅ Draft $draftId status successfully updated to $status');
           break;
         }
       }
     } catch (e) {
-      print('Error updating draft submission status: $e');
+      print('❌ Error updating draft submission status: $e');
     }
   }
 
@@ -110,10 +113,19 @@ Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
     print('📋 Data keys: ${submissionData.keys.toList()}');
 
     // Try to submit based on form type
-    if (formType.toLowerCase() == 'expert') {
-      await ApiService.postLandslide('/Landslide/create/$mobileNumber/$userType', [submissionData]);
-    } else {
-      await ApiService.postLandslide('/Landslide/create/$mobileNumber/Public', [submissionData]);
+    try {
+      if (formType.toLowerCase() == 'expert') {
+        print('🚀 Starting EXPERT report API submission...');
+        await ApiService.postLandslide('/Landslide/create/$mobileNumber/$userType', [submissionData]);
+        print('✅ EXPERT report API submission completed');
+      } else {
+        print('🚀 Starting PUBLIC report API submission...');
+        await ApiService.postLandslide('/Landslide/create/$mobileNumber/Public', [submissionData]);
+        print('✅ PUBLIC report API submission completed');
+      }
+    } catch (apiError) {
+      print('❌ API call failed for $formType report: $apiError');
+      rethrow; // Re-throw to be handled by outer catch
     }
     
     // If successful, move to synced and remove from pending
@@ -130,14 +142,7 @@ Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
     await addSyncedReport(syncedReport);
     await removeToBeSyncedReport(report['id']);
     
-    String formTypeText = formType.toLowerCase() == 'expert' ? 'expert'.tr : 'public'.tr;
-    Get.snackbar(
-      'export_ready'.tr, // Using existing translation key for "Success"
-      '$formTypeText landslide report submitted successfully!', // Could add specific key if needed
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    print('✅ Report successfully moved from pending to synced');
     
   } catch (e) {
     print('❌ Resubmission failed: $e');
@@ -163,22 +168,21 @@ Future<void> resubmitPendingReport(Map<String, dynamic> report) async {
     await prefs.setStringList(_toBeSyncedReportsKey, reportsJson);
     await loadToBeSyncedReports(); // Reload to update UI
     
-    String formTypeText = (report['formType'] ?? 'public').toLowerCase() == 'expert' ? 'expert'.tr : 'public'.tr;
-    Get.snackbar(
-      'export_failed'.tr, // Using existing translation key for "Failed"
-      'Failed to submit $formTypeText report: ${e.toString()}',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 4),
-    );
+    print('❌ Failed to submit report: ${e.toString()}');
   }
 }
 
-// Add method to download/export pending report
+// Add method to download/export pending report with proper data mapping
 Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
   try {
     String formTypeText = (report['formType'] ?? 'public').toLowerCase() == 'expert' ? 'expert'.tr : 'public'.tr;
+    
+    // Get the raw report data
+    final rawReportData = report['data'] ?? report;
+    
+    // Convert to properly mapped form data for PDF generation
+    final mappedData = _convertPendingToFormData(rawReportData, report['formType'] ?? 'public');
+    
     final exportData = {
       'exportedAt': DateTime.now().toIso8601String(),
       'reportType': 'To Be Synced $formTypeText Report',
@@ -187,13 +191,153 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
       'status': 'pending_sync',
       'retryCount': report['retryCount'] ?? 0,
       'createdAt': report['createdAt'],
-      'reportData': report['data'] ?? report,
+      'rawReportData': rawReportData, // Keep original API format data
+      'mappedReportData': mappedData, // Add properly mapped data for PDF
     };
     
     return jsonEncode(exportData);
   } catch (e) {
     throw Exception('${'export_failed'.tr}: $e');
   }
+}
+
+// Helper method to convert pending report data to form data format (for controller)
+Map<String, dynamic> _convertPendingToFormData(Map<String, dynamic> reportData, String formType) {
+  return {
+    // Location data - map API keys to form keys
+    'latitude': reportData['Latitude'] ?? reportData['latitude'] ?? '',
+    'longitude': reportData['Longitude'] ?? reportData['longitude'] ?? '',
+    'state': reportData['State'] ?? reportData['state'] ?? '',
+    'district': reportData['District'] ?? reportData['district'] ?? '',
+    'subdivision': reportData['SubdivisionOrTaluk'] ?? reportData['subdivision'] ?? '',
+    'village': reportData['Village'] ?? reportData['village'] ?? '',
+    'locationDetails': reportData['LocationDetails'] ?? reportData['locationDetails'] ?? '',
+    
+    // Occurrence data
+    'landslideOccurrence': reportData['DateTimeType'] ?? reportData['landslideOccurrence'] ?? '',
+    'date': _convertApiDateToDisplayDate(reportData['LandslideDate'] ?? reportData['date']),
+    'time': _convertApiTimeToDisplayTime(reportData['LandslideTime'] ?? reportData['time']),
+    'howDoYouKnow': reportData['ExactDateInfo'] ?? reportData['howDoYouKnow'] ?? '',
+    'occurrenceDateRange': reportData['Date_and_time_Range'] ?? reportData['occurrenceDateRange'] ?? '',
+    
+    // Basic landslide data - ensure proper mapping
+    'whereDidLandslideOccur': reportData['LanduseOrLandcover'] ?? reportData['whereDidLandslideOccur'] ?? '',
+    'typeOfMaterial': reportData['MaterialInvolved'] ?? reportData['typeOfMaterial'] ?? '',
+    'typeOfMovement': reportData['MovementType'] ?? reportData['typeOfMovement'] ?? '',
+    'landslideSize': reportData['LandslideSize'] ?? reportData['landslideSize'] ?? '', // For public form
+    'whatInducedLandslide': reportData['InducingFactor'] ?? reportData['whatInducedLandslide'] ?? '',
+    'otherRelevantInfo': reportData['OtherInformation'] ?? reportData['otherRelevantInfo'] ?? '',
+    
+    // Expert form specific fields
+    'activity': reportData['Activity'] ?? reportData['activity'] ?? '',
+    'style': reportData['Style'] ?? reportData['style'] ?? '',
+    'length': reportData['LengthInMeters'] ?? reportData['length'] ?? '',
+    'width': reportData['WidthInMeters'] ?? reportData['width'] ?? '',
+    'height': reportData['HeightInMeters'] ?? reportData['height'] ?? '',
+    'area': reportData['AreaInSqMeters'] ?? reportData['area'] ?? '',
+    'depth': reportData['DepthInMeters'] ?? reportData['depth'] ?? '',
+    'volume': reportData['VolumeInCubicMeters'] ?? reportData['volume'] ?? '',
+    'runoutDistance': reportData['RunoutDistanceInMeters'] ?? reportData['runoutDistance'] ?? '',
+    'rateOfMovement': reportData['RateOfMovement'] ?? reportData['rateOfMovement'] ?? '',
+    'distribution': reportData['Distribution'] ?? reportData['distribution'] ?? '',
+    'failureMechanism': reportData['FailureMechanism'] ?? reportData['failureMechanism'] ?? '',
+    'hydrologicalCondition': reportData['HydrologicalCondition'] ?? reportData['hydrologicalCondition'] ?? '',
+    'geology': reportData['Geology'] ?? reportData['geology'] ?? '',
+    'geomorphology': reportData['Geomorphology'] ?? reportData['geomorphology'] ?? '',
+    
+    // Rainfall data - map both possible keys
+    'rainfallAmount': reportData['Amount_of_rainfall'] ?? reportData['rainfallAmount'] ?? '',
+    'rainfallDuration': reportData['Duration_of_rainfall'] ?? reportData['rainfallDuration'] ?? '',
+    
+    // Impact/Damage data - handle both boolean and string formats
+    'peopleAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'People affected') || (reportData['peopleAffected'] == true),
+    'livestockAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Livestock affected') || (reportData['livestockAffected'] == true),
+    'housesBuildingAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Houses and buildings affected') || (reportData['housesBuildingAffected'] == true),
+    'roadsAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Roads affected') || (reportData['roadsAffected'] == true),
+    'roadsBlocked': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Roads blocked') || (reportData['roadsBlocked'] == true),
+    'railwayLineAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Railway line affected') || (reportData['railwayLineAffected'] == true),
+    'powerInfrastructureAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Power infrastructure') || (reportData['powerInfrastructureAffected'] == true),
+    'damagesToAgriculturalForestLand': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Agriculture') || (reportData['damagesToAgriculturalForestLand'] == true),
+    'other': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Other') || (reportData['other'] == true),
+    'noDamages': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'No damages') || (reportData['noDamages'] == true),
+    'iDontKnow': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'I don\'t know') || (reportData['iDontKnow'] == true),
+    
+    // Damage details - map API keys to form keys with fallbacks
+    'peopleDead': reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0',
+    'peopleInjured': reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0',
+    'livestockDead': reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0',
+    'livestockInjured': reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0',
+    'housesFullyAffected': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0',
+    'housesPartiallyAffected': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0',
+    'housesFully': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? reportData['housesFully'] ?? '0',
+    'housesPartially': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? reportData['housesPartially'] ?? '0',
+    'damsName': reportData['DamsBarragesName'] ?? reportData['damsName'] ?? '',
+    'damsExtent': reportData['DamsBarragesExtentOfDamage'] ?? reportData['damsExtent'] ?? '',
+    'roadType': reportData['RoadsAffectedType'] ?? reportData['roadType'] ?? '',
+    'roadExtent': reportData['RoadsAffectedExtentOfDamage'] ?? reportData['roadExtent'] ?? '',
+    'railwayDetails': reportData['RailwayLineAffected'] ?? reportData['railwayDetails'] ?? '',
+    'otherDamageDetails': reportData['OthersAffected'] ?? reportData['otherDamageDetails'] ?? '',
+    
+    // Contact information - map both possible key formats
+    'username': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
+    'name': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
+    'email': reportData['ContactEmailId'] ?? reportData['email'] ?? '',
+    'mobile': reportData['ContactMobile'] ?? reportData['mobile'] ?? '',
+    'affiliation': reportData['ContactAffiliation'] ?? reportData['affiliation'] ?? '',
+    'userType': reportData['UserType'] ?? reportData['userType'] ?? formType,
+    'formType': formType,
+    
+    // Images metadata
+    'imageCount': _countImagesInData(reportData),
+    'hasImages': _hasImagesInData(reportData),
+    
+    // Timestamps
+    'createdAt': reportData['createdAt'] ?? DateTime.now().toIso8601String(),
+    'updatedAt': reportData['updatedAt'] ?? DateTime.now().toIso8601String(),
+  };
+}
+
+// Helper methods for data conversion
+String _convertApiDateToDisplayDate(dynamic apiDate) {
+  if (apiDate == null || apiDate.toString().isEmpty) return '';
+  try {
+    DateTime dateTime = DateTime.parse(apiDate.toString());
+    return "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
+  } catch (e) {
+    return apiDate.toString();
+  }
+}
+
+String _convertApiTimeToDisplayTime(dynamic apiTime) {
+  if (apiTime == null || apiTime.toString().isEmpty) return '';
+  try {
+    String timeStr = apiTime.toString();
+    if (timeStr.length >= 5) {
+      return timeStr.substring(0, 5); // Extract HH:MM
+    }
+    return timeStr;
+  } catch (e) {
+    return apiTime.toString();
+  }
+}
+
+bool _extractImpactValueFromString(dynamic impactString, String searchTerm) {
+  if (impactString == null) return false;
+  return impactString.toString().toLowerCase().contains(searchTerm.toLowerCase());
+}
+
+int _countImagesInData(Map<String, dynamic> reportData) {
+  int count = 0;
+  if (reportData['LandslidePhotographs'] != null && reportData['LandslidePhotographs'].toString().isNotEmpty) count++;
+  if (reportData['LandslidePhotograph1'] != null && reportData['LandslidePhotograph1'].toString().isNotEmpty) count++;
+  if (reportData['LandslidePhotograph2'] != null && reportData['LandslidePhotograph2'].toString().isNotEmpty) count++;
+  if (reportData['LandslidePhotograph3'] != null && reportData['LandslidePhotograph3'].toString().isNotEmpty) count++;
+  if (reportData['LandslidePhotograph4'] != null && reportData['LandslidePhotograph4'].toString().isNotEmpty) count++;
+  return count;
+}
+
+bool _hasImagesInData(Map<String, dynamic> reportData) {
+  return _countImagesInData(reportData) > 0;
 }
 
   @override
@@ -409,15 +553,18 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
   // Load draft reports from SharedPreferences
   Future<void> loadDraftReports() async {
     try {
+      print('🔄 Loading draft reports...');
       isLoadingDrafts.value = true;
       final prefs = await SharedPreferences.getInstance();
       final draftsJson = prefs.getStringList(_draftReportsKey) ?? [];
       
+      print('📊 Found ${draftsJson.length} drafts in storage');
       draftReports.clear();
       for (String draftJson in draftsJson) {
         try {
           final draft = DraftReport.fromJsonString(draftJson);
           draftReports.add(draft);
+          print('📝 Loaded draft: ${draft.id} - Status: ${draft.submissionStatus} - FormType: ${draft.formType}');
         } catch (e) {
           print('Error parsing draft: $e');
           // Remove corrupted draft
@@ -433,6 +580,11 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
       
       // Sort by updated date (newest first)
       draftReports.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      
+      print('✅ Loaded ${draftReports.length} drafts total');
+      for (var draft in draftReports) {
+        print('  - ${draft.id}: ${draft.submissionStatus} (${draft.formType})');
+      }
       
       // Apply filters after loading
       _applyFilters();
@@ -460,6 +612,11 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
       final String draftId = 'draft_${DateTime.now().millisecondsSinceEpoch}';
       final now = DateTime.now();
       
+      // Get submission status from formData or default to 'draft'
+      final String submissionStatus = formData['submissionStatus'] ?? 'draft';
+      print('🔍 DEBUG: saveDraftReport - formData submissionStatus: ${formData['submissionStatus']}');
+      print('🔍 DEBUG: saveDraftReport - final submissionStatus: $submissionStatus');
+      
       final draft = DraftReport(
         id: draftId,
         createdAt: now,
@@ -467,7 +624,7 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
         formData: formData,
         title: DraftReport.generateTitle(formData),
         formType: formType, // ADD this required parameter
-        submissionStatus: 'draft', // Set initial status
+        submissionStatus: submissionStatus, // Use status from formData
       );
       
       // Add to list

@@ -415,7 +415,7 @@ class DraftReport {
           return {
             'text': 'ready'.tr.toUpperCase(),
             'icon': Icons.check_circle,
-            'color': Colors.green,
+            'color': Colors.blue,
           };
         } else {
           return {

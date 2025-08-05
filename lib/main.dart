@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/screens/homescreen.dart';
 import 'package:bhooskhalann/screens/login_register_pages/login_register_screen.dart';
 import 'package:bhooskhalann/translations/app_translations.dart';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
