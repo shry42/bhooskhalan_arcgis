@@ -60,6 +60,7 @@ var isPendingEditMode = false.obs;
   var isLocationAutoPopulated = false.obs;
 var selectedStateFromDropdown = Rxn<String>();
 var selectedDistrictFromDropdown = Rxn<String>();
+var isLocationFetching = false.obs; // Flag to prevent duplicate location fetching
 
   // UI State variables
   var isImpactSectionExpanded = false.obs;
@@ -594,6 +595,14 @@ List<String> getDistrictsForState(String? state) {
 
 // Replace the fetchIndianStateDistrictFromArcGIS method with this
 Future<void> fetchLocationFromCoordinates() async {
+  // Prevent duplicate calls
+  if (isLocationFetching.value) {
+    print('⚠️ Location fetching already in progress, skipping duplicate call');
+    return;
+  }
+  
+  isLocationFetching.value = true;
+  
   try {
     if (latitudeController.text.isNotEmpty && longitudeController.text.isNotEmpty) {
       final double lat = double.parse(latitudeController.text);
@@ -732,6 +741,9 @@ Future<void> fetchLocationFromCoordinates() async {
   } catch (e) {
     isLocationAutoPopulated.value = false;
     // _showLocationError(e.toString());
+  } finally {
+    // Reset the flag to allow future calls
+    isLocationFetching.value = false;
   }
 }
 
@@ -787,12 +799,15 @@ void _showLocationNotFound() {
 }
 
 
-// SETUP METHODS
+  // SETUP METHODS
   void setCoordinates(double latitude, double longitude) {
     latitudeController.text = latitude.toStringAsFixed(7);
     longitudeController.text = longitude.toStringAsFixed(7);
     // Automatically fetch state and district from ArcGIS
-    fetchLocationFromCoordinates();
+    // Only fetch if not already fetching
+    if (!isLocationFetching.value) {
+      fetchLocationFromCoordinates();
+    }
   }
 
   // DRAFT MANAGEMENT METHODS
@@ -1542,17 +1557,43 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
         
         await ApiService.postLandslide('/Landslide/create/${mobile.value}/Public', [payload]);
         
-        // If submission is successful and this was a draft, update its status to submitted
+        // Handle successful submission
+        final reportsController = Get.put(RecentReportsController());
+        
         if (currentDraftId != null) {
-          final reportsController = Get.find<RecentReportsController>();
+          // If this was an existing draft, update its status to submitted
           await reportsController.updateDraftSubmissionStatus(currentDraftId!, 'submitted');
+        } else {
+          // If this was a new submission, save it to draft section with submitted status
+          final completeFormData = await _buildCompleteFormData();
+          completeFormData['title'] = 'Public Landslide Report - ${completeFormData['district'] ?? completeFormData['state'] ?? 'Unknown Location'}';
+          completeFormData['submissionStatus'] = 'submitted';
+          completeFormData['createdAt'] = DateTime.now().toIso8601String();
+          completeFormData['updatedAt'] = DateTime.now().toIso8601String();
+          
+          await reportsController.saveDraftReport(completeFormData, 'public');
         }
         
         _showSuccessDialog(isOnline: true);
         
       } catch (e) {
-        // If API fails, treat as offline
-        await _handleOfflineSubmission(payload);
+        // If API fails, save to draft section with pending status
+        final reportsController = Get.put(RecentReportsController());
+        
+        if (currentDraftId != null) {
+          // If this was an existing draft, update its status to pending
+          await reportsController.updateDraftSubmissionStatus(currentDraftId!, 'pending');
+        } else {
+          // If this was a new submission, save it to draft section with pending status
+          final completeFormData = await _buildCompleteFormData();
+          completeFormData['title'] = 'Public Landslide Report - ${completeFormData['district'] ?? completeFormData['state'] ?? 'Unknown Location'}';
+          completeFormData['submissionStatus'] = 'pending';
+          completeFormData['createdAt'] = DateTime.now().toIso8601String();
+          completeFormData['updatedAt'] = DateTime.now().toIso8601String();
+          
+          await reportsController.saveDraftReport(completeFormData, 'public');
+        }
+        
         _showSuccessDialog(isOnline: false);
       }
     } else {
@@ -1719,6 +1760,92 @@ void _showSuccessDialog({required bool isOnline}) {
   );
 }
 
+
+// Build complete form data for storage (what user sees)
+Future<Map<String, dynamic>> _buildCompleteFormData() async {
+  // Convert images to base64 for storage
+  List<String> base64Images = [];
+  for (File imageFile in selectedImages) {
+    String base64Image = await imageToBase64(imageFile);
+    base64Images.add(base64Image);
+  }
+  
+  return {
+    // Location Information
+    "latitude": latitudeController.text.trim(),
+    "longitude": longitudeController.text.trim(),
+    "state": stateController.text.trim(),
+    "district": districtController.text.trim(),
+    "subdivision": subdivisionController.text.trim(),
+    "village": villageController.text.trim(),
+    "locationDetails": locationDetailsController.text.trim(),
+    "isLocationAutoPopulated": isLocationAutoPopulated.value,
+    
+    // Date and Time
+    "date": dateController.text.trim(),
+    "time": timeController.text.trim(),
+    "landslideOccurrence": landslideOccurrenceValue.value,
+    "howDoYouKnow": howDoYouKnowValue.value,
+    "occurrenceDateRange": occurrenceDateRange.value.trim(),
+    
+    // Images
+    "images": base64Images,
+    "imageCaptions": imageCaptions.map((controller) => controller.text).toList(),
+    "imageCount": selectedImages.length,
+    "hasImages": selectedImages.isNotEmpty,
+    
+    // Landslide Details
+    "whereDidLandslideOccur": whereDidLandslideOccurValue.value,
+    "typeOfMaterial": typeOfMaterialValue.value,
+    "landslideSize": landslideSize.value,
+    
+    // Impact and Damage
+    "peopleAffected": peopleAffected.value,
+    "livestockAffected": livestockAffected.value,
+    "housesBuildingAffected": housesBuildingAffected.value,
+    "damsBarragesAffected": damsBarragesAffected.value,
+    "roadsAffected": roadsAffected.value,
+    "roadsBlocked": roadsBlocked.value,
+    "roadBenchesDamaged": roadBenchesDamaged.value,
+    "railwayLineAffected": railwayLineAffected.value,
+    "railwayBlocked": railwayBlocked.value,
+    "railwayBenchesDamaged": railwayBenchesDamaged.value,
+    "powerInfrastructureAffected": powerInfrastructureAffected.value,
+    "damagesToAgriculturalForestLand": damagesToAgriculturalForestLand.value,
+    "other": other.value,
+    "noDamages": noDamages.value,
+    "iDontKnow": iDontKnow.value,
+    
+    // Damage Details
+    "peopleDead": peopleDeadController.text.trim(),
+    "peopleInjured": peopleInjuredController.text.trim(),
+    "livestockDead": livestockDeadController.text.trim(),
+    "livestockInjured": livestockInjuredController.text.trim(),
+    "housesFullyAffected": housesFullyController.text.trim(),
+    "housesPartiallyAffected": housesPartiallyController.text.trim(),
+    "damsName": damsNameController.text.trim(),
+    "damsExtent": damsExtentValue.value,
+    "roadType": roadTypeValue.value,
+    "roadExtent": roadExtentValue.value,
+    "roadBlockage": roadBlockageValue.value,
+    "roadBenchesExtent": roadBenchesExtentValue.value,
+    "railwayDetails": railwayDetailsController.text.trim(),
+    "railwayBlockage": railwayBlockageValue.value,
+    "railwayBenchesExtent": railwayBenchesExtentValue.value,
+    "powerExtent": powerExtentValue.value,
+    "otherDamageDetails": otherDamageDetailsController.text.trim(),
+    
+    // User Information
+    "username": username.value,
+    "email": email.value,
+    "mobile": mobile.value,
+    "affiliation": affiliationController.text.trim(),
+    
+    // Form Type
+    "formType": "public",
+    "userType": "Public",
+  };
+}
 
 // Update the _buildApiPayload method to convert translated values to English
 Future<Map<String, dynamic>> _buildApiPayload(String landslidePhotographs) async {
