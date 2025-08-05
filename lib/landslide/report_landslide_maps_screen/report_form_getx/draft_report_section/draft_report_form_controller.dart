@@ -1989,17 +1989,43 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
       try {
         await ApiService.postLandslide('/Landslide/create/$mobile/$userType', [payload]);
         
-        // If submission is successful and this was a draft, remove it from drafts
+        // Handle successful submission
+        final reportsController = Get.put(RecentReportsController());
+        
         if (currentDraftId != null) {
-          final reportsController = Get.find<RecentReportsController>();
+          // If this was an existing draft, move it to synced
           await reportsController.moveDraftToSynced(currentDraftId!, payload);
+        } else {
+          // If this was a new submission, add it to synced section
+          final syncedReport = {
+            'id': 'synced_${DateTime.now().millisecondsSinceEpoch}',
+            'originalDraftId': null,
+            'syncedAt': DateTime.now().toIso8601String(),
+            'submittedData': payload,
+            'status': 'synced',
+            'title': 'Expert Landslide Report - ${payload['District'] ?? payload['State'] ?? 'Unknown Location'}',
+            'formType': 'expert',
+          };
+          
+          await reportsController.addSyncedReport(syncedReport);
         }
         
         _showSuccessDialog(isOnline: true);
         
       } catch (e) {
-        // If API fails, treat as offline
-        await _handleOfflineSubmission(payload);
+        // If API fails, save to "To Be Synced" section
+        final reportsController = Get.put(RecentReportsController());
+        
+        if (currentDraftId != null) {
+          // If this was an existing draft, update its status to pending
+          await reportsController.updateDraftSubmissionStatus(currentDraftId!, 'pending');
+        } else {
+          // If this was a new submission, add it to "To Be Synced" section
+          payload['formType'] = 'expert';
+          payload['title'] = 'Expert Landslide Report - ${payload['District'] ?? payload['State'] ?? 'Unknown Location'}';
+          await reportsController.addToBeSyncedReport(payload);
+        }
+        
         _showSuccessDialog(isOnline: false);
       }
     } else {

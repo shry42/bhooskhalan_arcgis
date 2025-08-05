@@ -2459,14 +2459,17 @@ class SyncedReportCard extends StatelessWidget {
 
       // Generate PDF from synced report data with proper mapping
       final pdfService = PdfExportService();
-      final reportData = report['data'] ?? report;
-      final formType = reportData['formType'] ?? userType.toLowerCase();
+      
+      // Extract the actual submitted data from synced report
+      final submittedData = report['submittedData'] ?? report['data'] ?? report;
+      final formType = report['formType'] ?? userType.toLowerCase();
       
       print('📄 Generating PDF for synced report - Form type: $formType');
-      print('🔍 Report data keys: ${reportData.keys.toList()}');
+      print('🔍 Report keys: ${report.keys.toList()}');
+      print('🔍 Submitted data keys: ${submittedData.keys.toList()}');
       
-      // Use the comprehensive data mapping (same as pending reports)
-      final mappedData = _convertSyncedToFormData(reportData, formType);
+      // Use the comprehensive data mapping with the actual submitted data
+      final mappedData = _convertSyncedToFormData(submittedData, formType);
       
       final pdfFile = await pdfService.generateDraftPdf(mappedData, formType);
       
@@ -2515,47 +2518,52 @@ class SyncedReportCard extends StatelessWidget {
     print('🔄 Converting synced report data to form data format');
     print('📊 Available fields: ${reportData.keys.toList()}');
     
+    // Helper function to get value with multiple fallbacks
+    String getValue(String primaryKey, String fallbackKey, [String defaultValue = '']) {
+      return (reportData[primaryKey] ?? reportData[fallbackKey] ?? defaultValue).toString();
+    }
+    
     return {
-      // Location data - map API keys to form keys
-      'latitude': reportData['Latitude'] ?? reportData['latitude'] ?? '',
-      'longitude': reportData['Longitude'] ?? reportData['longitude'] ?? '',
-      'state': reportData['State'] ?? reportData['state'] ?? '',
-      'district': reportData['District'] ?? reportData['district'] ?? '',
-      'subdivision': reportData['SubdivisionOrTaluk'] ?? reportData['subdivision'] ?? '',
-      'village': reportData['Village'] ?? reportData['village'] ?? '',
-      'locationDetails': reportData['LocationDetails'] ?? reportData['locationDetails'] ?? '',
+      // Location data - map API keys to form keys with comprehensive fallbacks
+      'latitude': getValue('Latitude', 'latitude'),
+      'longitude': getValue('Longitude', 'longitude'),
+      'state': getValue('State', 'state'),
+      'district': getValue('District', 'district'),
+      'subdivision': getValue('SubdivisionOrTaluk', 'subdivision'),
+      'village': getValue('Village', 'village'),
+      'locationDetails': getValue('LocationDetails', 'locationDetails'),
       
       // Occurrence data
-      'landslideOccurrence': reportData['DateTimeType'] ?? reportData['landslideOccurrence'] ?? '',
-      'date': _convertApiDateToDisplayDate(reportData['LandslideDate'] ?? reportData['date']),
-      'time': _convertApiTimeToDisplayTime(reportData['LandslideTime'] ?? reportData['time']),
-      'howDoYouKnow': reportData['ExactDateInfo'] ?? reportData['howDoYouKnow'] ?? '',
-      'occurrenceDateRange': reportData['Date_and_time_Range'] ?? reportData['occurrenceDateRange'] ?? '',
+      'landslideOccurrence': getValue('DateTimeType', 'landslideOccurrence'),
+      'date': _convertApiDateToDisplayDate(getValue('LandslideDate', 'date')),
+      'time': _convertApiTimeToDisplayTime(getValue('LandslideTime', 'time')),
+      'howDoYouKnow': getValue('ExactDateInfo', 'howDoYouKnow'),
+      'occurrenceDateRange': getValue('Date_and_time_Range', 'occurrenceDateRange'),
       
       // Basic landslide data - ensure proper mapping
-      'whereDidLandslideOccur': reportData['LanduseOrLandcover'] ?? reportData['whereDidLandslideOccur'] ?? '',
-      'typeOfMaterial': reportData['MaterialInvolved'] ?? reportData['typeOfMaterial'] ?? '',
-      'typeOfMovement': reportData['MovementType'] ?? reportData['typeOfMovement'] ?? '',
-      'landslideSize': reportData['LandslideSize'] ?? reportData['landslideSize'] ?? '', // For public form
-      'whatInducedLandslide': reportData['InducingFactor'] ?? reportData['whatInducedLandslide'] ?? '',
-      'otherRelevantInfo': reportData['OtherInformation'] ?? reportData['otherRelevantInfo'] ?? '',
+      'whereDidLandslideOccur': getValue('LanduseOrLandcover', 'whereDidLandslideOccur'),
+      'typeOfMaterial': getValue('MaterialInvolved', 'typeOfMaterial'),
+      'typeOfMovement': getValue('MovementType', 'typeOfMovement'),
+      'landslideSize': getValue('LandslideSize', 'landslideSize'), // For public form
+      'whatInducedLandslide': getValue('InducingFactor', 'whatInducedLandslide'),
+      'otherRelevantInfo': getValue('OtherInformation', 'otherRelevantInfo'),
       
       // Expert form specific fields
-      'activity': reportData['Activity'] ?? reportData['activity'] ?? '',
-      'style': reportData['Style'] ?? reportData['style'] ?? '',
-      'length': reportData['LengthInMeters'] ?? reportData['length'] ?? '',
-      'width': reportData['WidthInMeters'] ?? reportData['width'] ?? '',
-      'height': reportData['HeightInMeters'] ?? reportData['height'] ?? '',
-      'area': reportData['AreaInSqMeters'] ?? reportData['area'] ?? '',
-      'depth': reportData['DepthInMeters'] ?? reportData['depth'] ?? '',
-      'volume': reportData['VolumeInCubicMeters'] ?? reportData['volume'] ?? '',
-      'runoutDistance': reportData['RunoutDistanceInMeters'] ?? reportData['runoutDistance'] ?? '',
-      'rateOfMovement': reportData['RateOfMovement'] ?? reportData['rateOfMovement'] ?? '',
-      'distribution': reportData['Distribution'] ?? reportData['distribution'] ?? '',
-      'failureMechanism': reportData['FailureMechanism'] ?? reportData['failureMechanism'] ?? '',
-      'hydrologicalCondition': reportData['HydrologicalCondition'] ?? reportData['hydrologicalCondition'] ?? '',
-      'geology': reportData['Geology'] ?? reportData['geology'] ?? '',
-      'geomorphology': reportData['Geomorphology'] ?? reportData['geomorphology'] ?? '',
+      'activity': getValue('Activity', 'activity'),
+      'style': getValue('Style', 'style'),
+      'length': getValue('LengthInMeters', 'length'),
+      'width': getValue('WidthInMeters', 'width'),
+      'height': getValue('HeightInMeters', 'height'),
+      'area': getValue('AreaInSqMeters', 'area'),
+      'depth': getValue('DepthInMeters', 'depth'),
+      'volume': getValue('VolumeInCubicMeters', 'volume'),
+      'runoutDistance': getValue('RunoutDistanceInMeters', 'runoutDistance'),
+      'rateOfMovement': getValue('RateOfMovement', 'rateOfMovement'),
+      'distribution': getValue('Distribution', 'distribution'),
+      'failureMechanism': getValue('FailureMechanism', 'failureMechanism'),
+      'hydrologicalCondition': getValue('HydrologicalCondition', 'hydrologicalCondition'),
+      'geology': getValue('Geology', 'geology'),
+      'geomorphology': getValue('Geomorphology', 'geomorphology'),
       
       // Rainfall data - map both possible keys
       'rainfallAmount': reportData['Amount_of_rainfall'] ?? reportData['rainfallAmount'] ?? '',
