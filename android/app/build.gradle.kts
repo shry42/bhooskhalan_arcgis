@@ -10,7 +10,7 @@ dependencies {
 }
 
 android {
-    namespace = "com.gsi.bhooskhalan"
+    namespace = "in.gov.gsi.bhooskhalan"
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
@@ -33,7 +33,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.gsi.bhooskhalan"
+        applicationId = "in.gov.gsi.bhooskhalan"
         minSdk = 29      // ✅ VAPT compliance (Android 10)
         targetSdk = 34   // Modern target for security
         versionCode = flutter.versionCode

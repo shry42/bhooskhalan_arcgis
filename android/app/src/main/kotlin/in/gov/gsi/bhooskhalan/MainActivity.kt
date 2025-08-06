@@ -1,4 +1,4 @@
-package com.gsi.bhooskhalan
+package `in`.`gov`.gsi.bhooskhalan
 
 import android.content.Context
 import android.content.Intent
