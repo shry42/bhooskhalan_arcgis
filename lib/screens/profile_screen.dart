@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:bhooskhalann/services/native_in_app_update_service.dart';
 
 class MyProfileScreen extends StatelessWidget {
   const MyProfileScreen({super.key});
@@ -38,6 +40,30 @@ class MyProfileScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             _buildInfoCard(icon: Icons.location_on, label: 'Expert User'),
+            const SizedBox(height: 12),
+
+            // Check for Updates Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: ListTile(
+                leading: Icon(Icons.system_update, color: Colors.green),
+                title: Text(
+                  'Check for Updates',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                subtitle: Text('Check for app updates'),
+                trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                tileColor: Colors.grey[100],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                onTap: () {
+                  NativeInAppUpdateService.checkForUpdatesWithDialog();
+                },
+              ),
+            ),
             const SizedBox(height: 32),
 
             SizedBox(

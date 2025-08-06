@@ -15,12 +15,12 @@ class ApiService {
   static void initialize() {
     if (_initialized) return;
     
-    // Your certificate fingerprint
-    List<String> certificateSHA256Fingerprints = [
-      '75:B6:CB:85:62:92:01:3A:68:3C:11:3D:07:FE:69:7D:C8:80:F5:FA:61:57:16:BD:B4:A1:C9:15:75:47:2C:E1'
+    // Your certificate fingerprint - Using SHA1 (Updated)
+    List<String> certificateSHA1Fingerprints = [
+      'C5:8A:15:04:B0:0F:E1:0C:7E:09:8E:30:1D:96:1D:85:EF:89:93:7F'
     ];
     
-    _client = SecureHttpClient.build(certificateSHA256Fingerprints);
+    _client = SecureHttpClient.build(certificateSHA1Fingerprints);
     _initialized = true;
     print('✅ Secure API Service initialized with SSL pinning');
   }

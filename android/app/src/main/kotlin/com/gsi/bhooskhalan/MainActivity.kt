@@ -1,6 +1,7 @@
-package com.example.bhooskhalann
+package com.gsi.bhooskhalan
 
 import android.content.Context
+import android.content.Intent
 import android.provider.Settings
 import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
@@ -10,9 +11,14 @@ import java.io.File
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "security_channel"
+    private lateinit var inAppUpdateHelper: InAppUpdateHelper
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        
+        // Initialize in-app update helper
+        inAppUpdateHelper = InAppUpdateHelper(this)
+        inAppUpdateHelper.onAttachedToEngine(flutterEngine)
         
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -43,6 +49,11 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
+    }
+    
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        inAppUpdateHelper.onActivityResult(requestCode, resultCode, data)
     }
     
     private fun isDeveloperModeEnabled(): Boolean {
@@ -284,4 +295,4 @@ class MainActivity: FlutterActivity() {
         val buildTags = Build.TAGS
         return buildTags?.contains("test-keys") == true
     }
-}
+} 

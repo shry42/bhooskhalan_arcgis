@@ -1,4 +1,5 @@
 import 'package:bhooskhalann/services/api_service.dart';
+import 'package:bhooskhalann/services/native_in_app_update_service.dart';
 import 'package:bhooskhalann/translations/language_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,14 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/screens/homescreen.dart';
 import 'package:bhooskhalann/screens/login_register_pages/login_register_screen.dart';
 import 'package:bhooskhalann/translations/app_translations.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:bhooskhalann/services/api_service.dart';
-import 'package:bhooskhalann/screens/homescreen.dart';
-import 'package:bhooskhalann/screens/login_register_pages/login_register_screen.dart';
-import 'package:bhooskhalann/translations/app_translations.dart';
-import 'package:bhooskhalann/translations/language_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +25,11 @@ void main() async {
   runApp(MyApp(
     isLoggedIn: token != null && token.isNotEmpty,
   ));
+
+  // Check for app updates after a delay (to not interfere with app startup)
+  Future.delayed(Duration(seconds: 3), () {
+    NativeInAppUpdateService.checkForUpdatesSilently();
+  });
 }
 
 class MyApp extends StatelessWidget {
