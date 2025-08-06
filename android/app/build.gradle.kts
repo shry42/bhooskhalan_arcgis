@@ -62,22 +62,19 @@ android {
                 debugSymbolLevel = "NONE"
             }
             
-            // Enable APK splitting for size reduction
-            splits {
-                abi {
-                    isEnable = true
-                    reset()
-                    include("arm64-v8a", "armeabi-v7a", "x86_64")
-                    isUniversalApk = false
-                }
-            }
-            
-            // Additional size optimizations
-            ndk {
-                debugSymbolLevel = "NONE"
-            }
+            // Splits moved to correct location outside buildTypes
         }
     }
+    
+    // Enable APK splitting for size reduction (disabled for debug)
+    // splits {
+    //     abi {
+    //         isEnable = true
+    //         reset()
+    //         include("arm64-v8a", "armeabi-v7a", "x86_64")
+    //         isUniversalApk = false
+    //     }
+    // }
     
     // Enable bundle compression
     bundle {

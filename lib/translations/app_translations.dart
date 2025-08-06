@@ -126,6 +126,13 @@ class AppTranslations extends Translations {
       'retry_button': 'Retry',
       'exit_button': 'Exit Application',
 
+      // VAPT Security Test Translations
+      'vapt_security_checks': 'Performing VAPT security checks...',
+      'security_warning': 'Security Warning',
+      'security_check_results': 'Security Check Results:',
+      'retry_check': 'Retry Check',
+      'exit_app': 'Exit App',
+
       // Public Form Screen Titles
   'edit_draft_report': 'Edit Draft Report',
   'edit_pending_report': 'Edit Pending Report',
