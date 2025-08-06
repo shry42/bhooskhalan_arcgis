@@ -48,11 +48,19 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
         }
-        release {
+                release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
+            // Additional size optimizations
+            isCrunchPngs = true
+            isJniDebuggable = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            
+            // Additional size optimizations
+            ndk {
+                debugSymbolLevel = "NONE"
+            }
             
             // Enable APK splitting for size reduction
             splits {

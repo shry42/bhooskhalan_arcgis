@@ -87,6 +87,20 @@
 -keep class com.esri.arcgisruntime.location.datasource.** { *; }  # Keep SystemLocationDataSource
 -keep class com.esri.arcgisruntime.portal.** { *; }  # Keep portal authentication
 
+# Additional size optimizations
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+
+# More aggressive optimizations
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-verbose
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+-mergeinterfacesaggressively
+
 # Exclude UNUSED ArcGIS components to reduce size
 -dontwarn com.esri.arcgisruntime.toolkit.**
 -dontwarn com.esri.arcgisruntime.tasks.**
@@ -119,20 +133,6 @@
 -dontwarn com.esri.arcgisruntime.survey.**  # Survey123 integration
 -dontwarn com.esri.arcgisruntime.collector.**  # Collector integration
 -dontwarn com.esri.arcgisruntime.explorer.**  # Explorer integration
--dontwarn com.esri.arcgisruntime.scene.**  # 3D Scene features
--dontwarn com.esri.arcgisruntime.sceneview.**  # SceneView components
--dontwarn com.esri.arcgisruntime.offline.**  # Offline map features
--dontwarn com.esri.arcgisruntime.mobile.**  # Mobile map packages
--dontwarn com.esri.arcgisruntime.routing.**  # Routing services
--dontwarn com.esri.arcgisruntime.geocoding.**  # Geocoding services
--dontwarn com.esri.arcgisruntime.analysis.**  # Spatial analysis
--dontwarn com.esri.arcgisruntime.editing.**  # Feature editing
--dontwarn com.esri.arcgisruntime.utility.**  # Utility networks
--dontwarn com.esri.arcgisruntime.indoor.**  # Indoor mapping
--dontwarn com.esri.arcgisruntime.geotrigger.**  # Geofencing
--dontwarn com.esri.arcgisruntime.measurement.**  # Measurement tools
--dontwarn com.esri.arcgisruntime.rendering.**  # Advanced rendering
--dontwarn com.esri.arcgisruntime.labeling.**  # Label definitions
 -dontwarn com.esri.arcgisruntime.animation.**  # Animation features
 -dontwarn com.esri.arcgisruntime.camera.**  # Camera controls
 -dontwarn com.esri.arcgisruntime.surface.**  # Surface navigation
@@ -373,3 +373,89 @@
 -dontwarn com.esri.arcgisruntime.githubclouddevops.**  # GitHub Cloud DevOps
 -dontwarn com.esri.arcgisruntime.gitlabclouddevops.**  # GitLab Cloud DevOps
 -dontwarn com.esri.arcgisruntime.bitbucketclouddevops.**  # Bitbucket Cloud DevOps 
+
+# Additional aggressive exclusions for more size reduction
+-dontwarn com.esri.arcgisruntime.licensing.**  # Licensing features
+-dontwarn com.esri.arcgisruntime.credential.**  # Credential management
+-dontwarn com.esri.arcgisruntime.token.**  # Token authentication
+-dontwarn com.esri.arcgisruntime.oauth.**  # OAuth authentication
+-dontwarn com.esri.arcgisruntime.saml.**  # SAML authentication
+-dontwarn com.esri.arcgisruntime.kerberos.**  # Kerberos authentication
+-dontwarn com.esri.arcgisruntime.certificate.**  # Certificate authentication
+-dontwarn com.esri.arcgisruntime.identity.**  # Identity management
+-dontwarn com.esri.arcgisruntime.user.**  # User management
+-dontwarn com.esri.arcgisruntime.group.**  # Group management
+-dontwarn com.esri.arcgisruntime.role.**  # Role management
+-dontwarn com.esri.arcgisruntime.permission.**  # Permission management
+-dontwarn com.esri.arcgisruntime.access.**  # Access control
+-dontwarn com.esri.arcgisruntime.sharing.**  # Sharing features
+-dontwarn com.esri.arcgisruntime.collaboration.**  # Collaboration features
+-dontwarn com.esri.arcgisruntime.workflow.**  # Workflow features
+-dontwarn com.esri.arcgisruntime.approval.**  # Approval workflows
+-dontwarn com.esri.arcgisruntime.review.**  # Review processes
+-dontwarn com.esri.arcgisruntime.comment.**  # Comment features
+-dontwarn com.esri.arcgisruntime.annotation.**  # Annotation features
+-dontwarn com.esri.arcgisruntime.markup.**  # Markup features
+-dontwarn com.esri.arcgisruntime.drawing.**  # Drawing tools
+-dontwarn com.esri.arcgisruntime.sketch.**  # Sketch tools
+-dontwarn com.esri.arcgisruntime.measurement.**  # Measurement tools
+-dontwarn com.esri.arcgisruntime.calculation.**  # Calculation tools
+-dontwarn com.esri.arcgisruntime.formula.**  # Formula evaluation
+-dontwarn com.esri.arcgisruntime.expression.**  # Expression evaluation
+-dontwarn com.esri.arcgisruntime.rule.**  # Rule engine
+-dontwarn com.esri.arcgisruntime.condition.**  # Conditional logic
+-dontwarn com.esri.arcgisruntime.validation.**  # Data validation
+-dontwarn com.esri.arcgisruntime.constraint.**  # Constraint checking
+-dontwarn com.esri.arcgisruntime.quality.**  # Data quality
+-dontwarn com.esri.arcgisruntime.accuracy.**  # Accuracy assessment
+-dontwarn com.esri.arcgisruntime.precision.**  # Precision handling
+-dontwarn com.esri.arcgisruntime.uncertainty.**  # Uncertainty analysis
+-dontwarn com.esri.arcgisruntime.error.**  # Error handling
+-dontwarn com.esri.arcgisruntime.exception.**  # Exception handling
+-dontwarn com.esri.arcgisruntime.logging.**  # Logging features
+-dontwarn com.esri.arcgisruntime.audit.**  # Audit trails
+-dontwarn com.esri.arcgisruntime.tracking.**  # Tracking features
+-dontwarn com.esri.arcgisruntime.monitoring.**  # Monitoring features
+-dontwarn com.esri.arcgisruntime.alert.**  # Alert system
+-dontwarn com.esri.arcgisruntime.notification.**  # Notification system
+-dontwarn com.esri.arcgisruntime.message.**  # Messaging features
+-dontwarn com.esri.arcgisruntime.communication.**  # Communication features
+-dontwarn com.esri.arcgisruntime.integration.**  # Integration features
+-dontwarn com.esri.arcgisruntime.connector.**  # Connector features
+-dontwarn com.esri.arcgisruntime.adapter.**  # Adapter patterns
+-dontwarn com.esri.arcgisruntime.bridge.**  # Bridge patterns
+-dontwarn com.esri.arcgisruntime.facade.**  # Facade patterns
+-dontwarn com.esri.arcgisruntime.proxy.**  # Proxy patterns
+-dontwarn com.esri.arcgisruntime.decorator.**  # Decorator patterns
+-dontwarn com.esri.arcgisruntime.observer.**  # Observer patterns
+-dontwarn com.esri.arcgisruntime.strategy.**  # Strategy patterns
+-dontwarn com.esri.arcgisruntime.factory.**  # Factory patterns
+-dontwarn com.esri.arcgisruntime.builder.**  # Builder patterns
+-dontwarn com.esri.arcgisruntime.singleton.**  # Singleton patterns
+-dontwarn com.esri.arcgisruntime.prototype.**  # Prototype patterns
+-dontwarn com.esri.arcgisruntime.command.**  # Command patterns
+-dontwarn com.esri.arcgisruntime.state.**  # State patterns
+-dontwarn com.esri.arcgisruntime.visitor.**  # Visitor patterns
+-dontwarn com.esri.arcgisruntime.template.**  # Template patterns
+-dontwarn com.esri.arcgisruntime.iterator.**  # Iterator patterns
+-dontwarn com.esri.arcgisruntime.chain.**  # Chain of responsibility
+-dontwarn com.esri.arcgisruntime.interpreter.**  # Interpreter patterns
+-dontwarn com.esri.arcgisruntime.mediator.**  # Mediator patterns
+-dontwarn com.esri.arcgisruntime.memento.**  # Memento patterns
+-dontwarn com.esri.arcgisruntime.flyweight.**  # Flyweight patterns
+-dontwarn com.esri.arcgisruntime.composite.**  # Composite patterns
+
+# Remove completely unused classes (more aggressive)
+-assumenosideeffects class com.esri.arcgisruntime.scene.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.analysis.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.routing.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.geocoding.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.editing.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.utility.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.indoor.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.geotrigger.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.toolkit.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.offline.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.mobile.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.tasks.** { *; }
+-assumenosideeffects class com.esri.arcgisruntime.security.** { *; } 
