@@ -583,35 +583,49 @@ class PdfExportService {
     );
   }
 
-  // Get downloads directory
+  // Get downloads directory using modern scoped storage
   Future<Directory> _getDownloadsDirectory() async {
     if (Platform.isAndroid) {
-      // Request storage permissions
-      final storageStatus = await Permission.storage.request();
-      final manageStorageStatus = await Permission.manageExternalStorage.request();
-      
-      if (storageStatus.isDenied && manageStorageStatus.isDenied) {
-        throw Exception('Storage permissions required to save PDF. Please grant storage access in app settings.');
-      }
-      
-      // Try to use external storage for Android
+      // For Android 10+ (API 29+), use scoped storage - no special permissions needed
+      // PDFs will be saved in app's external files directory, accessible to users
       try {
-        final directory = Directory('/storage/emulated/0/Download');
-        if (!await directory.exists()) {
-          await directory.create(recursive: true);
+        // Get external storage directory for the app
+        final directory = await getExternalStorageDirectory();
+        if (directory != null) {
+          // Create a Documents/PDFs folder within app's external storage
+          final pdfDirectory = Directory('${directory.path}/Documents/PDFs');
+          if (!await pdfDirectory.exists()) {
+            await pdfDirectory.create(recursive: true);
+          }
+          return pdfDirectory;
         }
-        return directory;
       } catch (e) {
-        // Fallback to app documents directory if external storage fails
-        print('External storage not accessible, using app documents directory: $e');
-        return await getApplicationDocumentsDirectory();
+        print('External storage not accessible: $e');
       }
+      
+      // Fallback to app documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      final pdfDirectory = Directory('${directory.path}/PDFs');
+      if (!await pdfDirectory.exists()) {
+        await pdfDirectory.create(recursive: true);
+      }
+      return pdfDirectory;
     } else if (Platform.isIOS) {
       // Use documents directory for iOS
-      return await getApplicationDocumentsDirectory();
+      final directory = await getApplicationDocumentsDirectory();
+      final pdfDirectory = Directory('${directory.path}/PDFs');
+      if (!await pdfDirectory.exists()) {
+        await pdfDirectory.create(recursive: true);
+      }
+      return pdfDirectory;
     } else {
       // Use documents directory for other platforms
-      return await getApplicationDocumentsDirectory();
+      final directory = await getApplicationDocumentsDirectory();
+      final pdfDirectory = Directory('${directory.path}/PDFs');
+      if (!await pdfDirectory.exists()) {
+        await pdfDirectory.create(recursive: true);
+      }
+      return pdfDirectory;
     }
   }
 

@@ -6,12 +6,16 @@ plugins {
 
 
 dependencies {
-    implementation("com.google.android.play:core:1.10.3")
+    // Updated Play libraries compatible with targetSdk 35 (Android 15)
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation("com.google.android.play:review:2.0.1")
+    implementation("com.google.android.play:feature-delivery:2.1.0")
+    implementation("com.google.android.gms:play-services-tasks:18.2.0")
 }
 
 android {
     namespace = "in.gov.gsi.bhooskhalan"
-    compileSdk = 35
+    compileSdk = 35  // ✅ Required by plugins for compatibility
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -35,7 +39,7 @@ android {
     defaultConfig {
         applicationId = "in.gov.gsi.bhooskhalan"
         minSdk = 29      // ✅ VAPT compliance (Android 10)
-        targetSdk = 34   // Modern target for security
+        targetSdk = 35   // ✅ Google Play Aug 31, 2025 compliance (Android 15)
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         
