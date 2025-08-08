@@ -112,6 +112,8 @@ class ApiService {
     final url = Uri.parse('$_baseUrl$endpoint');
     final token = await _getStoredToken();
 
+    print(body);
+
     try {
       final response = await _client.post(
         url,
