@@ -362,9 +362,25 @@ class DetailedLandslideReport {
   
   List<String> get availablePhotographs {
     List<String> photos = [];
+    
+    // Handle new format: LandslidePhotographs with &&& separator
     if (landslidePhotographs != null && landslidePhotographs!.isNotEmpty) {
-      photos.add(landslidePhotographs!);
+      if (landslidePhotographs!.contains('&&&')) {
+        // Split concatenated images by &&& separator
+        List<String> concatenatedImages = landslidePhotographs!.split('&&&');
+        for (String image in concatenatedImages) {
+          String trimmedImage = image.trim();
+          if (trimmedImage.isNotEmpty) {
+            photos.add(trimmedImage);
+          }
+        }
+      } else {
+        // Single image in LandslidePhotographs (old format)
+        photos.add(landslidePhotographs!);
+      }
     }
+    
+    // Handle old format: individual LandslidePhotograph1-4 fields (for backward compatibility)
     if (landslidePhotograph1 != null && landslidePhotograph1!.isNotEmpty) {
       photos.add(landslidePhotograph1!);
     }
@@ -377,6 +393,7 @@ class DetailedLandslideReport {
     if (landslidePhotograph4 != null && landslidePhotograph4!.isNotEmpty) {
       photos.add(landslidePhotograph4!);
     }
+    
     return photos;
   }
 }

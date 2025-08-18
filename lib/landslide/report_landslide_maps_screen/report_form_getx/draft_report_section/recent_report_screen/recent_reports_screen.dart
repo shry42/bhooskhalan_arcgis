@@ -1956,10 +1956,24 @@ class ToBeSyncedReportCard extends StatelessWidget {
     // Add images in order from API fields
     if (reportData['LandslidePhotographs'] != null && reportData['LandslidePhotographs'].toString().isNotEmpty) {
       String imageData = reportData['LandslidePhotographs'].toString();
-      // Clean base64 string - remove data:image/jpeg;base64, prefix if present
-      imageData = _cleanBase64String(imageData);
-      images.add(imageData);
-      print('✅ Added LandslidePhotographs (length: ${imageData.length})');
+      
+      // Check if images are concatenated with &&& separator (new format)
+      if (imageData.contains('&&&')) {
+        List<String> concatenatedImages = imageData.split('&&&');
+        for (String image in concatenatedImages) {
+          String trimmedImage = image.trim();
+          if (trimmedImage.isNotEmpty) {
+            String cleanedImage = _cleanBase64String(trimmedImage);
+            images.add(cleanedImage);
+            print('✅ Added concatenated image (length: ${cleanedImage.length})');
+          }
+        }
+      } else {
+        // Single image in LandslidePhotographs (old format)
+        imageData = _cleanBase64String(imageData);
+        images.add(imageData);
+        print('✅ Added LandslidePhotographs (length: ${imageData.length})');
+      }
     }
     if (reportData['LandslidePhotograph1'] != null && reportData['LandslidePhotograph1'].toString().isNotEmpty) {
       String imageData = reportData['LandslidePhotograph1'].toString();
@@ -2011,8 +2025,22 @@ class ToBeSyncedReportCard extends StatelessWidget {
     // Try to get captions from various possible API fields
     if (reportData['imageCaptions'] != null && reportData['imageCaptions'] is List) {
       captionStrings = List<String>.from(reportData['imageCaptions']);
-    } else if (reportData['ImageCaptions'] != null && reportData['ImageCaptions'] is List) {
-      captionStrings = List<String>.from(reportData['ImageCaptions']);
+    } else if (reportData['ImageCaptions'] != null) {
+      // Handle both old format (List) and new format (concatenated string with &&&)
+      if (reportData['ImageCaptions'] is List) {
+        captionStrings = List<String>.from(reportData['ImageCaptions']);
+      } else if (reportData['ImageCaptions'] is String) {
+        String captionsString = reportData['ImageCaptions'].toString();
+        if (captionsString.isNotEmpty && captionsString != 'null') {
+          if (captionsString.contains('&&&')) {
+            // Split concatenated captions by &&& separator (new format)
+            captionStrings = captionsString.split('&&&').map((caption) => caption.trim()).where((caption) => caption.isNotEmpty).toList();
+          } else {
+            // Single caption string (old format)
+            captionStrings = [captionsString];
+          }
+        }
+      }
     } else {
       // Generate default captions
       captionStrings = List.generate(imageCount, (index) => 'Image ${index + 1}');
