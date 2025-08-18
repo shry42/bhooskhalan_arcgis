@@ -1906,6 +1906,46 @@ if (whatInducedLandslideValue.value == 'Rainfall') {
     return base64Encode(imageBytes);
   }
 
+  // Helper method to concatenate all images with &&& separator
+  Future<String> buildConcatenatedImages() async {
+    List<String> base64Images = [];
+    for (File imageFile in selectedImages) {
+      try {
+        String base64Image = await imageToBase64(imageFile);
+        base64Images.add(base64Image);
+      } catch (e) {
+        print('Error converting image to base64: $e');
+        base64Images.add(''); // Add empty string to maintain sequence
+      }
+    }
+    return base64Images.join('&&&');
+  }
+
+  // Helper method to concatenate all image captions with &&& separator
+  String buildConcatenatedCaptions() {
+    if (imageCaptions.isEmpty) {
+      return "";
+    }
+    
+    List<String> captions = [];
+    bool hasNonEmptyCaptions = false;
+    
+    for (int i = 0; i < imageCaptions.length; i++) {
+      String caption = imageCaptions[i].text.trim();
+      captions.add(caption);
+      if (caption.isNotEmpty) {
+        hasNonEmptyCaptions = true;
+      }
+    }
+    
+    // If all captions are empty, return empty string
+    if (!hasNonEmptyCaptions) {
+      return "";
+    }
+    
+    return captions.join('&&&');
+  }
+
   Future<List<String>> _convertImagesToBase64() async {
     List<String> base64Images = [];
     for (File image in selectedImages) {
@@ -1955,10 +1995,10 @@ Future<void> submitForm() async {
       return;
     }
     
-    // Convert first image to base64 (required)
+    // Convert all images to concatenated base64 string with &&& separator
     String landslidePhotographs = '';
     if (selectedImages.isNotEmpty) {
-      landslidePhotographs = await imageToBase64(selectedImages.first);
+      landslidePhotographs = await buildConcatenatedImages();
     }
     
 // Check if we're editing a pending report
@@ -2194,24 +2234,14 @@ void _showSuccessDialog({required bool isOnline}) {
 
 
   Future<Map<String, dynamic>> _buildApiPayload(String mobile, String userType, String landslidePhotographs) async {
-    // Convert additional images to base64 if they exist
-    String? landslidePhotograph1;
-    String? landslidePhotograph2;
-    String? landslidePhotograph3;
-    String? landslidePhotograph4;
+    // Individual photograph fields are now kept as null as per new API format
+    String? landslidePhotograph1 = null;
+    String? landslidePhotograph2 = null;
+    String? landslidePhotograph3 = null;
+    String? landslidePhotograph4 = null;
     
-    if (selectedImages.length > 1) {
-      landslidePhotograph1 = await imageToBase64(selectedImages[1]);
-    }
-    if (selectedImages.length > 2) {
-      landslidePhotograph2 = await imageToBase64(selectedImages[2]);
-    }
-    if (selectedImages.length > 3) {
-      landslidePhotograph3 = await imageToBase64(selectedImages[3]);
-    }
-    if (selectedImages.length > 4) {
-      landslidePhotograph4 = await imageToBase64(selectedImages[4]);
-    }
+    // Get concatenated image captions for the new ImageCaptions field
+    String imageCaptions = buildConcatenatedCaptions();
     
     return {
       "Latitude": latitudeController.text.trim(),
@@ -2322,7 +2352,7 @@ void _showSuccessDialog({required bool isOnline}) {
       "OldSlide_No": null,
       "Initiation_Year": null,
       "Slide_No": null,
-      "ImageCaptions": null,
+      "ImageCaptions": imageCaptions,
       "DamsBarragesName": damsNameController.text.trim(),
     };
   }
