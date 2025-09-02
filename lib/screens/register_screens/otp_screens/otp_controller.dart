@@ -71,7 +71,7 @@ class OTPVerificationController extends GetxController {
     final otp = getOTP();
     
     if (otp.length != 4) {
-      Get.snackbar("Error", "Please enter complete 4-digit OTP");
+      Get.snackbar('error'.tr, 'please_enter_complete_4_digit_otp'.tr);
       return;
     }
 
@@ -87,17 +87,17 @@ class OTPVerificationController extends GetxController {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isOTPVerified', true);
         
-        Get.snackbar("Success", "OTP verified successfully");
+        Get.snackbar('success'.tr, 'otp_verified_successfully'.tr);
         
         // Navigate to HomeScreen
         Get.off(() =>  LoginRegisterScreen());
       } else {
-        Get.snackbar("Verification Failed", response['message'] ?? 'Invalid OTP');
+        Get.snackbar('verification_failed'.tr, response['message'] ?? 'invalid_otp'.tr);
         // Clear OTP fields on failure
         clearOTPFields();
       }
     } catch (e) {
-      Get.snackbar("Error", "Something went wrong: $e");
+      Get.snackbar('error'.tr, '${'something_went_wrong'.tr}: $e');
       clearOTPFields();
     } finally {
       isLoading.value = false;
@@ -108,7 +108,7 @@ class OTPVerificationController extends GetxController {
     try {
       // You might need to implement a resend OTP endpoint
       // For now, just restart the timer
-      Get.snackbar("Info", "OTP resent successfully");
+      Get.snackbar('info'.tr, 'otp_resent_successfully'.tr);
       clearOTPFields();
       startResendTimer();
       
@@ -117,7 +117,7 @@ class OTPVerificationController extends GetxController {
       // final response = await ApiService.get(endpoint);
       
     } catch (e) {
-      Get.snackbar("Error", "Failed to resend OTP: $e");
+      Get.snackbar('error'.tr, '${'failed_to_resend_otp'.tr}: $e');
     }
   }
 

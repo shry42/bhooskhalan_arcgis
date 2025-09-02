@@ -1,4 +1,4 @@
-// DEVELOPMENT VERSION - COMMENTED OUT FOR PRODUCTION
+// DEVELOPMENT VERSION - COMMENTED OUT FOR VAPT TESTING
 import 'package:bhooskhalann/services/api_service.dart';
 import 'package:bhooskhalann/services/native_in_app_update_service.dart';
 import 'package:bhooskhalann/translations/language_controller.dart';
@@ -59,12 +59,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
 
 //VAPT TEST - PRODUCTION VERSION
 // import 'package:bhooskhalann/services/api_service.dart';

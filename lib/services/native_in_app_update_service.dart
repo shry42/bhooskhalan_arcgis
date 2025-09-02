@@ -13,75 +13,38 @@ class NativeInAppUpdateService {
   
   /// Check for app updates and show update dialog if available
   static Future<void> checkForUpdates({bool showDialog = true}) async {
-    print('🔄 Starting update check...');
     try {
       if (Platform.isAndroid) {
-        print('📱 Checking Android updates...');
         await _checkAndroidUpdates(showDialog);
       } else if (Platform.isIOS) {
-        print('🍎 Checking iOS updates...');
         await _checkIOSUpdates(showDialog);
       }
     } catch (e) {
       print('❌ Error checking for updates: $e');
-      if (showDialog) {
-        Get.snackbar(
-          'Update Check Failed',
-          'Unable to check for updates. Please try again later.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: Duration(seconds: 3),
-        );
-      }
     }
   }
 
   /// Check for Android updates
   static Future<void> _checkAndroidUpdates(bool showDialog) async {
-    try {
-      print('🔍 Invoking Android update check...');
-      final Map<dynamic, dynamic>? result = await _channel.invokeMethod('checkForUpdate');
-      
-      print('📊 Android update check result: $result');
-      
-      if (result != null && result['updateAvailable'] == true) {
-        print('✅ Android update available!');
-        if (showDialog) {
-          _showAndroidUpdateDialog(result);
-        } else {
-          print('📱 Android Update available: ${result['immediateAllowed'] ? 'Immediate' : 'Flexible'}');
-        }
-      } else {
-        print('📱 Android App is up to date');
-        if (showDialog) {
-          // Show manual check option for debug
-          _showNoUpdateDialog('Android');
-        }
-      }
-    } catch (e) {
-      print('❌ Android update check failed: $e');
+    final Map<dynamic, dynamic>? result = await _channel.invokeMethod('checkForUpdate');
+    
+    if (result != null && result['updateAvailable'] == true) {
       if (showDialog) {
-        Get.snackbar(
-          'Android Update Check Failed',
-          'Error: $e',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          duration: Duration(seconds: 5),
-        );
+        _showAndroidUpdateDialog(result);
+      } else {
+        print('📱 Android Update available: ${result['immediateAllowed'] ? 'Immediate' : 'Flexible'}');
       }
+    } else {
+      print('📱 Android App is up to date');
     }
   }
 
   /// Check for iOS updates via App Store API
   static Future<void> _checkIOSUpdates(bool showDialog) async {
     try {
-      print('🔍 Checking iOS App Store for updates...');
       final bool updateAvailable = await _checkIOSUpdateAvailable();
       
       if (updateAvailable) {
-        print('✅ iOS update available!');
         if (showDialog) {
           _showIOSUpdateDialog();
         } else {
@@ -89,23 +52,9 @@ class NativeInAppUpdateService {
         }
       } else {
         print('📱 iOS App is up to date');
-        if (showDialog) {
-          // Show manual check option for debug
-          _showNoUpdateDialog('iOS');
-        }
       }
     } catch (e) {
       print('❌ Error checking iOS updates: $e');
-      if (showDialog) {
-        Get.snackbar(
-          'iOS Update Check Failed',
-          'Error: $e',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          duration: Duration(seconds: 5),
-        );
-      }
     }
   }
 
@@ -115,45 +64,24 @@ class NativeInAppUpdateService {
       // Get current app version
       final PackageInfo packageInfo = await PackageInfo.fromPlatform();
       final String currentVersion = packageInfo.version;
-      final String bundleId = packageInfo.packageName;
       
-      print('📱 Current app version: $currentVersion');
-      print('📱 Bundle ID: $bundleId');
-      print('📱 App Store ID configured: ${AppConfig.appStoreId}');
-      
-      // Query App Store API for latest version using bundle ID
-      final String appStoreUrl = 'https://itunes.apple.com/lookup?bundleId=$bundleId';
-      print('🔍 Querying App Store API: $appStoreUrl');
-      
+      // Query App Store API for latest version
+      final String appStoreUrl = 'https://itunes.apple.com/lookup?bundleId=${packageInfo.packageName}';
       final response = await http.get(Uri.parse(appStoreUrl));
-      print('📊 App Store API response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         final List<dynamic> results = data['results'];
         
-        print('📊 App Store API results count: ${results.length}');
-        
         if (results.isNotEmpty) {
           final Map<String, dynamic> appInfo = results[0];
           final String latestVersion = appInfo['version'];
-          final String appStoreUrl = appInfo['trackViewUrl'];
           
-          print('📱 Current version: $currentVersion');
-          print('📱 Latest version: $latestVersion');
-          print('📱 App Store URL: $appStoreUrl');
+          print('📱 Current version: $currentVersion, Latest version: $latestVersion');
           
           // Compare versions
-          final comparison = _compareVersions(currentVersion, latestVersion);
-          print('📊 Version comparison result: $comparison (< 0 means update available)');
-          
-          return comparison < 0;
-        } else {
-          print('❌ No results found in App Store API response');
+          return _compareVersions(currentVersion, latestVersion) < 0;
         }
-      } else {
-        print('❌ App Store API request failed with status: ${response.statusCode}');
-        print('❌ Response body: ${response.body}');
       }
       
       return false;
@@ -451,111 +379,5 @@ class NativeInAppUpdateService {
   /// Check for updates with user dialog (called from settings or menu)
   static Future<void> checkForUpdatesWithDialog() async {
     await checkForUpdates(showDialog: true);
-  }
-
-  /// Show debug dialog when no updates are found
-  static void _showNoUpdateDialog(String platform) {
-    Get.dialog(
-      AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 8),
-            Text('No Updates Available'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your app is up to date!',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 12),
-            Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Debug Info ($platform):',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '• Current version: 2.2.2',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  Text(
-                    '• Check console logs for details',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  if (platform == 'Android') ...[
-                    Text(
-                      '• Requires Google Play Store distribution',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    Text(
-                      '• Debug builds don\'t receive updates',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                  if (platform == 'iOS') ...[
-                    Text(
-                      '• Requires App Store distribution',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    Text(
-                      '• TestFlight builds may not show updates',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text('OK'),
-          ),
-          if (platform == 'iOS')
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-                _openAppStore();
-              },
-              child: Text('Open App Store'),
-            ),
-        ],
-      ),
-      barrierDismissible: true,
-    );
-  }
-
-  /// Open App Store manually
-  static Future<void> _openAppStore() async {
-    try {
-      final String url = AppConfig.appStoreUrl;
-      if (await canLaunchUrl(Uri.parse(url))) {
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      } else {
-        Get.snackbar(
-          'Error',
-          'Cannot open App Store',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } catch (e) {
-      print('❌ Error opening App Store: $e');
-    }
   }
 } 

@@ -24,7 +24,7 @@ Future<void> fetchUserProfile() async {
     
     if (mobile!.isEmpty) {
       print('Mobile number not found in SharedPreferences');
-      Get.snackbar("Error", "User data not found. Please login again.");
+      Get.snackbar('error'.tr, 'user_data_not_found'.tr);
       // Optionally redirect to login screen
       // Get.offAll(() => LoginScreen());
       return;
@@ -79,7 +79,7 @@ Future<void> logout() async {
       var response = await ApiService.put('/Login/logout?mobile=$mobile');
       
       if (response != null && response['status'] == "Success") {
-        Get.snackbar("Success", "Logged out successfully");
+        Get.snackbar('success'.tr, 'logged_out_successfully'.tr);
       } else {
         print('Failed to logout: ${response?['message'] ?? "Unknown error"}');
         // Even if the API call fails, we'll still log out locally
@@ -95,7 +95,7 @@ Future<void> logout() async {
       print('Error during logout: $e');
       // Even if there's an error, still clear local data and redirect
       _clearLocalData();
-      Get.snackbar("Notice", "You've been logged out");
+      Get.snackbar('notice'.tr, 'you_have_been_logged_out'.tr);
       Get.offAll(LoginRegisterScreen());
      
     } finally {
