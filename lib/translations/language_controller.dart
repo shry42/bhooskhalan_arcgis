@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 class LanguageController extends GetxController {
   static const String _languageKey = 'selected_language';
   static const String _countryKey = 'selected_country';
 
-  // Supported locales
-  static const Locale englishLocale = Locale('en', 'US');
+  // Supported locales (all from India)
+  static const Locale englishLocale = Locale('en', 'IN');
   static const Locale hindiLocale = Locale('hi', 'IN');
+  static const Locale banglaLocale = Locale('bn', 'IN');
 
-  static List<Locale> get supportedLocales => [englishLocale, hindiLocale];
+  static List<Locale> get supportedLocales => [englishLocale, hindiLocale, banglaLocale];
 
   // Reactive variable to track current locale
   final Rx<Locale> currentLocale = englishLocale.obs;
@@ -49,7 +46,7 @@ class LanguageController extends GetxController {
 
   /// English language shortcut
   Future<void> changeToEnglish() async {
-    await changeLanguage('en', 'US');
+    await changeLanguage('en', 'IN');
   }
 
   /// Hindi language shortcut
@@ -57,13 +54,20 @@ class LanguageController extends GetxController {
     await changeLanguage('hi', 'IN');
   }
 
+  /// Bangla language shortcut
+  Future<void> changeToBangla() async {
+    await changeLanguage('bn', 'IN');
+  }
+
   /// Language status flags
   bool get isEnglish => currentLocale.value.languageCode == 'en';
   bool get isHindi => currentLocale.value.languageCode == 'hi';
+  bool get isBangla => currentLocale.value.languageCode == 'bn';
 
   /// For displaying current language in UI
   String get currentLanguageName {
     if (isHindi) return 'हिन्दी';
+    if (isBangla) return 'বাংলা';
     return 'English';
   }
 }

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 void showLanguageSelectionDialog(BuildContext context) {
-  final LanguageController languageController = Get.find<LanguageController>();
-  
   showDialog(
     context: context,
     builder: (context) => Dialog(
@@ -12,7 +10,7 @@ void showLanguageSelectionDialog(BuildContext context) {
       child: Container(
         constraints: const BoxConstraints(
           maxWidth: 400,
-          maxHeight: 300, // Prevent overflow
+          maxHeight: 400, // Increased height to accommodate Bangla button
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -61,8 +59,6 @@ void showLanguageSelectionDialog(BuildContext context) {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('🇺🇸', style: TextStyle(fontSize: 18)),
-                            const SizedBox(width: 8),
                             Text(
                               'english'.tr,
                               style: const TextStyle(
@@ -111,8 +107,6 @@ void showLanguageSelectionDialog(BuildContext context) {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('🇮🇳', style: TextStyle(fontSize: 18)),
-                            const SizedBox(width: 8),
                             Text(
                               'hindi'.tr,
                               style: const TextStyle(
@@ -122,6 +116,54 @@ void showLanguageSelectionDialog(BuildContext context) {
                               ),
                             ),
                             if (controller.isHindi) ...[
+                              const SizedBox(width: 8),
+                              const Icon(Icons.check, color: Colors.white, size: 20),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Bangla Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: GetBuilder<LanguageController>(
+                      builder: (controller) => ElevatedButton(
+                        onPressed: () async {
+                          await controller.changeToBangla();
+                          Navigator.pop(context);
+                          
+                          Get.snackbar(
+                            'language_changed'.tr,
+                            'language_changed_to_bangla'.tr,
+                            backgroundColor: Colors.green,
+                            colorText: Colors.white,
+                            duration: const Duration(seconds: 2),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: controller.isBangla 
+                              ? Colors.blue.shade700 
+                              : Colors.blue,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'bangla'.tr,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            if (controller.isBangla) ...[
                               const SizedBox(width: 8),
                               const Icon(Icons.check, color: Colors.white, size: 20),
                             ],
