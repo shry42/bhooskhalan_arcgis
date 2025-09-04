@@ -2585,11 +2585,11 @@ void _showSuccessDialog({required bool isOnline}) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'पूर्णता: ${summary['percentage']}%',
+                'completion_percentage'.tr.replaceAll('{percentage}', '${summary['percentage']}'),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              Text('${summary['completed']} में से ${summary['totalRequired']} आवश्यक फ़ील्ड पूर्ण'),
+              Text('fields_completed_count'.tr.replaceAll('{completed}', '${summary['completed']}').replaceAll('{totalRequired}', '${summary['totalRequired']}')),
               const SizedBox(height: 16),
               if (!summary['isComplete']) ...[
                 Text(

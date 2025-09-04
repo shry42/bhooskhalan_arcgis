@@ -3817,18 +3817,18 @@ Widget _buildHierarchicalCheckbox({
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'This diagram shows how to measure the key dimensions of a landslide:',
+                Text(
+                  'dimension_diagram_title'.tr,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  '• Length: The distance along the slope from crown to toe\n'
-                  '• Width: The maximum width perpendicular to the length\n'
-                  '• Height: The vertical distance from crown to toe',
+                Text(
+                  '${'length_description'.tr}\n'
+                  '${'width_description'.tr}\n'
+                  '${'height_description'.tr}',
                   style: TextStyle(
                     fontSize: 14,
                     height: 1.4,

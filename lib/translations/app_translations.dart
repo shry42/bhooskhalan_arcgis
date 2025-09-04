@@ -1220,6 +1220,16 @@ class AppTranslations extends Translations {
 'sheared_jointed_fissured_materials': 'Sheared, jointed, or fissured materials',
 'contrast_in_permeability': 'Contrast in permeability and/or stiffness of materials',
 
+// Landslide Dimension Instructions
+'dimension_diagram_title': 'This diagram shows how to measure the key dimensions of a landslide:',
+'length_description': '• Length: The distance along the slope from crown to toe',
+'width_description': '• Width: The maximum width perpendicular to the length',
+'height_description': '• Height: The vertical distance from crown to toe',
+
+// Form Completion Status
+'completion_percentage': 'Completion: {percentage}%',
+'fields_completed_count': '{completed} out of {totalRequired} required fields completed',
+
 //Basic information on slides
 
 'basic_info_title': 'Basic Information on Landslides',
@@ -2614,6 +2624,16 @@ class AppTranslations extends Translations {
 'sheared_jointed_fissured_materials': 'कटे, जुड़े या दरार वाले सामग्री',
 'contrast_in_permeability': 'सामग्री की पारगम्यता और/या कठोरता में विपरीतता',
 
+// Landslide Dimension Instructions
+'dimension_diagram_title': 'यह आरेख दिखाता है कि भूस्खलन के मुख्य आयामों को कैसे मापें:',
+'length_description': '• लंबाई: मुकुट से पैर तक ढलान के साथ दूरी',
+'width_description': '• चौड़ाई: लंबाई के लंबवत अधिकतम चौड़ाई',
+'height_description': '• ऊंचाई: मुकुट से पैर तक ऊर्ध्वाधर दूरी',
+
+// Form Completion Status
+'completion_percentage': 'पूर्णता: {percentage}%',
+'fields_completed_count': '{completed} में से {totalRequired} आवश्यक फ़ील्ड पूर्ण',
+
 //Basic information on slides
 
     'basic_info_title': 'भूस्खलन पर बुनियादी जानकारी',
@@ -3334,6 +3354,16 @@ class AppTranslations extends Translations {
       'weathered_materials': 'বায়ুপ্রবাহিত উপাদান',
       'sheared_jointed_fissured_materials': 'কাটা, যুক্ত বা ফাটলযুক্ত উপাদান',
       'contrast_in_permeability': 'উপাদানের ব্যাপ্তিযোগ্যতা এবং/অথবা কঠোরতার বৈসাদৃশ্য',
+
+      // Landslide Dimension Instructions
+      'dimension_diagram_title': 'এই চিত্রটি দেখায় কীভাবে ভূমিধসের মূল মাত্রা পরিমাপ করতে হয়:',
+      'length_description': '• দৈর্ঘ্য: মুকুট থেকে পাদদেশ পর্যন্ত ঢাল বরাবর দূরত্ব',
+      'width_description': '• প্রস্থ: দৈর্ঘ্যের লম্ব দিকের সর্বোচ্চ প্রস্থ',
+      'height_description': '• উচ্চতা: মুকুট থেকে পাদদেশ পর্যন্ত উল্লম্ব দূরত্ব',
+
+      // Form Completion Status
+      'completion_percentage': 'সম্পূর্ণতা: {percentage}%',
+      'fields_completed_count': '{completed} এর মধ্যে {totalRequired} প্রয়োজনীয় ক্ষেত্র সম্পূর্ণ',
       
       // Location and Map Related Dialogs
       'location_dialog_content': 'যদি ভূমিধসের অবস্থান আপনার বর্তমান অবস্থান না হয় (উদাহরণস্বরূপ, ঢালের অন্য দিকে, রাস্তার উপরে বা নিচে বা উপত্যকার ওপাশে ভূমিধস ঘটেছে), সঠিক অবস্থান বেছে নিতে মানচিত্রে ট্যাপ করুন। একটি নতুন লাল রঙের অবস্থান চিহ্ন প্রদর্শিত হবে।',
