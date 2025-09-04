@@ -786,24 +786,6 @@ Future<void> _loadSusceptibilityLayer() async {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-             ListTile(
-  leading: const Icon(Icons.terrain),
-  title: Text('topographic'.tr),
-  subtitle: Text('terrain_elevation'.tr),
-  onTap: () {
-    Navigator.of(context).pop();
-    _setMapType('topographic', 'topographic'.tr);
-  },
-),
-ListTile(
-  leading: const Icon(Icons.satellite),
-  title: Text('imagery'.tr),
-  subtitle: Text('aerial_imagery'.tr),
-  onTap: () {
-    Navigator.of(context).pop();
-    _setMapType('imagery', 'imagery'.tr);
-  },
-),
               ListTile(
                 leading: const Icon(Icons.map),
                 title: Text('openstreetmap'.tr),
@@ -1791,12 +1773,6 @@ Future<void> _setMapType(String mapType, String typeName) async {
   try {
     String itemId;
     switch (mapType) {
-      case 'topographic':
-        itemId = '79873351c4c1462cba9af947be2fdf4c';
-        break;
-      case 'imagery':
-        itemId = '72d22cd267a141fba0e35f9913f34736';
-        break;
       default:
         _showError('Unknown map type: $mapType');
         return;

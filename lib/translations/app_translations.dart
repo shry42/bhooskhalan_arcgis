@@ -1113,10 +1113,6 @@ class AppTranslations extends Translations {
 'loading_reports': 'Loading reports...',
 'initializing_map': 'Initializing map...',
 'basemap_gallery': 'Basemap gallery',
-'topographic': 'Topographic',
-'terrain_elevation': 'Terrain and elevation',
-'imagery': 'Imagery',  
-'aerial_imagery': 'Aerial imagery view',
 'openstreetmap': 'OpenStreetMap',
 'free_opensource_map': 'Free open-source map',
 'close': 'Close',
@@ -1371,8 +1367,6 @@ class AppTranslations extends Translations {
   'india_state_boundary': 'India State Boundary',
 
   // Map Types
-  'topographic': 'Topographic',
-  'imagery': 'Imagery',
   'openstreetmap': 'OpenStreetMap',
   'free_opensource_map': 'Free open-source map',
 
@@ -2551,10 +2545,6 @@ class AppTranslations extends Translations {
 'loading_reports': 'रिपोर्ट लोड हो रही हैं...',
 'initializing_map': 'मैप इनिशियलाइज़ हो रहा है...',
 'basemap_gallery': 'बेसमैप गैलरी',
-'topographic': 'स्थलाकृतिक',
-'terrain_elevation': 'भू-भाग और ऊंचाई',
-'imagery': 'इमेजरी',
-'aerial_imagery': 'हवाई इमेजरी दृश्य',
 'openstreetmap': 'ओपनस्ट्रीटमैप',
 'free_opensource_map': 'मुफ्त ओपन-सोर्स मैप',
 'close': 'बंद करें',
@@ -2842,8 +2832,6 @@ class AppTranslations extends Translations {
   'india_state_boundary': 'भारत राज्य सीमा',
 
   // Map Types
-  'topographic': 'स्थलाकृतिक',
-  'imagery': 'चित्रण',
   'openstreetmap': 'ओपनस्ट्रीटमैप',
   'free_opensource_map': 'मुफ्त ओपन-सोर्स मैप',
 
@@ -3072,11 +3060,7 @@ class AppTranslations extends Translations {
       'india_state_boundary': 'ভারতের রাজ্য সীমানা',
 
       // Map Types
-      'topographic': 'ভূসংস্থানিক',
-      'imagery': 'চিত্রাবলী',
       'openstreetmap': 'ওপেনস্ট্রিটম্যাপ',
-      'terrain_elevation': 'ভূখণ্ড ও উচ্চতা',
-      'aerial_imagery': 'বিমান চিত্র দৃশ্য',
       'free_opensource_map': 'বিনামূল্যে ওপেন-সোর্স মানচিত্র',
 
       // Field Labels
