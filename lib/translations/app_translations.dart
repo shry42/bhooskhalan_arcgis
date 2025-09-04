@@ -1230,6 +1230,40 @@ class AppTranslations extends Translations {
 'completion_percentage': 'Completion: {percentage}%',
 'fields_completed_count': '{completed} out of {totalRequired} required fields completed',
 
+// Location Names and Administrative Divisions
+'state': 'State',
+'district': 'District',
+'subdivision': 'Subdivision',
+'block': 'Block',
+'village': 'Village',
+'taluk': 'Taluk',
+'division': 'Division',
+'location_details': 'Location Details',
+'administrative_division': 'Administrative Division',
+
+// Common Indian States and Regions (for better localization)
+'west_bengal': 'West Bengal',
+'bihar': 'Bihar',
+'jharkhand': 'Jharkhand',
+'odisha': 'Odisha',
+'assam': 'Assam',
+'tripura': 'Tripura',
+'meghalaya': 'Meghalaya',
+'manipur': 'Manipur',
+'nagaland': 'Nagaland',
+'mizoram': 'Mizoram',
+'arunachal_pradesh': 'Arunachal Pradesh',
+'sikkim': 'Sikkim',
+'kolkata': 'Kolkata',
+'siliguri': 'Siliguri',
+'durgapur': 'Durgapur',
+'asansol': 'Asansol',
+'bardhaman': 'Bardhaman',
+'malda': 'Malda',
+'jalpaiguri': 'Jalpaiguri',
+'cooch_behar': 'Cooch Behar',
+'alipurduar': 'Alipurduar',
+
 //Basic information on slides
 
 'basic_info_title': 'Basic Information on Landslides',
@@ -2634,6 +2668,40 @@ class AppTranslations extends Translations {
 'completion_percentage': 'पूर्णता: {percentage}%',
 'fields_completed_count': '{completed} में से {totalRequired} आवश्यक फ़ील्ड पूर्ण',
 
+// Location Names and Administrative Divisions
+'state': 'राज्य',
+'district': 'जिला',
+'subdivision': 'उपविभाग',
+'block': 'ब्लॉक',
+'village': 'गांव',
+'taluk': 'तालुक',
+'division': 'विभाग',
+'location_details': 'स्थान विवरण',
+'administrative_division': 'प्रशासनिक विभाग',
+
+// Common Indian States and Regions (for better localization)
+'west_bengal': 'पश्चिम बंगाल',
+'bihar': 'बिहार',
+'jharkhand': 'झारखंड',
+'odisha': 'ओडिशा',
+'assam': 'असम',
+'tripura': 'त्रिपुरा',
+'meghalaya': 'मेघालय',
+'manipur': 'मणिपुर',
+'nagaland': 'नागालैंड',
+'mizoram': 'मिजोरम',
+'arunachal_pradesh': 'अरुणाचल प्रदेश',
+'sikkim': 'सिक्किम',
+'kolkata': 'कोलकाता',
+'siliguri': 'सिलीगुड़ी',
+'durgapur': 'दुर्गापुर',
+'asansol': 'आसनसोल',
+'bardhaman': 'बर्धमान',
+'malda': 'मालदा',
+'jalpaiguri': 'जलपाईगुड़ी',
+'cooch_behar': 'कूचबिहार',
+'alipurduar': 'अलीपुरद्वार',
+
 //Basic information on slides
 
     'basic_info_title': 'भूस्खलन पर बुनियादी जानकारी',
@@ -3364,6 +3432,40 @@ class AppTranslations extends Translations {
       // Form Completion Status
       'completion_percentage': 'সম্পূর্ণতা: {percentage}%',
       'fields_completed_count': '{completed} এর মধ্যে {totalRequired} প্রয়োজনীয় ক্ষেত্র সম্পূর্ণ',
+
+      // Location Names and Administrative Divisions
+      'state': 'রাজ্য',
+      'district': 'জেলা',
+      'subdivision': 'উপবিভাগ',
+      'block': 'ব্লক',
+      'village': 'গ্রাম',
+      'taluk': 'তালুক',
+      'division': 'বিভাগ',
+      'location_details': 'অবস্থানের বিবরণ',
+      'administrative_division': 'প্রশাসনিক বিভাগ',
+
+      // Common Indian States and Regions (for better localization)
+      'west_bengal': 'পশ্চিমবঙ্গ',
+      'bihar': 'বিহার',
+      'jharkhand': 'ঝাড়খণ্ড',
+      'odisha': 'ওড়িশা',
+      'assam': 'আসাম',
+      'tripura': 'ত্রিপুরা',
+      'meghalaya': 'মেঘালয়',
+      'manipur': 'মণিপুর',
+      'nagaland': 'নাগাল্যান্ড',
+      'mizoram': 'মিজোরাম',
+      'arunachal_pradesh': 'অরুণাচল প্রদেশ',
+      'sikkim': 'সিকিম',
+      'kolkata': 'কলকাতা',
+      'siliguri': 'শিলিগুড়ি',
+      'durgapur': 'দুর্গাপুর',
+      'asansol': 'আসানসোল',
+      'bardhaman': 'বর্ধমান',
+      'malda': 'মালদা',
+      'jalpaiguri': 'জলপাইগুড়ি',
+      'cooch_behar': 'কোচবিহার',
+      'alipurduar': 'আলিপুরদুয়ার',
       
       // Location and Map Related Dialogs
       'location_dialog_content': 'যদি ভূমিধসের অবস্থান আপনার বর্তমান অবস্থান না হয় (উদাহরণস্বরূপ, ঢালের অন্য দিকে, রাস্তার উপরে বা নিচে বা উপত্যকার ওপাশে ভূমিধস ঘটেছে), সঠিক অবস্থান বেছে নিতে মানচিত্রে ট্যাপ করুন। একটি নতুন লাল রঙের অবস্থান চিহ্ন প্রদর্শিত হবে।',
