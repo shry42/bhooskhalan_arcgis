@@ -742,7 +742,7 @@ Future<void> fetchLocationFromCoordinates() async {
           if (populated) {
             isLocationAutoPopulated.value = true;
             Get.snackbar(
-              'Location Found',
+              'location_found_successfully'.tr,
               populatedFields.join('\n'),
               backgroundColor: Colors.green,
               colorText: Colors.white,
@@ -813,8 +813,8 @@ String _cleanLocationName(String name) {
 // Error handling methods
 void _showLocationNotFound() {
   Get.snackbar(
-    'Location Not Found',
-    'Could not fetch location details. Please enter manually.',
+    'location_not_found'.tr,
+    'could_not_fetch_location'.tr,
     backgroundColor: Colors.orange,
     colorText: Colors.white,
     snackPosition: SnackPosition.BOTTOM,
@@ -2368,52 +2368,52 @@ void _showSuccessDialog({required bool isOnline}) {
   
   String buildImpactDamageString() {
     List<String> impacts = [];
-    if (peopleAffected.value) impacts.add("People affected");
-    if (livestockAffected.value) impacts.add("Livestock affected");
-    if (housesBuildingAffected.value) impacts.add("Houses and buildings affected");
-    if (damsBarragesAffected.value) impacts.add("Dams / Barrages affected");
-    if (roadsAffected.value) impacts.add("Roads affected");
-    if (roadsBlocked.value) impacts.add("Roads blocked");
-    if (roadBenchesDamaged.value) impacts.add("Road benches damaged");
-    if (railwayLineAffected.value) impacts.add("Railway line affected");
-    if (railwayBlocked.value) impacts.add("Railway blocked");
-    if (railwayBenchesDamaged.value) impacts.add("Railway benches damaged");
-    if (powerInfrastructureAffected.value) impacts.add("Power infrastructure and telecommunication affected");
-    if (damagesToAgriculturalForestLand.value) impacts.add("Damages to Agriculture/Barren/Forest");
-    if (other.value) impacts.add("Other");
-    if (noDamages.value) impacts.add("No damages");
-    if (iDontKnow.value) impacts.add("I don't know");
+    if (peopleAffected.value) impacts.add("people_affected".tr);
+    if (livestockAffected.value) impacts.add("livestock_affected".tr);
+    if (housesBuildingAffected.value) impacts.add("houses_buildings_affected".tr);
+    if (damsBarragesAffected.value) impacts.add("dams_barrages_affected".tr);
+    if (roadsAffected.value) impacts.add("roads_affected".tr);
+    if (roadsBlocked.value) impacts.add("roads_blocked".tr);
+    if (roadBenchesDamaged.value) impacts.add("road_benches_damaged".tr);
+    if (railwayLineAffected.value) impacts.add("railway_line_affected".tr);
+    if (railwayBlocked.value) impacts.add("railway_blocked".tr);
+    if (railwayBenchesDamaged.value) impacts.add("railway_benches_damaged".tr);
+    if (powerInfrastructureAffected.value) impacts.add("power_infrastructure_affected".tr);
+    if (damagesToAgriculturalForestLand.value) impacts.add("damages_to_agricultural_forest_land".tr);
+    if (other.value) impacts.add("other".tr);
+    if (noDamages.value) impacts.add("no_damages".tr);
+    if (iDontKnow.value) impacts.add("i_dont_know".tr);
     return impacts.join(", ");
   }
   
   String buildGeoScientificCausesString() {
     List<String> causes = [];
-    if (geologicalCauses.value) causes.add("Geological Causes");
-    if (morphologicalCauses.value) causes.add("Morphological Causes");
-    if (humanCauses.value) causes.add("Human Causes");
-    if (otherCauses.value) causes.add("Other Causes");
+    if (geologicalCauses.value) causes.add("geological_causes".tr);
+    if (morphologicalCauses.value) causes.add("morphological_causes".tr);
+    if (humanCauses.value) causes.add("human_causes".tr);
+    if (otherCauses.value) causes.add("other_causes".tr);
     return causes.join(", ");
   }
   
   String buildRemedialMeasuresString() {
     List<String> measures = [];
-    if (modificationOfSlopeGeometry.value) measures.add("Modification of Slope Geometry");
-    if (drainage.value) measures.add("Drainage");
-    if (retainingStructures.value) measures.add("Retaining Structures");
-    if (internalSlopeReinforcement.value) measures.add("Internal Slope Reinforcement");
-    if (remedialMeasuresNotRequired.value) measures.add("Remedial measures not required");
-    if (remedialMeasuresNotAdequate.value) measures.add("Remedial measures not adequately safeguard the slide");
-    if (otherInformation.value) measures.add("Other Information");
+    if (modificationOfSlopeGeometry.value) measures.add("modification_of_slope_geometry".tr);
+    if (drainage.value) measures.add("drainage".tr);
+    if (retainingStructures.value) measures.add("retaining_structures".tr);
+    if (internalSlopeReinforcement.value) measures.add("internal_slope_reinforcement".tr);
+    if (remedialMeasuresNotRequired.value) measures.add("remedial_measures_not_required".tr);
+    if (remedialMeasuresNotAdequate.value) measures.add("remedial_measures_not_adequately_safeguard".tr);
+    if (otherInformation.value) measures.add("other_information".tr);
     return measures.join(", ");
   }
   
   String buildGeologicalCausesString() {
     List<String> causes = [];
-    if (weakOrSensitiveMaterials.value) causes.add("Weak or sensitive materials");
-    if (weatheredMaterialsValue.value != null) causes.add("Weathered materials: ${weatheredMaterialsValue.value}");
-    if (shearedJointedFissuredMaterials.value) causes.add("Sheared, jointed, or fissured materials");
-    if (adverselyOrientedDiscontinuity.value) causes.add("Adversely oriented discontinuity");
-    if (contrastInPermeability.value) causes.add("Contrast in permeability and/or stiffness of materials");
+    if (weakOrSensitiveMaterials.value) causes.add("weak_sensitive_materials".tr);
+    if (weatheredMaterialsValue.value != null) causes.add("${"weathered_materials".tr}: ${weatheredMaterialsValue.value}");
+    if (shearedJointedFissuredMaterials.value) causes.add("sheared_jointed_fissured_materials".tr);
+    if (adverselyOrientedDiscontinuity.value) causes.add("adversely_oriented_discontinuity".tr);
+    if (contrastInPermeability.value) causes.add("contrast_in_permeability".tr);
     if (geologicalOtherController.text.trim().isNotEmpty) causes.add(geologicalOtherController.text.trim());
     return causes.join(", ");
   }

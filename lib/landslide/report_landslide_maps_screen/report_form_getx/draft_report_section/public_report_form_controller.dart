@@ -718,7 +718,7 @@ Future<void> fetchLocationFromCoordinates() async {
           if (populated) {
             isLocationAutoPopulated.value = true;
             Get.snackbar(
-              'Location Found',
+              'location_found_successfully'.tr,
               populatedFields.join('\n'),
               backgroundColor: Colors.green,
               colorText: Colors.white,
@@ -1956,21 +1956,21 @@ String buildImpactDamageString() {
   List<String> impacts = [];
   
   // Store the English keys for API, but display translated values in UI
-  if (peopleAffected.value) impacts.add("People affected");
-  if (livestockAffected.value) impacts.add("Livestock affected");
-  if (housesBuildingAffected.value) impacts.add("Houses and buildings affected");
-  if (damsBarragesAffected.value) impacts.add("Dams / Barrages affected");
-  if (roadsAffected.value) impacts.add("Roads affected");
-  if (roadsBlocked.value) impacts.add("Roads blocked");
-  if (roadBenchesDamaged.value) impacts.add("Road benches damaged");
-  if (railwayLineAffected.value) impacts.add("Railway line affected");
-  if (railwayBlocked.value) impacts.add("Railway blocked");
-  if (railwayBenchesDamaged.value) impacts.add("Railway benches damaged");
-  if (powerInfrastructureAffected.value) impacts.add("Power infrastructure and telecommunication affected");
-  if (damagesToAgriculturalForestLand.value) impacts.add("Damages to Agriculture/Barren/Forest");
-  if (other.value) impacts.add("Other");
-  if (noDamages.value) impacts.add("No damages");
-  if (iDontKnow.value) impacts.add("I don't know");
+  if (peopleAffected.value) impacts.add("people_affected".tr);
+  if (livestockAffected.value) impacts.add("livestock_affected".tr);
+  if (housesBuildingAffected.value) impacts.add("houses_buildings_affected".tr);
+  if (damsBarragesAffected.value) impacts.add("dams_barrages_affected".tr);
+  if (roadsAffected.value) impacts.add("roads_affected".tr);
+  if (roadsBlocked.value) impacts.add("roads_blocked".tr);
+  if (roadBenchesDamaged.value) impacts.add("road_benches_damaged".tr);
+  if (railwayLineAffected.value) impacts.add("railway_line_affected".tr);
+  if (railwayBlocked.value) impacts.add("railway_blocked".tr);
+  if (railwayBenchesDamaged.value) impacts.add("railway_benches_damaged".tr);
+  if (powerInfrastructureAffected.value) impacts.add("power_infrastructure_affected".tr);
+  if (damagesToAgriculturalForestLand.value) impacts.add("damages_to_agricultural_forest_land".tr);
+  if (other.value) impacts.add("other".tr);
+  if (noDamages.value) impacts.add("no_damages".tr);
+  if (iDontKnow.value) impacts.add("i_dont_know".tr);
   
   return impacts.join(", ");
 }
