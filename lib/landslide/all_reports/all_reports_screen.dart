@@ -46,9 +46,8 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
   String _selectedFilter = 'All';
   
   // Track visible layers for report visualization
-  bool _showApprovedLayer = true;
-  bool _showPendingLayer = true;
-  bool _showRejectedLayer = true;
+  bool _showApprovedLayer = true;  // Now used for public reports
+  bool _showPendingLayer = true;   // Now used for expert reports
   
   // Government geological data layers
   RasterLayer? _susceptibilityLayer;
@@ -278,10 +277,9 @@ Future<void> _createMapWithStreetsView() async {
       // Skip invalid coordinates
       if (report.latitude == 0.0 || report.longitude == 0.0) continue;
       
-      // Skip based on layer visibility
-      if (report.isApproved && !_showApprovedLayer) continue;
-      if (report.isPending && !_showPendingLayer) continue;
-      if (report.isRejected && !_showRejectedLayer) continue;
+      // Skip based on layer visibility (now based on user type)
+      if (report.isPublic && !_showApprovedLayer) continue;
+      if (report.isGeoScientist && !_showPendingLayer) continue;
       
       final ArcGISPoint point = ArcGISPoint(
         x: report.longitude,
@@ -369,15 +367,6 @@ Future<void> _createMapWithStreetsView() async {
       switch (filter) {
         case 'All':
           _filteredReports = _allReports;
-          break;
-        case 'Approved':
-          _filteredReports = LandslideReportsService.filterByStatus(_allReports, 'approved');
-          break;
-        case 'Rejected':
-          _filteredReports = LandslideReportsService.filterByStatus(_allReports, 'rejected');
-          break;
-        case 'Pending':
-          _filteredReports = LandslideReportsService.filterByStatus(_allReports, 'pending');
           break;
         case 'Geo-Scientist':
           _filteredReports = LandslideReportsService.filterByUserType(_allReports, 'geo-scientist');
@@ -550,7 +539,6 @@ void _showBasemapGallery() {
                     setState(() {
                       _showApprovedLayer = false;
                       _showPendingLayer = false;
-                      _showRejectedLayer = false;
                     });
                     _createMarkers();
                     Navigator.of(context).pop();
@@ -610,8 +598,21 @@ void _showBasemapGallery() {
                     return Column(
                       children: [
                         CheckboxListTile(
-                          title: Text('approved_reports'.tr),
-                          subtitle: Text('${_allReports.where((r) => r.isApproved).length} ${'reports'.tr}'),
+                          title: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('public_reports'.tr),
+                            ],
+                          ),
+                          subtitle: Text('${_allReports.where((r) => r.isPublic).length} ${'reports'.tr}'),
                           value: _showApprovedLayer,
                           activeColor: Colors.green,
                           onChanged: (bool? value) {
@@ -625,31 +626,29 @@ void _showBasemapGallery() {
                           },
                         ),
                         CheckboxListTile(
-                          title: Text('pending_reports'.tr),
-                          subtitle: Text('${_allReports.where((r) => r.isPending).length} ${'reports'.tr}'),
+                          title: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('expert_reports'.tr),
+                            ],
+                          ),
+                          subtitle: Text('${_allReports.where((r) => r.isGeoScientist).length} ${'reports'.tr}'),
                           value: _showPendingLayer,
-                          activeColor: Colors.orange,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              _showPendingLayer = value ?? false;
-                            });
-                            this.setState(() {
-                              _showPendingLayer = value ?? false;
-                            });
-                            _createMarkers();
-                          },
-                        ),
-                        CheckboxListTile(
-                          title: Text('rejected_reports'.tr),
-                          subtitle: Text('${_allReports.where((r) => r.isRejected).length} ${'reports'.tr}'),
-                          value: _showRejectedLayer,
                           activeColor: Colors.red,
                           onChanged: (bool? value) {
                             setState(() {
-                              _showRejectedLayer = value ?? false;
+                              _showPendingLayer = value ?? false;
                             });
                             this.setState(() {
-                              _showRejectedLayer = value ?? false;
+                              _showPendingLayer = value ?? false;
                             });
                             _createMarkers();
                           },
@@ -1472,15 +1471,10 @@ Future<void> _setMapType(String mapType, String typeName) async {
             children: [
               _filterOption('All', 'all_reports_count'.trParams({'count': stats['total'].toString()})),
               const Divider(),
-              _filterOption('Approved', 'approved_count'.trParams({'count': stats['approved'].toString()}), 
+              _filterOption('Public', 'public_reports_count'.trParams({'count': stats['public'].toString()}), 
                 color: Colors.green),
-              _filterOption('Rejected', 'rejected_count'.trParams({'count': stats['rejected'].toString()}), 
+              _filterOption('Geo-Scientist', 'geo_scientists_count'.trParams({'count': stats['geoScientist'].toString()}), 
                 color: Colors.red),
-              _filterOption('Pending', 'pending_count'.trParams({'count': stats['pending'].toString()}), 
-                color: Colors.orange),
-              const Divider(),
-              _filterOption('Geo-Scientist', 'geo_scientists_count'.trParams({'count': stats['geoScientist'].toString()})),
-              _filterOption('Public', 'public_reports_count'.trParams({'count': stats['public'].toString()})),
             ],
           ),
         );
