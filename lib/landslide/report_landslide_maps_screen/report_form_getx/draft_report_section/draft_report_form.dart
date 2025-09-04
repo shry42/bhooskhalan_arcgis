@@ -760,9 +760,12 @@ _buildLocationModeSwitch(controller, primaryColor),
                                   children: [
                                     Icon(Icons.history, color: primaryColor),
                                     const SizedBox(width: 12),
-                                    Text(
-                                      'no_historical_dates_added'.tr,
-                                      style: TextStyle(color: hintColor, fontSize: 15),
+                                    Expanded(
+                                      child: Text(
+                                        'no_historical_dates_added'.tr,
+                                        style: TextStyle(color: hintColor, fontSize: 15),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ],
                                 ),

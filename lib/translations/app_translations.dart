@@ -3619,7 +3619,7 @@ class AppTranslations extends Translations {
       'history': 'ইতিহাস',
       'dates_past_movement_reactivation': 'অতীতের গতিবিধির তারিখ, যদি কোনো পুনরায় সক্রিয়করণের তারিখ এবং সময় থাকে',
       'add_date': 'তারিখ যোগ করুন',
-      'no_historical_dates_added': 'কোনো ঐতিহাসিক তারিখ যোগ করা হয়নি',
+      'no_historical_dates_added': 'কোনো ঐতিহাসিক তারিখ যোগ',
       
       // Geomorphology and Geology
       'geomorphology': 'ভূমিরূপবিদ্যা',
