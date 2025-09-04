@@ -1172,48 +1172,6 @@ Future<void> _loadSusceptibilityLayer() async {
     }
   }
 
-// Update the _setMapType method to use GSI portal items
-Future<void> _setMapType(String mapType, String typeName) async {
-  try {
-    String itemId;
-    switch (mapType) {
-      default:
-        _showError('unknown_map_type'.trParams({'mapType': mapType}));
-        return;
-    }
-    
-    // Create portal pointing to GSI portal using the correct constructor
-    final gsiPortal = Portal(
-      Uri.parse('https://bhusanket.gsi.gov.in/gisportal/sharing/rest'),
-      connection: PortalConnection.authenticated
-    );
-    
-    // Create portal item using named parameters
-    final portalItem = PortalItem.withPortalAndItemId(
-      portal: gsiPortal, 
-      itemId: itemId
-    );
-    
-    // Create new map from portal item
-    _map = ArcGISMap.withItem(portalItem);
-    _mapViewController.arcGISMap = _map;
-    
-    _showError('switched_to'.trParams({'mapType': typeName}));
-  } catch (e) {
-    _showError('failed_to_change_map_type'.trParams({'error': e.toString()}));
-    // Fallback to regular basemap
-    setState(() {
-      if (mapType == 'topographic') {
-        _currentBasemapStyle = BasemapStyle.arcGISTopographic;
-      } else if (mapType == 'imagery') {
-        _currentBasemapStyle = BasemapStyle.arcGISImageryStandard;
-      }
-      if (_ready) {
-        _map.basemap = Basemap.withStyle(_currentBasemapStyle);
-      }
-    });
-  }
-}
 
   // Set map to OpenStreetMap
   void _setMapToOpenStreetMap() {

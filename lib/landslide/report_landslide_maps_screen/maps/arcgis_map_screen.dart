@@ -1768,40 +1768,5 @@ Future<void> _proceedToReportForm() async {
     }
   }
 
-  // Set specific map type (requires API key)
-Future<void> _setMapType(String mapType, String typeName) async {
-  try {
-    String itemId;
-    switch (mapType) {
-      default:
-        _showError('Unknown map type: $mapType');
-        return;
-    }
-    
-    // Create portal pointing to GSI portal using the correct constructor
-    final gsiPortal = Portal(
-      Uri.parse('https://bhusanket.gsi.gov.in/gisportal/sharing/rest'),
-      connection: PortalConnection.authenticated
-    );
-    
-    // Create portal item using named parameters
-    final portalItem = PortalItem.withPortalAndItemId(
-      portal: gsiPortal, 
-      itemId: itemId
-    );
-    
-    // Create new map from portal item
-    _map = ArcGISMap.withItem(portalItem);
-    _mapViewController.arcGISMap = _map;
-    
-    if (mapType == 'topographic') {
-      _showError('switched_to_topographic'.tr);
-    } else if (mapType == 'imagery') {
-      _showError('switched_to_imagery'.tr);
-    }
-  } catch (e) {
-    _showError('failed_to_change_map'.trParams({'error': e.toString()}));
-  }
-}
 
 }
