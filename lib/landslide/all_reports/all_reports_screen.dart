@@ -479,7 +479,7 @@ void _showBasemapGallery() {
             ListTile(
               leading: const Icon(Icons.terrain),
               title: Text('topographic'.tr),
-              subtitle: Text('gsi_terrain_elevation'.tr),
+              subtitle: Text('terrain_elevation'.tr),
               onTap: () {
                 Navigator.of(context).pop();
                 _setMapType('topographic', 'topographic'.tr);
@@ -488,7 +488,7 @@ void _showBasemapGallery() {
             ListTile(
               leading: const Icon(Icons.satellite),
               title: Text('imagery'.tr),
-              subtitle: Text('gsi_aerial_imagery'.tr),
+              subtitle: Text('aerial_imagery'.tr),
               onTap: () {
                 Navigator.of(context).pop();
                 _setMapType('imagery', 'imagery'.tr);

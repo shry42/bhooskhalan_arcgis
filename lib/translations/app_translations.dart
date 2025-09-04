@@ -1114,9 +1114,9 @@ class AppTranslations extends Translations {
 'initializing_map': 'Initializing map...',
 'basemap_gallery': 'Basemap gallery',
 'topographic': 'Topographic',
-'gsi_terrain_elevation': 'GSI Terrain and elevation',
+'terrain_elevation': 'Terrain and elevation',
 'imagery': 'Imagery',  
-'gsi_aerial_imagery': 'GSI Aerial imagery view',
+'aerial_imagery': 'Aerial imagery view',
 'openstreetmap': 'OpenStreetMap',
 'free_opensource_map': 'Free open-source map',
 'close': 'Close',
@@ -1374,8 +1374,6 @@ class AppTranslations extends Translations {
   'topographic': 'Topographic',
   'imagery': 'Imagery',
   'openstreetmap': 'OpenStreetMap',
-  'gsi_terrain_elevation': 'GSI Terrain and elevation',
-  'gsi_aerial_imagery': 'GSI Aerial imagery view',
   'free_opensource_map': 'Free open-source map',
 
   // Field Labels
@@ -2554,9 +2552,9 @@ class AppTranslations extends Translations {
 'initializing_map': 'मैप इनिशियलाइज़ हो रहा है...',
 'basemap_gallery': 'बेसमैप गैलरी',
 'topographic': 'स्थलाकृतिक',
-'gsi_terrain_elevation': 'जीएसआई भू-भाग और ऊंचाई',
+'terrain_elevation': 'भू-भाग और ऊंचाई',
 'imagery': 'इमेजरी',
-'gsi_aerial_imagery': 'जीएसआई हवाई इमेजरी दृश्य',
+'aerial_imagery': 'हवाई इमेजरी दृश्य',
 'openstreetmap': 'ओपनस्ट्रीटमैप',
 'free_opensource_map': 'मुफ्त ओपन-सोर्स मैप',
 'close': 'बंद करें',
@@ -2847,8 +2845,6 @@ class AppTranslations extends Translations {
   'topographic': 'स्थलाकृतिक',
   'imagery': 'चित्रण',
   'openstreetmap': 'ओपनस्ट्रीटमैप',
-  'gsi_terrain_elevation': 'जीएसआई भूभाग और ऊंचाई',
-  'gsi_aerial_imagery': 'जीएसआई हवाई चित्रण दृश्य',
   'free_opensource_map': 'मुफ्त ओपन-सोर्स मैप',
 
   // Field Labels
@@ -3079,8 +3075,8 @@ class AppTranslations extends Translations {
       'topographic': 'ভূসংস্থানিক',
       'imagery': 'চিত্রাবলী',
       'openstreetmap': 'ওপেনস্ট্রিটম্যাপ',
-      'gsi_terrain_elevation': 'জিএসআই ভূখণ্ড ও উচ্চতা',
-      'gsi_aerial_imagery': 'জিএসআই বিমান চিত্র দৃশ্য',
+      'terrain_elevation': 'ভূখণ্ড ও উচ্চতা',
+      'aerial_imagery': 'বিমান চিত্র দৃশ্য',
       'free_opensource_map': 'বিনামূল্যে ওপেন-সোর্স মানচিত্র',
 
       // Field Labels
