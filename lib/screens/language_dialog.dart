@@ -1,6 +1,7 @@
 import 'package:bhooskhalann/translations/language_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void showLanguageSelectionDialog(BuildContext context) {
   showDialog(
@@ -60,7 +61,7 @@ void showLanguageSelectionDialog(BuildContext context) {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'english'.tr,
+                              'English',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -108,11 +109,10 @@ void showLanguageSelectionDialog(BuildContext context) {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'hindi'.tr,
-                              style: const TextStyle(
+                              'हिन्दी',
+                              style: GoogleFonts.notoSansDevanagari(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                                fontFamily: 'NotoSansDevanagari',
                               ),
                             ),
                             if (controller.isHindi) ...[
@@ -157,8 +157,8 @@ void showLanguageSelectionDialog(BuildContext context) {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'bangla'.tr,
-                              style: const TextStyle(
+                              'বাংলা',
+                              style: GoogleFonts.notoSansBengali(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),

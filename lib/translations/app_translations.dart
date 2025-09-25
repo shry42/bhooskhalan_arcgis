@@ -290,6 +290,8 @@ class AppTranslations extends Translations {
   'photo_captured': 'Photo captured! Total images:',
   'images_selected_gallery': 'images selected! Total images:',
   'warning_max_5_images': 'You can only select up to 5 images. Adding',
+  'max_5_images_limit': 'You can only select up to 5 images. Please remove some images first.',
+  'max_5_allowed': 'Max 5 allowed',
   'remaining_images': 'images.',
   
   // Form Status and Validation
@@ -1728,6 +1730,8 @@ class AppTranslations extends Translations {
   'photo_captured': 'तस्वीर ली गई! कुल तस्वीरें:',
   'images_selected_gallery': 'तस्वीरें चुनी गईं! कुल तस्वीरें:',
   'warning_max_5_images': 'आप केवल 5 तस्वीरें तक चुन सकते हैं। जोड़ी जा रही हैं',
+  'max_5_images_limit': 'आप केवल 5 तस्वीरें तक चुन सकते हैं। कृपया पहले कुछ तस्वीरें हटाएं।',
+  'max_5_allowed': 'अधिकतम 5 अनुमतित',
   'remaining_images': 'तस्वीरें।',
   
   // Form Status and Validation
@@ -4344,6 +4348,8 @@ class AppTranslations extends Translations {
       'photo_captured': 'ছবি তোলা হয়েছে! মোট ছবি:',
       'images_selected_gallery': 'ছবি নির্বাচিত! মোট ছবি:',
       'warning_max_5_images': 'আপনি সর্বোচ্চ ৫টি ছবি নির্বাচন করতে পারেন। যোগ করা হচ্ছে',
+      'max_5_images_limit': 'আপনি সর্বোচ্চ ৫টি ছবি নির্বাচন করতে পারেন। অনুগ্রহ করে প্রথমে কিছু ছবি সরান।',
+      'max_5_allowed': 'সর্বোচ্চ ৫টি অনুমোদিত',
       'remaining_images': 'ছবি।',
       
       // Form Status

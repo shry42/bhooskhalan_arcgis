@@ -1399,6 +1399,18 @@ Future<void> saveDraft() async {
   // IMAGE HANDLING METHODS WITH VALIDATION
   Future<void> openCamera() async {
     try {
+      // Check if already at maximum limit before opening camera
+      if (selectedImages.length >= 5) {
+        Get.snackbar(
+          'Warning',
+          'You can only select up to 5 images. Please remove some images first.',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+      
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 1800,
@@ -1431,6 +1443,18 @@ Future<void> saveDraft() async {
   
   Future<void> openGallery() async {
     try {
+      // Check if already at maximum limit before opening gallery
+      if (selectedImages.length >= 5) {
+        Get.snackbar(
+          'Warning',
+          'You can only select up to 5 images. Please remove some images first.',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+      
       final List<XFile> photos = await _picker.pickMultiImage(
         maxWidth: 1800,
         maxHeight: 1800,
@@ -2552,11 +2576,11 @@ void _showSuccessDialog({required bool isOnline}) {
   // Get image status for UI display
   String getImageStatusText() {
     if (selectedImages.isEmpty) {
-      return 'no_images_selected_required'.tr;
+      return '${'no_images_selected_required'.tr} (${'max_5_allowed'.tr})';
     } else if (selectedImages.length == 1) {
-      return 'one_image_selected'.tr;
+      return '${'one_image_selected'.tr} (${selectedImages.length}/5)';
     } else {
-      return 'images_selected_count'.trParams({'count': '${selectedImages.length}'});
+      return '${'images_selected_count'.trParams({'count': '${selectedImages.length}'})} (${selectedImages.length}/5)';
     }
   }
 
