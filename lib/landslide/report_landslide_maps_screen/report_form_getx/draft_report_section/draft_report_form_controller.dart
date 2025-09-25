@@ -268,6 +268,7 @@ final Map<String, List<String>> stateDistrictsMap = {
   final subdivisionController = TextEditingController();
   final villageController = TextEditingController();
   final locationDetailsController = TextEditingController();
+  final toposheetNoController = TextEditingController();
   
   // Form controllers - Dimensions
   final lengthController = TextEditingController();
@@ -841,6 +842,8 @@ void _showLocationNotFound() {
   void setCoordinates(double latitude, double longitude) {
     latitudeController.text = latitude.toStringAsFixed(7);
     longitudeController.text = longitude.toStringAsFixed(7);
+    // Generate topsheet number from coordinates
+    updateToposheetNumber();
     // Automatically fetch state, district, subdivision and village from Google Maps API
     // Only fetch if not already fetching
     if (!isLocationFetching.value) {
@@ -922,6 +925,7 @@ void _showLocationNotFound() {
     if (draftData['subdivision'] != null) subdivisionController.text = draftData['subdivision'];
     if (draftData['village'] != null) villageController.text = draftData['village'];
     if (draftData['locationDetails'] != null) locationDetailsController.text = draftData['locationDetails'];
+    if (draftData['toposheetNo'] != null) toposheetNoController.text = draftData['toposheetNo'];
 
     if (draftData['isLocationAutoPopulated'] == false) {
   isLocationAutoPopulated.value = false;
@@ -958,6 +962,13 @@ rainfallDurationValue.value = draftData['rainfallDuration'];
     if (draftData['time'] != null) {
       timeController.text = draftData['time'];
       selectedTimeText.value = draftData['time'];
+    }
+    
+    // Update topsheet number if coordinates are available and topsheet not already saved
+    if (draftData['toposheetNo'] == null && 
+        draftData['latitude'] != null && 
+        draftData['longitude'] != null) {
+      updateToposheetNumber();
     }
   }
 
@@ -1154,6 +1165,7 @@ rainfallDurationValue.value = draftData['rainfallDuration'];
       'subdivision': subdivisionController.text,
       'village': villageController.text,
       'locationDetails': locationDetailsController.text,
+      'toposheetNo': toposheetNoController.text,
 
       'isLocationAutoPopulated': isLocationAutoPopulated.value,
       
@@ -2244,48 +2256,48 @@ void _showSuccessDialog({required bool isOnline}) {
     String imageCaptions = buildConcatenatedCaptions();
     
     return {
-      "Latitude": latitudeController.text.trim(),
-      "Longitude": longitudeController.text.trim(),
-      "State": stateController.text.trim(),
+      "Latitude": latitudeController.text.trim().isNotEmpty ? double.tryParse(latitudeController.text.trim()) : null,   //double
+      "Longitude": longitudeController.text.trim().isNotEmpty ? double.tryParse(longitudeController.text.trim()) : null,   //double
+      "State": stateController.text.trim(),   
       "District": districtController.text.trim(),
       "SubdivisionOrTaluk": subdivisionController.text.trim(),
       "Village": villageController.text.trim(),
       "LocationDetails": locationDetailsController.text.trim(),
-      "LandslideDate": dateController.text.trim().isNotEmpty ? formatDateForAPI(dateController.text.trim()) : null,
-      "LandslideTime": timeController.text.trim().isNotEmpty ? formatTimeForAPI(timeController.text.trim()) : null,
-      "LandslidePhotographs": landslidePhotographs,
-      "LanduseOrLandcover": whereDidLandslideOccurValue.value ?? "",
-      "MaterialInvolved": typeOfMaterialValue.value ?? "",
+      "LandslideDate": dateController.text.trim().isNotEmpty ? formatDateForAPI(dateController.text.trim()) : null,  //datetime
+      "LandslideTime": timeController.text.trim().isNotEmpty ? formatTimeForAPI(timeController.text.trim()) : null,  //timespan
+      "LandslidePhotographs": landslidePhotographs,   
+      "LanduseOrLandcover": translateExpertValueToAPI(whereDidLandslideOccurValue.value, 'locationType') ?? "",
+      "MaterialInvolved": translateExpertValueToAPI(typeOfMaterialValue.value, 'material') ?? "",
       "MovementType": typeOfMovementValue.value ?? "",
-      "LengthInMeters": lengthController.text.trim(),
-      "WidthInMeters": widthController.text.trim(),
-      "HeightInMeters": heightController.text.trim(),
-      "AreaInSqMeters": areaController.text.trim(),
-      "DepthInMeters": depthController.text.trim(),
-      "VolumeInCubicMeters": volumeController.text.trim(),
-      "RunOutDistanceInMeters": runoutDistanceController.text.trim().isNotEmpty ? runoutDistanceController.text.trim() : "0.0",
-      "MovementRate": rateOfMovementValue.value ?? "",
-      "Activity": activityValue.value ?? "",
-      "Distribution": distributionValue.value ?? "",
-      "Style": styleValue.value ?? "",
-      "FailureMechanism": failureMechanismValue.value ?? "",
+      "LengthInMeters": lengthController.text.trim().isNotEmpty ? double.tryParse(lengthController.text.trim()) : null,  //double
+      "WidthInMeters": widthController.text.trim().isNotEmpty ? double.tryParse(widthController.text.trim()) : null,   //double
+      "HeightInMeters": heightController.text.trim().isNotEmpty ? double.tryParse(heightController.text.trim()) : null,  //double
+      "AreaInSqMeters": areaController.text.trim().isNotEmpty ? double.tryParse(areaController.text.trim()) : null,  //double 
+      "DepthInMeters": depthController.text.trim().isNotEmpty ? double.tryParse(depthController.text.trim()) : null,  //double
+      "VolumeInCubicMeters": volumeController.text.trim().isNotEmpty ? double.tryParse(volumeController.text.trim()) : null,  //double
+      "RunOutDistanceInMeters": runoutDistanceController.text.trim().isNotEmpty ? double.tryParse(runoutDistanceController.text.trim()) : null,  //double
+      "MovementRate": translateExpertValueToAPI(rateOfMovementValue.value, 'rateOfMovement') ?? "",  
+      "Activity": translateExpertValueToAPI(activityValue.value, 'activity') ?? "",
+      "Distribution": translateExpertValueToAPI(distributionValue.value, 'distribution') ?? "",
+      "Style": translateExpertValueToAPI(styleValue.value, 'style') ?? "",
+      "FailureMechanism": translateExpertValueToAPI(failureMechanismValue.value, 'failureMechanism') ?? "",
       "Geomorphology": geomorphologyController.text.trim(),
       "Geology": geologyController.text.trim(),
       "Structure": buildStructureString(),
-      "HydrologicalCondition": hydrologicalConditionValue.value ?? "",
-      "InducingFactor": whatInducedLandslideValue.value ?? "",
+      "HydrologicalCondition": translateExpertValueToAPI(hydrologicalConditionValue.value, 'hydrologicalCondition') ?? "",
+      "InducingFactor": whatInducedLandslideValue.value?.tr ?? "",
       "ImpactOrDamage": buildImpactDamageString(),
       "GeoScientificCauses": buildGeoScientificCausesString(),
       "PreliminaryRemedialMeasures": buildRemedialMeasuresString(),
-      "VulnerabilityCategory": alertCategory.value ?? "",
+      "VulnerabilityCategory": translateExpertValueToAPI(alertCategory.value, 'category') ?? "",
       "OtherInformation": otherRelevantInformation.text.trim(),
-      "Status": null,
-      "LivestockDead": livestockDeadController.text.trim().isNotEmpty ? livestockDeadController.text.trim() : "0",
-      "LivestockInjured": livestockInjuredController.text.trim().isNotEmpty ? livestockInjuredController.text.trim() : "0",
-      "HousesBuildingfullyaffected": housesFullyController.text.trim().isNotEmpty ? housesFullyController.text.trim() : "0",
-      "HousesBuildingpartialaffected": housesPartiallyController.text.trim().isNotEmpty ? housesPartiallyController.text.trim() : "0",
-      "DamsBarragesCount": damsNameController.text.trim().isNotEmpty ? "1" : "0",
-      "DamsBarragesExtentOfDamage": damsExtentValue.value ?? "",
+      "Status": "Synced",
+      "LivestockDead": livestockDeadController.text.trim().isNotEmpty ? int.tryParse(livestockDeadController.text.trim()) : null, //int
+      "LivestockInjured": livestockInjuredController.text.trim().isNotEmpty ? int.tryParse(livestockInjuredController.text.trim()) : null,  //int
+      "HousesBuildingfullyaffected": housesFullyController.text.trim().isNotEmpty ? int.tryParse(housesFullyController.text.trim()) : null,  //int
+      "HousesBuildingpartialaffected": housesPartiallyController.text.trim().isNotEmpty ? int.tryParse(housesPartiallyController.text.trim()) : null,  //int
+      "DamsBarragesCount": damsNameController.text.trim().isNotEmpty ? 1 : null,  //int
+      "DamsBarragesExtentOfDamage": damsExtentValue.value ?? "",  //String
       "RoadsAffectedType": roadTypeValue.value ?? "",
       "RoadsAffectedExtentOfDamage": roadExtentValue.value ?? "",
       "RoadBlocked": roadBlockageValue.value ?? "",
@@ -2295,13 +2307,13 @@ void _showSuccessDialog({required bool isOnline}) {
       "RailwayBenchesAffected": railwayBenchesExtentValue.value ?? "",
       "PowerInfrastructureAffected": powerExtentValue.value ?? "",
       "OthersAffected": otherDamageDetailsController.text.trim(),
-      "History_date": historyDates.isNotEmpty ? historyDates.join(", ") : "NaN-NaN-NaN",
-    "Amount_of_rainfall": rainfallAmountController.text.trim().isNotEmpty ? rainfallAmountController.text.trim() : "0",
-"Duration_of_rainfall": rainfallDurationValue.value ?? "",
-      "Date_and_time_Range": occurrenceDateRange.value.trim(),
+      "History_date": historyDates.isNotEmpty ? historyDates.join(", ") : "NaN-NaN-NaN",  
+    "Amount_of_rainfall": rainfallAmountController.text.trim().isNotEmpty ? int.tryParse(rainfallAmountController.text.trim()) : null,  //int
+    "Duration_of_rainfall": rainfallDurationValue.value ?? "",  
+      "Date_and_time_Range": occurrenceDateRange.value.trim(),   //string
       "OtherLandUse": "",
       "datacreatedby": mobile,
-      "DateTimeType": landslideOccurrenceValue.value ?? "",
+      "DateTimeType": translateExpertValueToAPI(landslideOccurrenceValue.value, 'occurrence') ?? "",
       "LandslidePhotograph1": landslidePhotograph1,
       "LandslidePhotograph2": landslidePhotograph2,
       "LandslidePhotograph3": landslidePhotograph3,
@@ -2311,28 +2323,28 @@ void _showSuccessDialog({required bool isOnline}) {
       "Rejected_Reason": null,
       "Reviewed_Date": null,
       "Reviewed_Time": null,
-      "PeopleDead": peopleDeadController.text.trim().isNotEmpty ? peopleDeadController.text.trim() : "0",
-      "PeopleInjured": peopleInjuredController.text.trim().isNotEmpty ? peopleInjuredController.text.trim() : "0",
+      "PeopleDead": peopleDeadController.text.trim().isNotEmpty ? int.tryParse(peopleDeadController.text.trim()) : null,  //int
+      "PeopleInjured": peopleInjuredController.text.trim().isNotEmpty ? int.tryParse(peopleInjuredController.text.trim()) : null,  //int
       "LandslideSize": "",
       "ContactName": "",
       "ContactAffiliation": "",
       "ContactEmailId": "",
       "ContactMobile": mobile,
-      "UserType": userType,
-      "source": "webportal",
-      "u_lat": null,
-      "u_long": null,
-      "LandslideCauses": null,
-      "GeologicalCauses": buildGeologicalCausesString(),
+      "UserType": "Geo-Scientist",
+      "source": "mobile",
+      "u_lat": null,  //string
+      "u_long": null,   //string
+      "LandslideCauses": null,    //string
+      "GeologicalCauses": buildGeologicalCausesString(),   //string
       "MorphologicalCauses": buildMorphologicalCausesString(),
       "HumanCauses": buildHumanCausesString(),
       "CausesOtherInfo": otherCausesController.text.trim(),
       "WeatheredMaterial": weatheredMaterialsValue.value ?? "",
-      "Bedding": buildBeddingString(),
+      "Bedding": buildBeddingString(),  
       "Joint": buildJointsString(),
       "RMR": buildRmrString(),
-      "ExactDateInfo": howDoYouKnowValue.value ?? "",
-      "RainfallIntensity": null,
+      "ExactDateInfo": translateExpertValueToAPI(howDoYouKnowValue.value, 'source') ?? "",  
+      "RainfallIntensity": null,   //string
       "SlopeGeometry": buildSlopeGeometryString(),
       "Drainage": buildDrainageString(),
       "RetainingStructures": buildRetainingStructuresString(),
@@ -2340,20 +2352,20 @@ void _showSuccessDialog({required bool isOnline}) {
       "RemedialNotRequired": remedialNotRequiredWhyController.text.trim(),
       "RemedialNotSufficient": buildRemedialNotSufficientString(),
       "RemedialOtherInfo": otherInformationController.text.trim(),
-      "ID_project": null,
+      "ID_project": null,   //string
       "ID_lan": null,
-      "class_number": null,
+      "class_number": null,  
       "class_type": null,
       "geo_acc": null,
-      "date": null,
+      "date": null, //string
       "date_acc": null,
       "Realignment": communicationCorridorType.value ?? "",
-      "Toposheet_No": "",
-      "OldSlide_No": null,
-      "Initiation_Year": null,
-      "Slide_No": null,
+      "Toposheet_No": toposheetNoController.text.trim(),
+      "OldSlide_No": null,  //string
+      "Initiation_Year": null,   //int
+      "Slide_No": null,  //string
       "ImageCaptions": imageCaptions,
-      "DamsBarragesName": damsNameController.text.trim(),
+      "DamsBarragesName": damsNameController.text.trim(),  //string
     };
   }
 
@@ -2971,5 +2983,178 @@ void _showSuccessDialog({required bool isOnline}) {
     };
     
     return hindiToEnglishMap[hindiValue];
+  }
+
+  // Translation method for expert form to convert keys to exact API values
+  String? translateExpertValueToAPI(String? translatedValue, String fieldType) {
+    if (translatedValue == null || translatedValue.isEmpty) return null;
+    
+    switch (fieldType) {
+      case 'occurrence':
+        if (translatedValue == 'exact_occurrence_date') return 'I know the EXACT occurrence date';
+        if (translatedValue == 'approximate_occurrence_date') return 'I know the APPROXIMATE occurrence date';
+        if (translatedValue == 'no_occurrence_date') return 'I DO NOT know the occurrence date';
+        break;
+        
+      case 'locationType':
+        if (translatedValue == 'near_on_road') return 'Near/on road';
+        if (translatedValue == 'next_to_river') return 'Next to river';
+        if (translatedValue == 'settlement') return 'Settlement';
+        if (translatedValue == 'plantation') return 'Plantation (tea, rubber .... etc.)';
+        if (translatedValue == 'forest_area') return 'Forest Area';
+        if (translatedValue == 'cultivation') return 'Cultivation';
+        if (translatedValue == 'barren_land') return 'Barren Land';
+        if (translatedValue == 'other_specify') return 'Other (Specify)';
+        break;
+        
+      case 'material':
+        if (translatedValue == 'rock') return 'Rock';
+        if (translatedValue == 'soil') return 'Soil';
+        if (translatedValue == 'debris_mixture') return 'Debris (mixture of Rock and Soil)';
+        break;
+        
+      case 'rateOfMovement':
+        if (translatedValue == 'extremely_rapid') return 'Extremely rapid';
+        if (translatedValue == 'very_rapid') return 'Very rapid';
+        if (translatedValue == 'rapid') return 'Rapid';
+        if (translatedValue == 'moderate') return 'Moderate';
+        if (translatedValue == 'slow') return 'Slow';
+        if (translatedValue == 'very_slow') return 'Very slow';
+        if (translatedValue == 'extremely_slow') return 'Extremely slow';
+        break;
+        
+      case 'activity':
+        if (translatedValue == 'active') return 'Active';
+        if (translatedValue == 'reactivated') return 'Reactivated';
+        if (translatedValue == 'suspended') return 'Suspended';
+        if (translatedValue == 'dormant') return 'Dormant';
+        if (translatedValue == 'abandoned') return 'Abandoned';
+        if (translatedValue == 'stabilised') return 'Stabilised';
+        if (translatedValue == 'relict') return 'Relict';
+        break;
+        
+      case 'distribution':
+        if (translatedValue == 'advancing') return 'Advancing';
+        if (translatedValue == 'retrogressive') return 'Retrogressive';
+        if (translatedValue == 'widening') return 'Widening';
+        if (translatedValue == 'enlarging') return 'Enlarging';
+        if (translatedValue == 'confined') return 'Confined';
+        if (translatedValue == 'diminishing') return 'Diminishing';
+        if (translatedValue == 'moving') return 'Moving';
+        break;
+        
+      case 'style':
+        if (translatedValue == 'complex') return 'Complex';
+        if (translatedValue == 'successive') return 'Successive';
+        if (translatedValue == 'multiple') return 'Multiple';
+        if (translatedValue == 'single') return 'Single';
+        if (translatedValue == 'composite') return 'Composite';
+        break;
+        
+      case 'failureMechanism':
+        if (translatedValue == 'translational') return 'Shallow planar failure';
+        if (translatedValue == 'rotational') return 'Deep rotational failure';
+        if (translatedValue == 'planar') return 'Deep planar failure';
+        if (translatedValue == 'wedge') return 'Shallow rotational failure';
+        break;
+        
+      case 'hydrologicalCondition':
+        if (translatedValue == 'dry') return 'Dry';
+        if (translatedValue == 'damp') return 'Damp';
+        if (translatedValue == 'wet') return 'Wet';
+        if (translatedValue == 'dipping') return 'Dripping';
+        if (translatedValue == 'flowing') return 'Flowing';
+        break;
+        
+      case 'category':
+        if (translatedValue == 'category_i') return 'Category I';
+        if (translatedValue == 'category_ii') return 'Category II';
+        if (translatedValue == 'category_iii') return 'Category III';
+        break;
+        
+      case 'source':
+        if (translatedValue == 'i_observed_it') return 'I observed it';
+        if (translatedValue == 'through_local') return 'Through a local';
+        if (translatedValue == 'social_media') return 'Social media';
+        if (translatedValue == 'news') return 'News';
+        if (translatedValue == 'i_dont_know') return 'I don\'t know';
+        break;
+    }
+    
+    return translatedValue; // Return as-is if no translation found
+  }
+
+  // Generate topsheet number based on latitude and longitude
+  String generateToposheetNumber(double latitude, double longitude) {
+    try {
+      // Indian toposheets follow the Survey of India numbering system
+      // Format: [Series][Number][Letter][SubNumber]
+      
+      // Determine series based on latitude (4° strips)
+      int latDegrees = latitude.floor();
+      int seriesRow = ((latDegrees - 4) / 4).floor();
+      
+      // Determine series based on longitude (4° strips)  
+      int lonDegrees = longitude.floor();
+      int seriesCol = ((lonDegrees - 68) / 4).floor();
+      
+      // Series number calculation (A-O from south to north, 1-19 from west to east)
+      String seriesLetter = String.fromCharCode(65 + seriesRow); // A, B, C, etc.
+      int seriesNumber = seriesCol + 1;
+      
+      // Calculate sheet number within the series (1-16)
+      double latWithinSeries = latitude - (seriesRow * 4 + 4);
+      double lonWithinSeries = longitude - (seriesCol * 4 + 68);
+      
+      int sheetRow = (latWithinSeries / 1).floor();
+      int sheetCol = (lonWithinSeries / 1).floor();
+      int sheetNumber = (sheetRow * 4) + sheetCol + 1;
+      
+      // Calculate quadrant (A, B, C, D)
+      double latWithinSheet = latitude - latitude.floor();
+      double lonWithinSheet = longitude - longitude.floor();
+      
+      String quadrant;
+      if (latWithinSheet >= 0.5 && lonWithinSheet < 0.5) {
+        quadrant = 'A'; // NW
+      } else if (latWithinSheet >= 0.5 && lonWithinSheet >= 0.5) {
+        quadrant = 'B'; // NE
+      } else if (latWithinSheet < 0.5 && lonWithinSheet < 0.5) {
+        quadrant = 'C'; // SW
+      } else {
+        quadrant = 'D'; // SE
+      }
+      
+      // Calculate sub-quadrant number (1-16)
+      double latSubQuad = (latWithinSheet % 0.5) / 0.125;
+      double lonSubQuad = (lonWithinSheet % 0.5) / 0.125;
+      int subQuadRow = latSubQuad.floor();
+      int subQuadCol = lonSubQuad.floor();
+      int subQuadNumber = (subQuadRow * 4) + subQuadCol + 1;
+      
+      // Format: SeriesNumber + SeriesLetter + SheetNumber + "/" + Quadrant + SubQuadNumber
+      return "$seriesNumber$seriesLetter$sheetNumber/$quadrant$subQuadNumber";
+      
+    } catch (e) {
+      print('Error generating topsheet number: $e');
+      // Fallback to a simple format
+      return "${latitude.toStringAsFixed(1)}_${longitude.toStringAsFixed(1)}";
+    }
+  }
+
+  // Update topsheet number when coordinates change
+  void updateToposheetNumber() {
+    if (latitudeController.text.isNotEmpty && longitudeController.text.isNotEmpty) {
+      try {
+        double lat = double.parse(latitudeController.text);
+        double lon = double.parse(longitudeController.text);
+        String toposheetNo = generateToposheetNumber(lat, lon);
+        toposheetNoController.text = toposheetNo;
+        print('Generated topsheet number: $toposheetNo for coordinates: $lat, $lon');
+      } catch (e) {
+        print('Error updating topsheet number: $e');
+        toposheetNoController.text = '';
+      }
+    }
   }
 }

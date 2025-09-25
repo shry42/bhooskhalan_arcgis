@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:bhooskhalann/user_profile/profile_controller.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +55,7 @@ var isPendingEditMode = false.obs;
   final subdivisionController = TextEditingController();
   final villageController = TextEditingController();
   final locationDetailsController = TextEditingController();
+  final toposheetNoController = TextEditingController();
 
   var isLocationAutoPopulated = false.obs;
 var selectedStateFromDropdown = Rxn<String>();
@@ -96,10 +96,10 @@ String? translateToEnglish(String? translatedValue, String fieldType) {
       break;
       
     case 'locationType':
-      if (translatedValue == 'near_on_road') return 'Near/onroad';
+      if (translatedValue == 'near_on_road') return 'Near/on road';
       if (translatedValue == 'next_to_river') return 'Next to river';
       if (translatedValue == 'settlement') return 'Settlement';
-      if (translatedValue == 'plantation') return 'Plantation (tea,rubber .... etc.)';
+      if (translatedValue == 'plantation') return 'Plantation (tea, rubber .... etc.)';
       if (translatedValue == 'forest_area') return 'Forest Area';
       if (translatedValue == 'cultivation') return 'Cultivation';
       if (translatedValue == 'barren_land') return 'Barren Land';
@@ -546,6 +546,7 @@ final Map<String, List<String>> stateDistrictsMap = {
     } else {
       // If not a draft/pending and we have coordinates, fetch location
       if (args['latitude'] != null && args['longitude'] != null) {
+        updateToposheetNumber();
         fetchLocationFromCoordinates();
       }
     }
@@ -803,6 +804,8 @@ void _showLocationNotFound() {
   void setCoordinates(double latitude, double longitude) {
     latitudeController.text = latitude.toStringAsFixed(7);
     longitudeController.text = longitude.toStringAsFixed(7);
+    // Generate topsheet number from coordinates
+    updateToposheetNumber();
     // Automatically fetch state and district from ArcGIS
     // Only fetch if not already fetching
     if (!isLocationFetching.value) {
@@ -854,6 +857,7 @@ void _showLocationNotFound() {
     if (draftData['subdivision'] != null) subdivisionController.text = draftData['subdivision'];
     if (draftData['village'] != null) villageController.text = draftData['village'];
     if (draftData['locationDetails'] != null) locationDetailsController.text = draftData['locationDetails'];
+    if (draftData['toposheetNo'] != null) toposheetNoController.text = draftData['toposheetNo'];
     // if (draftData['otherRelevantInfo'] != null) otherRelevantInformation.text = draftData['otherRelevantInfo'];
   if (draftData['occurrenceDateRange'] != null) occurrenceDateRange.value = draftData['occurrenceDateRange'];
     //  if (draftData['rainfallAmount'] != null) rainfallAmountController.text = draftData['rainfallAmount'];
@@ -879,6 +883,13 @@ void _showLocationNotFound() {
     if (draftData['time'] != null) {
       timeController.text = draftData['time'];
       selectedTimeText.value = draftData['time'];
+    }
+    
+    // Update topsheet number if coordinates are available and topsheet not already saved
+    if (draftData['toposheetNo'] == null && 
+        draftData['latitude'] != null && 
+        draftData['longitude'] != null) {
+      updateToposheetNumber();
     }
   }
 
@@ -959,6 +970,7 @@ void _showLocationNotFound() {
       // Location data
       'latitude': latitudeController.text,
       'longitude': longitudeController.text,
+      'toposheetNo': toposheetNoController.text,
       'state': stateController.text,
       'district': districtController.text,
       'subdivision': subdivisionController.text,
@@ -1814,6 +1826,7 @@ Future<Map<String, dynamic>> _buildCompleteFormData() async {
     // Location Information
     "latitude": latitudeController.text.trim(),
     "longitude": longitudeController.text.trim(),
+    "toposheetNo": toposheetNoController.text.trim(),
     "state": stateController.text.trim(),
     "district": districtController.text.trim(),
     "subdivision": subdivisionController.text.trim(),
@@ -1898,13 +1911,17 @@ Future<Map<String, dynamic>> _buildApiPayload(String landslidePhotographs) async
   // Get concatenated image captions for the new ImageCaptions field
   String imageCaptions = buildConcatenatedCaptions();
   
+  // Get current timestamp for datacreated
+  String currentTimestamp = DateTime.now().toIso8601String();
+  
   return {
-    "Latitude": latitudeController.text.trim(),
-    "Longitude": longitudeController.text.trim(),
+    "Latitude": latitudeController.text.trim().isNotEmpty ? double.tryParse(latitudeController.text.trim()) : null,
+    "Longitude": longitudeController.text.trim().isNotEmpty ? double.tryParse(longitudeController.text.trim()) : null,
     "State": stateController.text.trim(),
     "District": districtController.text.trim(),
     "SubdivisionOrTaluk": subdivisionController.text.trim(),
     "Village": villageController.text.trim(),
+    "Status": "Synced",
     "LocationDetails": locationDetailsController.text.trim(),
     "LandslideDate": dateController.text.trim().isNotEmpty ? formatDateForAPI(dateController.text.trim()) : null,
     "LandslideTime": timeController.text.trim().isNotEmpty ? formatTimeForAPI(timeController.text.trim()) : null,
@@ -1912,13 +1929,18 @@ Future<Map<String, dynamic>> _buildApiPayload(String landslidePhotographs) async
     "LanduseOrLandcover": translateToEnglish(whereDidLandslideOccurValue.value, 'locationType') ?? "",
     "MaterialInvolved": translateToEnglish(typeOfMaterialValue.value, 'material') ?? "",
     "LandslideSize": translateToEnglish(landslideSize.value, 'size') ?? "",
+    "InducingFactor": "Earthquake", // Public form doesn't collect this data, using default value
+    "Amount_of_rainfall": null, // Public form doesn't collect rainfall data
+    "Duration_of_rainfall": null, // Missing field from Xamarin - not collected in UI
     "ImpactOrDamage": buildImpactDamageString(),
-    "Status": null,
-    "LivestockDead": livestockDeadController.text.trim().isNotEmpty ? livestockDeadController.text.trim() : "0",
-    "LivestockInjured": livestockInjuredController.text.trim().isNotEmpty ? livestockInjuredController.text.trim() : "0",
-    "HousesBuildingfullyaffected": housesFullyController.text.trim().isNotEmpty ? housesFullyController.text.trim() : "0",
-    "HousesBuildingpartialaffected": housesPartiallyController.text.trim().isNotEmpty ? housesPartiallyController.text.trim() : "0",
-    "DamsBarragesCount": damsNameController.text.trim().isNotEmpty ? "1" : "0",
+    "PeopleDead": peopleDeadController.text.trim().isNotEmpty ? int.tryParse(peopleDeadController.text.trim()) : null,
+    "PeopleInjured": peopleInjuredController.text.trim().isNotEmpty ? int.tryParse(peopleInjuredController.text.trim()) : null,
+    "LivestockDead": livestockDeadController.text.trim().isNotEmpty ? int.tryParse(livestockDeadController.text.trim()) : null,
+    "LivestockInjured": livestockInjuredController.text.trim().isNotEmpty ? int.tryParse(livestockInjuredController.text.trim()) : null,
+    "HousesBuildingfullyaffected": housesFullyController.text.trim().isNotEmpty ? int.tryParse(housesFullyController.text.trim()) : null,
+    "HousesBuildingpartialaffected": housesPartiallyController.text.trim().isNotEmpty ? int.tryParse(housesPartiallyController.text.trim()) : null,
+    "DamsBarragesName": damsNameController.text.trim(),
+    "DamsBarragesCount": damsNameController.text.trim().isNotEmpty ? 1 : null,
     "DamsBarragesExtentOfDamage": translateToEnglish(damsExtentValue.value, 'extent') ?? "",
     "RoadsAffectedType": translateToEnglish(roadTypeValue.value, 'roadType') ?? "",
     "RoadsAffectedExtentOfDamage": translateToEnglish(roadExtentValue.value, 'extent') ?? "",
@@ -1929,25 +1951,36 @@ Future<Map<String, dynamic>> _buildApiPayload(String landslidePhotographs) async
     "RailwayBenchesAffected": translateToEnglish(railwayBenchesExtentValue.value, 'extent') ?? "",
     "PowerInfrastructureAffected": translateToEnglish(powerExtentValue.value, 'extent') ?? "",
     "OthersAffected": otherDamageDetailsController.text.trim(),
+    "OtherInformation": null, // Missing field from Xamarin - not collected in UI
     "Date_and_time_Range": translateToEnglish(occurrenceDateRange.value.trim(), 'dateRange'),
-    "datacreatedby": mobile.value,
+    "OtherLandUse": null, // Missing field from Xamarin - not collected in UI
     "DateTimeType": translateToEnglish(landslideOccurrenceValue.value, 'occurrence') ?? "",
-    "LandslidePhotograph1": landslidePhotograph1,
-    "LandslidePhotograph2": landslidePhotograph2,
-    "LandslidePhotograph3": landslidePhotograph3,
-    "LandslidePhotograph4": landslidePhotograph4,
     "check_Status": "Pending",
-    "PeopleDead": peopleDeadController.text.trim().isNotEmpty ? peopleDeadController.text.trim() : "0",
-    "PeopleInjured": peopleInjuredController.text.trim().isNotEmpty ? peopleInjuredController.text.trim() : "0",
     "ContactName": username.value,
     "ContactAffiliation": affiliationController.text.trim(),
     "ContactEmailId": email.value,
     "ContactMobile": mobile.value,
+    "datacreatedby": mobile.value,
+    "datacreated": currentTimestamp, // Missing field from Xamarin - add current timestamp
     "UserType": "Public",
-    "source": "webportal",
     "ExactDateInfo": translateToEnglish(howDoYouKnowValue.value, 'source') ?? "",
-    "DamsBarragesName": damsNameController.text.trim(),
+    "u_lat": latitudeController.text.trim(),
+    "u_long": longitudeController.text.trim(),
+    "Toposheet_No": toposheetNoController.text.trim(),
     "ImageCaptions": imageCaptions,
+    "LengthInMeters": 0.0,
+    "WidthInMeters": 0.0,
+    "HeightInMeters": 0.0,
+    "AreaInSqMeters": 0.0,
+    "DepthInMeters": 0.0,
+    "VolumeInCubicMeters": 0.0,
+    "RunOutDistanceInMeters": 0.0,
+    "History_date": null, // Missing field from Xamarin - not collected in UI
+    "Source": "Mobile", // Missing field from Xamarin - add with proper capitalization
+    "LandslidePhotograph1": landslidePhotograph1,
+    "LandslidePhotograph2": landslidePhotograph2,
+    "LandslidePhotograph3": landslidePhotograph3,
+    "LandslidePhotograph4": landslidePhotograph4,
   };
 }
 
@@ -1998,6 +2031,80 @@ String getFormCompletionText() {
   final summary = getValidationSummary();
   return '${summary['completed']} of ${summary['totalRequired']} required fields completed';
 }
+
+  // Generate topsheet number based on latitude and longitude
+  String generateToposheetNumber(double latitude, double longitude) {
+    try {
+      // Indian toposheets follow the Survey of India numbering system
+      // Format: [Series][Number][Letter][SubNumber]
+      
+      // Determine series based on latitude (4° strips)
+      int latDegrees = latitude.floor();
+      int seriesRow = ((latDegrees - 4) / 4).floor();
+      
+      // Determine series based on longitude (4° strips)  
+      int lonDegrees = longitude.floor();
+      int seriesCol = ((lonDegrees - 68) / 4).floor();
+      
+      // Series number calculation (A-O from south to north, 1-19 from west to east)
+      String seriesLetter = String.fromCharCode(65 + seriesRow); // A, B, C, etc.
+      int seriesNumber = seriesCol + 1;
+      
+      // Calculate sheet number within the series (1-16)
+      double latWithinSeries = latitude - (seriesRow * 4 + 4);
+      double lonWithinSeries = longitude - (seriesCol * 4 + 68);
+      
+      int sheetRow = (latWithinSeries / 1).floor();
+      int sheetCol = (lonWithinSeries / 1).floor();
+      int sheetNumber = (sheetRow * 4) + sheetCol + 1;
+      
+      // Calculate quadrant (A, B, C, D)
+      double latWithinSheet = latitude - latitude.floor();
+      double lonWithinSheet = longitude - longitude.floor();
+      
+      String quadrant;
+      if (latWithinSheet >= 0.5 && lonWithinSheet < 0.5) {
+        quadrant = 'A'; // NW
+      } else if (latWithinSheet >= 0.5 && lonWithinSheet >= 0.5) {
+        quadrant = 'B'; // NE
+      } else if (latWithinSheet < 0.5 && lonWithinSheet < 0.5) {
+        quadrant = 'C'; // SW
+      } else {
+        quadrant = 'D'; // SE
+      }
+      
+      // Calculate sub-quadrant number (1-16)
+      double latSubQuad = (latWithinSheet % 0.5) / 0.125;
+      double lonSubQuad = (lonWithinSheet % 0.5) / 0.125;
+      int subQuadRow = latSubQuad.floor();
+      int subQuadCol = lonSubQuad.floor();
+      int subQuadNumber = (subQuadRow * 4) + subQuadCol + 1;
+      
+      // Format: SeriesNumber + SeriesLetter + SheetNumber + "/" + Quadrant + SubQuadNumber
+      return "$seriesNumber$seriesLetter$sheetNumber/$quadrant$subQuadNumber";
+      
+    } catch (e) {
+      print('Error generating topsheet number: $e');
+      // Fallback to a simple format
+      return "${latitude.toStringAsFixed(1)}_${longitude.toStringAsFixed(1)}";
+    }
+  }
+
+  // Update topsheet number when coordinates change
+  void updateToposheetNumber() {
+    if (latitudeController.text.isNotEmpty && longitudeController.text.isNotEmpty) {
+      try {
+        double lat = double.parse(latitudeController.text);
+        double lon = double.parse(longitudeController.text);
+        String toposheetNo = generateToposheetNumber(lat, lon);
+        toposheetNoController.text = toposheetNo;
+        print('Generated topsheet number: $toposheetNo for coordinates: $lat, $lon');
+      } catch (e) {
+        print('Error updating topsheet number: $e');
+        toposheetNoController.text = '';
+      }
+    }
+  }
 
   // Show validation summary dialog
 void showValidationSummary() {
@@ -2102,6 +2209,7 @@ void showValidationSummary() {
     subdivisionController.dispose();
     villageController.dispose();
     locationDetailsController.dispose();
+    toposheetNoController.dispose();
     dateController.dispose();
     timeController.dispose();
     // otherRelevantInformation.dispose();

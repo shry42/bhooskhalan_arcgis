@@ -20,6 +20,10 @@ class ForecastBulletinPage extends StatelessWidget {
         'key': 'district_west_bengal_kalimpong',
         'original': 'WEST BENGAL - KALIMPONG',
       },
+      {
+        'key': 'district_uttarakhand_rudraprayag',
+        'original': 'UTTARAKHAND - RUDRAPRAYAG',
+      },
     ];
 
     return Scaffold(

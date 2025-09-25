@@ -1237,6 +1237,7 @@ class AppTranslations extends Translations {
 'taluk': 'Taluk',
 'division': 'Division',
 'location_details': 'Location Details',
+'toposheet_no': 'Toposheet No.',
 'administrative_division': 'Administrative Division',
 
 // Common Indian States and Regions (for better localization)
@@ -1293,6 +1294,7 @@ class AppTranslations extends Translations {
       'district_tamil_nadu_nilgiris': 'TAMIL NADU - THE NILGIRIS',
       'district_west_bengal_darjeeling': 'WEST BENGAL - DARJEELING',
       'district_west_bengal_kalimpong': 'WEST BENGAL - KALIMPONG',
+      'district_uttarakhand_rudraprayag': 'UTTARAKHAND - RUDRAPRAYAG',
       
       // Bulletin WebView Screen
       'bulletin_title': 'Bulletin - ',
@@ -2669,6 +2671,7 @@ class AppTranslations extends Translations {
 'taluk': 'तालुक',
 'division': 'विभाग',
 'location_details': 'स्थान विवरण',
+'toposheet_no': 'टोपोशीट नं.',
 'administrative_division': 'प्रशासनिक विभाग',
 
 // Common Indian States and Regions (for better localization)
@@ -2720,6 +2723,7 @@ class AppTranslations extends Translations {
       'district_tamil_nadu_nilgiris': 'तमिल नाडु - नीलगिरी',
       'district_west_bengal_darjeeling': 'पश्चिम बंगाल - दार्जिलिंग',
       'district_west_bengal_kalimpong': 'पश्चिम बंगाल - कलिंपोंग',
+      'district_uttarakhand_rudraprayag': 'उत्तराखंड - रुद्रप्रयाग',
       
       // Bulletin Date Screen
       'bulletin_date': 'बुलेटिन दिनांक',
@@ -3017,6 +3021,7 @@ class AppTranslations extends Translations {
       'district_tamil_nadu_nilgiris': 'তামিলনাড়ু - নীলগিরি',
       'district_west_bengal_darjeeling': 'পশ্চিমবঙ্গ - দার্জিলিং',
       'district_west_bengal_kalimpong': 'পশ্চিমবঙ্গ - কালিম্পং',
+      'district_uttarakhand_rudraprayag': 'উত্তরাখণ্ড - রুদ্রপ্রয়াগ',
       
       // Bulletin WebView Screen
       'bulletin_title': 'বুলেটিন - ',
@@ -3428,6 +3433,7 @@ class AppTranslations extends Translations {
       'taluk': 'তালুক',
       'division': 'বিভাগ',
       'location_details': 'অবস্থানের বিবরণ',
+      'toposheet_no': 'টোপোশিট নং',
       'administrative_division': 'প্রশাসনিক বিভাগ',
 
       // Common Indian States and Regions (for better localization)
