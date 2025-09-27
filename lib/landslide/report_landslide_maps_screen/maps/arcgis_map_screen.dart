@@ -1,6 +1,7 @@
 import 'package:arcgis_maps/arcgis_maps.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/draft_report_section/draft_report_form.dart';
 import 'package:bhooskhalann/landslide/report_landslide_maps_screen/report_form_getx/draft_report_section/public_report_form_screen.dart';
+import 'package:bhooskhalann/services/toposheet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -38,6 +39,9 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
   ArcGISPoint? _selectedLandslideLocation;
   bool _isSelectingLocation = false;
   
+  // Calculated toposheet number
+  String _calculatedToposheetNumber = '';
+  
   // Text controllers for coordinate input
   late TextEditingController _latController;
   late TextEditingController _longController;
@@ -51,8 +55,7 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
 
   
   
-  // Flag to track if susceptibility layers are loaded
-  bool _susceptibilityLayersLoaded = false;
+  // Flag to track if susceptibility layers are loaded (removed unused variable)
 
   // Current active layer tracking for mutual exclusivity
   String? _currentActiveLayer;
@@ -64,7 +67,7 @@ class _ArcGisLocationMapScreenState extends State<ArcGisLocationMapScreen>
   // Authentication credentials - GSI Enterprise portal
   static const String _gsiUsername = 'nlfcproject';
   static const String _gsiPassword = 'nlfcadmin1234';
-  static const String _apiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOqj9vsaKKHwafyQtKINWeMtuT47-o9HvNNf0Sr4AXK_Z0nEuHmGLq10e9tfRST8lnfLYMly3rmIc8gjRoWsPC7dgkz4jal4xcz_-LE_msCKrG6d_ACX174bDQ4WdKS9pEaUrHZrz3vGXsQUZWKmo6jlbAuW2MedeMPN1X14mcEOixZ5CCpZ8k3hm3NCQACNMPnCyMtfJXXCAy0S8_GWjGA.AT1_6zX0ZMIw'; // For ArcGIS Online services
+  // static const String _apiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOqj9vsaKKHwafyQtKINWeMtuT47-o9HvNNf0Sr4AXK_Z0nEuHmGLq10e9tfRST8lnfLYMly3rmIc8gjRoWsPC7dgkz4jal4xcz_-LE_msCKrG6d_ACX174bDQ4WdKS9pEaUrHZrz3vGXsQUZWKmo6jlbAuW2MedeMPN1X14mcEOixZ5CCpZ8k3hm3NCQACNMPnCyMtfJXXCAy0S8_GWjGA.AT1_6zX0ZMIw'; // For ArcGIS Online services (unused)
 
   @override
   void initState() {
@@ -389,36 +392,36 @@ Future<void> _loadShortrangeForecastLayer() async {
 // Create categorized renderer for forecast risk levels
 Future<Renderer> _createForecastRenderer() async {
   try {
-    // Create symbols for different risk levels
-    final lowRiskSymbol = SimpleFillSymbol(
-      style: SimpleFillSymbolStyle.solid,
-      color: Colors.green.withOpacity(0.7), // Green for low risk
-      outline: SimpleLineSymbol(
-        style: SimpleLineSymbolStyle.solid,
-        color: Colors.black,
-        width: 1,
-      ),
-    );
+    // Create symbols for different risk levels (commented out as not used)
+    // final lowRiskSymbol = SimpleFillSymbol(
+    //   style: SimpleFillSymbolStyle.solid,
+    //   color: Colors.green.withOpacity(0.7), // Green for low risk
+    //   outline: SimpleLineSymbol(
+    //     style: SimpleLineSymbolStyle.solid,
+    //     color: Colors.black,
+    //     width: 1,
+    //   ),
+    // );
     
-    final moderateRiskSymbol = SimpleFillSymbol(
-      style: SimpleFillSymbolStyle.solid,
-      color: Colors.yellow.withOpacity(0.7), // Yellow for moderate risk
-      outline: SimpleLineSymbol(
-        style: SimpleLineSymbolStyle.solid,
-        color: Colors.black,
-        width: 1,
-      ),
-    );
+    // final moderateRiskSymbol = SimpleFillSymbol(
+    //   style: SimpleFillSymbolStyle.solid,
+    //   color: Colors.yellow.withOpacity(0.7), // Yellow for moderate risk
+    //   outline: SimpleLineSymbol(
+    //     style: SimpleLineSymbolStyle.solid,
+    //     color: Colors.black,
+    //     width: 1,
+    //   ),
+    // );
     
-    final highRiskSymbol = SimpleFillSymbol(
-      style: SimpleFillSymbolStyle.solid,
-      color: Colors.red.withOpacity(0.7), // Red for high risk
-      outline: SimpleLineSymbol(
-        style: SimpleLineSymbolStyle.solid,
-        color: Colors.black,
-        width: 1,
-      ),
-    );
+    // final highRiskSymbol = SimpleFillSymbol(
+    //   style: SimpleFillSymbolStyle.solid,
+    //   color: Colors.red.withOpacity(0.7), // Red for high risk
+    //   outline: SimpleLineSymbol(
+    //     style: SimpleLineSymbolStyle.solid,
+    //     color: Colors.black,
+    //     width: 1,
+    //   ),
+    // );
     
     final noDataSymbol = SimpleFillSymbol(
       style: SimpleFillSymbolStyle.solid,
@@ -430,27 +433,27 @@ Future<Renderer> _createForecastRenderer() async {
       ),
     );
     
-    // Create unique value infos for different forecast statuses
-    final uniqueValueInfos = [
-     (
-        values: ['Low'],
-        symbol: lowRiskSymbol,
-        label: 'low_risk'.tr,
-        description: 'low_risk_desc'.tr,
-      ),
-     (
-        values: ['Moderate'],
-        symbol: moderateRiskSymbol,
-        label: 'moderate_risk'.tr,
-        description: 'moderate_risk_desc'.tr,
-      ),
-      (
-        values: ['High'],
-        symbol: highRiskSymbol,
-        label: 'high_risk'.tr,
-        description: 'high_risk_desc'.tr,
-      ),
-    ];
+    // Create unique value infos for different forecast statuses (commented out as not used)
+    // final uniqueValueInfos = [
+    //  (
+    //     values: ['Low'],
+    //     symbol: lowRiskSymbol,
+    //     label: 'low_risk'.tr,
+    //     description: 'low_risk_desc'.tr,
+    //   ),
+    //  (
+    //     values: ['Moderate'],
+    //     symbol: moderateRiskSymbol,
+    //     label: 'moderate_risk'.tr,
+    //     description: 'moderate_risk_desc'.tr,
+    //   ),
+    //   (
+    //     values: ['High'],
+    //     symbol: highRiskSymbol,
+    //     label: 'high_risk'.tr,
+    //     description: 'high_risk_desc'.tr,
+    //   ),
+    // ];
     
     // Create unique value renderer using Day1_Approved field
     // You can change this to Day2_Approved, Day1_status, or Day2_status as needed
@@ -787,26 +790,32 @@ Future<void> _loadSusceptibilityLayer() async {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
+                leading: const Icon(Icons.terrain),
+                title: const Text('Topographic'),
+                subtitle: const Text('Terrain and elevation'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  await _setMapToTopographic();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.satellite),
+                title: const Text('Imagery'),
+                subtitle: const Text('Aerial imagery view'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  await _setMapToImagery();
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.map),
                 title: Text('openstreetmap'.tr),
                 subtitle: Text('free_opensource_map'.tr),
-                onTap: () {
+                onTap: () async {
                   Navigator.of(context).pop();
-                  _setMapToOpenStreetMap();
+                  await _setMapToOpenStreetMap();
                 },
               ),
-              
-              // if (_apiKey != 'YOUR_API_KEY_HERE') ...[
-              //   ListTile(
-              //     leading: const Icon(Icons.location_city),
-              //     title: const Text('Streets'),
-              //     subtitle: const Text('Detailed street view'),
-              //     onTap: () {
-              //       Navigator.of(context).pop();
-              //       _setMapType(BasemapStyle.arcGISStreets, 'Streets');
-              //     },
-              //   ),
-              // ],
             ],
           ),
           actions: [
@@ -880,7 +889,7 @@ Future<void> _recenterToIndia() async {
                 ],
               ),
               child: Transform.rotate(
-                angle: ((_compassHeading ?? 0) * (pi / 180) * -1),
+                angle: (_compassHeading * (pi / 180) * -1),
                 child: Container(
                   decoration: const BoxDecoration(
                     image: DecorationImage(
@@ -1117,6 +1126,8 @@ Future<void> _recenterToIndia() async {
 
   Future<void> _onMapViewReady() async {
     try {
+      print('🗺️ Map view ready - configuring...');
+      
       // Configure the graphics overlay for landslide location marker
       _graphicsOverlay.renderer = SimpleRenderer(
         symbol: SimpleMarkerSymbol(
@@ -1128,9 +1139,12 @@ Future<void> _recenterToIndia() async {
 
       // Add the graphics overlay to the map view
       _mapViewController.graphicsOverlays.add(_graphicsOverlay);
+      print('✅ Graphics overlay added');
 
       // Assign the map to the map view controller
+      print('🗺️ Assigning map to controller...');
       _mapViewController.arcGISMap = _map;
+      print('✅ Map assigned to controller successfully');
 
       // Set up location display AFTER map is assigned
       _locationDisplay = _mapViewController.locationDisplay;
@@ -1232,6 +1246,10 @@ void _onMapTap(Offset screenPoint) async {
     // Validate coordinates
     print('🔍 Validating coordinates: Lat=${wgs84Point.y}, Lng=${wgs84Point.x}');
     if (_isValidIndianCoordinate(wgs84Point.y, wgs84Point.x)) {
+      // Calculate toposheet number
+      _calculatedToposheetNumber = ToposheetService.getToposheetNumber(wgs84Point.y, wgs84Point.x);
+      print('🗺️ Calculated toposheet number: $_calculatedToposheetNumber');
+      
       setState(() {
         _selectedLandslideLocation = wgs84Point;
       });
@@ -1332,6 +1350,11 @@ void _updateCoordinateFields() {
     if (_isValidIndianCoordinate(lat, lng)) {
       _latController.text = lat.toStringAsFixed(6);
       _longController.text = lng.toStringAsFixed(6);
+      
+      // Calculate toposheet number for manual coordinate entry
+      _calculatedToposheetNumber = ToposheetService.getToposheetNumber(lat, lng);
+      print('🗺️ Calculated toposheet number from manual entry: $_calculatedToposheetNumber');
+      
       print('✅ Coordinate fields updated successfully');
     } else {
       _showError('Invalid coordinates detected during field update');
@@ -1396,25 +1419,7 @@ void _updateLandslideLocationMarker() {
   }
 }
 
-  // Reset map rotation to north
-  Future<void> _resetMapRotation() async {
-    try {
-      final currentViewpoint = _mapViewController.getCurrentViewpoint(ViewpointType.centerAndScale);
-      if (currentViewpoint != null) {
-        // Create a new viewpoint with the same center and scale but with rotation reset to 0
-        final currentCenter = currentViewpoint.targetGeometry as ArcGISPoint;
-        final newViewpoint = Viewpoint.fromCenter(
-          currentCenter,
-          scale: currentViewpoint.targetScale,
-        );
-        
-         _mapViewController.setViewpoint(newViewpoint);
-        _showError('map_rotation_reset'.tr);
-      }
-    } catch (e) {
-      _showError('failed_to_reset_rotation'.trParams({'error': e.toString()}));
-    }
-  }
+  // Reset map rotation to north (removed unused method)
 
   // Start the landslide reporting flow
   void _startLandslideReporting() {
@@ -1629,7 +1634,7 @@ Future<void> _proceedToReportForm() async {
   print('🎯 Final coordinates for validation: Lat=$reportLat, Lng=$reportLng');
   
   // Final validation
-  if (!_isValidIndianCoordinate(reportLat!, reportLng!)) {
+  if (!_isValidIndianCoordinate(reportLat, reportLng)) {
     _showError('invalid_location_validation'.trParams({
       'lat': reportLat.toStringAsFixed(4),
       'lng': reportLng.toStringAsFixed(4),
@@ -1648,27 +1653,28 @@ Future<void> _proceedToReportForm() async {
     final arguments = {
       'latitude': reportLat,
       'longitude': reportLng,
+      'toposheetNumber': _calculatedToposheetNumber,
     };
     
     print('📦 Passing arguments to form: $arguments');
     
     if (userType == 'Public') {
       // ✅ CORRECTED: Pass arguments using Get.arguments
-      Get.to(() => PublicLandslideReportingScreen(latitude: reportLat as double,
-    longitude: reportLng as double,), arguments: arguments);
+      Get.to(() => PublicLandslideReportingScreen(latitude: reportLat!,
+    longitude: reportLng!,), arguments: arguments);
     } else {
       // ✅ CORRECTED: Pass arguments using Get.arguments  
-      Get.to(() => LandslideReportingScreen(latitude: reportLat as double,
-    longitude: reportLng as double,), arguments: arguments);
+      Get.to(() => LandslideReportingScreen(latitude: reportLat!,
+    longitude: reportLng!,), arguments: arguments);
     }
     print('✅ Successfully navigated to report form with arguments');
   } catch (e) {
     print('❌ Error during navigation: $e');
     // Fallback to public form with arguments
-    Get.to(() => PublicLandslideReportingScreen(latitude: reportLat as double,
-    longitude: reportLng as double,), arguments: {
-      'latitude': reportLat!,
-      'longitude': reportLng!,
+    Get.to(() => PublicLandslideReportingScreen(latitude: reportLat!,
+    longitude: reportLng!,), arguments: {
+      'latitude': reportLat,
+      'longitude': reportLng,
     });
   }
 }
@@ -1759,12 +1765,36 @@ Future<void> _proceedToReportForm() async {
     }
   }
 
-  // Set map back to OpenStreetMap
-  void _setMapToOpenStreetMap() {
-    try { 
-      _showError('switched_to_osm'.tr);
+  // Set map to Topographic
+  Future<void> _setMapToTopographic() async {
+    try {
+      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISTopographic));
+      _mapViewController.arcGISMap = _map;
+      _showError('switched_to_topographic'.tr);
     } catch (e) {
-      _showError('failed_to_change_map'.trParams({'error': e.toString()}));
+      _showError('Failed to switch to Topographic: $e');
+    }
+  }
+
+  // Set map to Imagery
+  Future<void> _setMapToImagery() async {
+    try {
+      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISImagery));
+      _mapViewController.arcGISMap = _map;
+      _showError('switched_to_imagery'.tr);
+    } catch (e) {
+      _showError('Failed to switch to Imagery: $e');
+    }
+  }
+
+  // Set map to OpenStreetMap
+  Future<void> _setMapToOpenStreetMap() async {
+    try {
+      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.osmStandard));
+      _mapViewController.arcGISMap = _map;
+      _showError('switched_to_openstreetmap'.tr);
+    } catch (e) {
+      _showError('Failed to switch to OpenStreetMap: $e');
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/services/api_service.dart';
+import 'package:bhooskhalann/services/toposheet_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'recent_report_screen/recent_reports_controller.dart';
 
@@ -55,7 +56,7 @@ var isPendingEditMode = false.obs;
   final subdivisionController = TextEditingController();
   final villageController = TextEditingController();
   final locationDetailsController = TextEditingController();
-  final toposheetNoController = TextEditingController();
+  late TextEditingController toposheetNoController;
 
   var isLocationAutoPopulated = false.obs;
 var selectedStateFromDropdown = Rxn<String>();
@@ -530,6 +531,9 @@ final Map<String, List<String>> stateDistrictsMap = {
     );
     longitudeController = TextEditingController(
       text: args['longitude']?.toStringAsFixed(7) ?? '',
+    );
+    toposheetNoController = TextEditingController(
+      text: args['toposheetNumber']?.toString() ?? '',
     );
     
     // Check if this is a draft being loaded
@@ -2120,7 +2124,7 @@ String getFormCompletionText() {
       try {
         double lat = double.parse(latitudeController.text);
         double lon = double.parse(longitudeController.text);
-        String toposheetNo = generateToposheetNumber(lat, lon);
+        String toposheetNo = ToposheetService.getToposheetNumber(lat, lon);
         toposheetNoController.text = toposheetNo;
         print('Generated topsheet number: $toposheetNo for coordinates: $lat, $lon');
       } catch (e) {

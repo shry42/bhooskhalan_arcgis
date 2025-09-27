@@ -226,12 +226,6 @@ _buildLocationModeSwitch(controller, primaryColor),
     ),
     const SizedBox(height: 16),
     _buildTextField(
-      label: 'toposheet_no'.tr,
-      controller: controller.toposheetNoController,
-      readOnly: true,
-    ),
-    const SizedBox(height: 16),
-    _buildTextField(
       label: 'other_relevant_location_details_landmark'.tr,
       controller: controller.locationDetailsController,
       maxLines: 3,

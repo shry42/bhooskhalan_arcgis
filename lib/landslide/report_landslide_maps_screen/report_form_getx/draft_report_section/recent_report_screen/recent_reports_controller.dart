@@ -181,7 +181,7 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
     final rawReportData = report['data'] ?? report;
     
     // Convert to properly mapped form data for PDF generation
-    final mappedData = _convertPendingToFormData(rawReportData, report['formType'] ?? 'public');
+    final mappedData = await _convertPendingToFormData(rawReportData, report['formType'] ?? 'public');
     
     final exportData = {
       'exportedAt': DateTime.now().toIso8601String(),
@@ -202,7 +202,7 @@ Future<String> exportPendingReportAsJson(Map<String, dynamic> report) async {
 }
 
 // Helper method to convert pending report data to form data format (for controller)
-Map<String, dynamic> _convertPendingToFormData(Map<String, dynamic> reportData, String formType) {
+Future<Map<String, dynamic>> _convertPendingToFormData(Map<String, dynamic> reportData, String formType) async {
   return {
     // Location data - map API keys to form keys
     'latitude': reportData['Latitude'] ?? reportData['latitude'] ?? '',
@@ -262,15 +262,15 @@ Map<String, dynamic> _convertPendingToFormData(Map<String, dynamic> reportData, 
     'noDamages': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'No damages') || (reportData['noDamages'] == true),
     'iDontKnow': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'I don\'t know') || (reportData['iDontKnow'] == true),
     
-    // Damage details - map API keys to form keys with fallbacks
-    'peopleDead': reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0',
-    'peopleInjured': reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0',
-    'livestockDead': reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0',
-    'livestockInjured': reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0',
-    'housesFullyAffected': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0',
-    'housesPartiallyAffected': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0',
-    'housesFully': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? reportData['housesFully'] ?? '0',
-    'housesPartially': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? reportData['housesPartially'] ?? '0',
+    // Damage details - map API keys to form keys with fallbacks, ensure string conversion
+    'peopleDead': (reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0').toString(),
+    'peopleInjured': (reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0').toString(),
+    'livestockDead': (reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0').toString(),
+    'livestockInjured': (reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0').toString(),
+    'housesFullyAffected': (reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0').toString(),
+    'housesPartiallyAffected': (reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0').toString(),
+    'housesFully': (reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? reportData['housesFully'] ?? '0').toString(),
+    'housesPartially': (reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? reportData['housesPartially'] ?? '0').toString(),
     'damsName': reportData['DamsBarragesName'] ?? reportData['damsName'] ?? '',
     'damsExtent': reportData['DamsBarragesExtentOfDamage'] ?? reportData['damsExtent'] ?? '',
     'roadType': reportData['RoadsAffectedType'] ?? reportData['roadType'] ?? '',
@@ -278,10 +278,10 @@ Map<String, dynamic> _convertPendingToFormData(Map<String, dynamic> reportData, 
     'railwayDetails': reportData['RailwayLineAffected'] ?? reportData['railwayDetails'] ?? '',
     'otherDamageDetails': reportData['OthersAffected'] ?? reportData['otherDamageDetails'] ?? '',
     
-    // Contact information - map both possible key formats
-    'username': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
-    'name': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
-    'email': reportData['ContactEmailId'] ?? reportData['email'] ?? '',
+    // Contact information - map both possible key formats, with profile fallback for expert forms
+    'username': await _getContactInfoController('username', reportData, formType),
+    'name': await _getContactInfoController('name', reportData, formType),
+    'email': await _getContactInfoController('email', reportData, formType),
     'mobile': reportData['ContactMobile'] ?? reportData['mobile'] ?? '',
     'affiliation': reportData['ContactAffiliation'] ?? reportData['affiliation'] ?? '',
     'userType': reportData['UserType'] ?? reportData['userType'] ?? formType,
@@ -1221,6 +1221,114 @@ String _generateTitleFromData(Map<String, dynamic> data) {
     }
   }
 
+  // Export synced reports as PDF
+  Future<void> exportSyncedReportsAsPdf({String? userType}) async {
+    try {
+      List<Map<String, dynamic>> reportsToExport;
+      
+      if (userType != null) {
+        final formType = userType.toLowerCase() == 'public' ? 'public' : 'expert';
+        reportsToExport = syncedReports.where((report) => 
+          (report['formType']?.toString().toLowerCase() ?? 'public') == formType).toList();
+      } else {
+        reportsToExport = syncedReports;
+      }
+
+      if (reportsToExport.isEmpty) {
+        Get.snackbar(
+          'No Synced Reports',
+          'No synced reports available to export',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      // Convert synced reports to form data format for PDF generation
+      final List<Map<String, dynamic>> reportsData = [];
+      for (var report in reportsToExport) {
+        final submittedData = report['submittedData'] ?? report['data'] ?? report;
+        final formType = report['formType'] ?? userType?.toLowerCase() ?? 'public';
+        final mappedData = await _convertSyncedToFormData(submittedData, formType);
+        reportsData.add(mappedData);
+      }
+
+      final formType = userType?.toLowerCase() ?? 'public';
+      final pdfService = PdfExportService();
+      
+      // Generate PDF
+      final file = await pdfService.generateDraftsPdf(reportsData, formType);
+      
+      // Show success notification
+      pdfService.showDownloadNotification(file, file.path.split('/').last);
+      
+    } catch (e) {
+      print('Error exporting synced reports as PDF: $e');
+      Get.snackbar(
+        'Export Failed',
+        'Failed to export synced reports as PDF: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  // Export to-be-synced reports as PDF
+  Future<void> exportToBeSyncedReportsAsPdf({String? userType}) async {
+    try {
+      List<Map<String, dynamic>> reportsToExport;
+      
+      if (userType != null) {
+        final formType = userType.toLowerCase() == 'public' ? 'public' : 'expert';
+        reportsToExport = toBeSyncedReports.where((report) => 
+          (report['formType']?.toString().toLowerCase() ?? 'public') == formType).toList();
+      } else {
+        reportsToExport = toBeSyncedReports;
+      }
+
+      if (reportsToExport.isEmpty) {
+        Get.snackbar(
+          'No Pending Reports',
+          'No pending reports available to export',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      // Convert pending reports to form data format for PDF generation
+      final List<Map<String, dynamic>> reportsData = [];
+      for (var report in reportsToExport) {
+        final reportData = report['data'] ?? report;
+        final formType = report['formType'] ?? userType?.toLowerCase() ?? 'public';
+        final mappedData = await _convertPendingToFormData(reportData, formType);
+        reportsData.add(mappedData);
+      }
+
+      final formType = userType?.toLowerCase() ?? 'public';
+      final pdfService = PdfExportService();
+      
+      // Generate PDF
+      final file = await pdfService.generateDraftsPdf(reportsData, formType);
+      
+      // Show success notification
+      pdfService.showDownloadNotification(file, file.path.split('/').last);
+      
+    } catch (e) {
+      print('Error exporting pending reports as PDF: $e');
+      Get.snackbar(
+        'Export Failed',
+        'Failed to export pending reports as PDF: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
   // Import drafts from JSON (for restore)
   Future<void> importDraftsFromJson(String jsonData) async {
     try {
@@ -1413,6 +1521,220 @@ String _generateTitleFromData(Map<String, dynamic> data) {
   int countDraftsByFormType(String formType) {
     return draftReports.where((draft) => 
       draft.formType.toLowerCase() == formType.toLowerCase()).length;
+  }
+
+  // Helper method to get contact information with profile fallback for expert forms
+  Future<String> _getContactInfoController(String field, Map<String, dynamic> reportData, String formType) async {
+    // For expert forms, try to get from profile if not available in report data
+    if (formType.toLowerCase() == 'expert') {
+      // First check if data exists in the report
+      String? reportValue;
+      if (field == 'username' || field == 'name') {
+        reportValue = reportData['ContactName'] ?? reportData['username'] ?? reportData['name'];
+      } else if (field == 'email') {
+        reportValue = reportData['ContactEmailId'] ?? reportData['email'];
+      }
+      
+      // If not found in report data and it's an expert form, get from profile
+      if ((reportValue == null || reportValue.isEmpty)) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          if (field == 'username' || field == 'name') {
+            final profileUsername = prefs.getString('username');
+            if (profileUsername != null && profileUsername.isNotEmpty) {
+              return profileUsername;
+            }
+          } else if (field == 'email') {
+            final profileEmail = prefs.getString('email');
+            if (profileEmail != null && profileEmail.isNotEmpty) {
+              return profileEmail;
+            }
+          }
+        } catch (e) {
+          print('Error getting profile data for $field: $e');
+        }
+      }
+      
+      return reportValue ?? '';
+    } else {
+      // For public forms, use report data only
+      if (field == 'username' || field == 'name') {
+        return reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '';
+      } else if (field == 'email') {
+        return reportData['ContactEmailId'] ?? reportData['email'] ?? '';
+      }
+      return '';
+    }
+  }
+
+  // Helper method to convert synced report data to form data format
+  Future<Map<String, dynamic>> _convertSyncedToFormData(Map<String, dynamic> reportData, String formType) async {
+    print('🔄 Converting synced report data to form data format');
+    print('📊 Available fields: ${reportData.keys.toList()}');
+    
+    // Helper function to get value with multiple fallbacks
+    String getValue(String primaryKey, String fallbackKey, [String defaultValue = '']) {
+      return (reportData[primaryKey] ?? reportData[fallbackKey] ?? defaultValue).toString();
+    }
+    
+    return {
+      // Location data - map API keys to form keys with comprehensive fallbacks
+      'latitude': getValue('Latitude', 'latitude'),
+      'longitude': getValue('Longitude', 'longitude'),
+      'state': getValue('State', 'state'),
+      'district': getValue('District', 'district'),
+      'subdivision': getValue('SubdivisionOrTaluk', 'subdivision'),
+      'village': getValue('Village', 'village'),
+      'locationDetails': getValue('LocationDetails', 'locationDetails'),
+      
+      // Occurrence data
+      'landslideOccurrence': getValue('DateTimeType', 'landslideOccurrence'),
+      'date': _convertApiDateToDisplayDate(getValue('LandslideDate', 'date')),
+      'time': _convertApiTimeToDisplayTime(getValue('LandslideTime', 'time')),
+      'howDoYouKnow': getValue('ExactDateInfo', 'howDoYouKnow'),
+      'occurrenceDateRange': getValue('Date_and_time_Range', 'occurrenceDateRange'),
+      
+      // Basic landslide data - ensure proper mapping
+      'whereDidLandslideOccur': getValue('LanduseOrLandcover', 'whereDidLandslideOccur'),
+      'typeOfMaterial': getValue('MaterialInvolved', 'typeOfMaterial'),
+      'typeOfMovement': getValue('MovementType', 'typeOfMovement'),
+      'landslideSize': getValue('LandslideSize', 'landslideSize'), // For public form
+      'whatInducedLandslide': getValue('InducingFactor', 'whatInducedLandslide'),
+      'otherRelevantInfo': getValue('OtherInformation', 'otherRelevantInfo'),
+      
+      // Expert form specific fields
+      'activity': getValue('Activity', 'activity'),
+      'style': getValue('Style', 'style'),
+      'length': getValue('LengthInMeters', 'length'),
+      'width': getValue('WidthInMeters', 'width'),
+      'height': getValue('HeightInMeters', 'height'),
+      'area': getValue('AreaInSqMeters', 'area'),
+      'depth': getValue('DepthInMeters', 'depth'),
+      'volume': getValue('VolumeInCubicMeters', 'volume'),
+      'runoutDistance': getValue('RunoutDistanceInMeters', 'runoutDistance'),
+      'rateOfMovement': getValue('RateOfMovement', 'rateOfMovement'),
+      'distribution': getValue('Distribution', 'distribution'),
+      'failureMechanism': getValue('FailureMechanism', 'failureMechanism'),
+      'hydrologicalCondition': getValue('HydrologicalCondition', 'hydrologicalCondition'),
+      'geology': getValue('Geology', 'geology'),
+      'geomorphology': getValue('Geomorphology', 'geomorphology'),
+      
+      // Rainfall data - map both possible keys
+      'rainfallAmount': reportData['Amount_of_rainfall'] ?? reportData['rainfallAmount'] ?? '',
+      'rainfallDuration': reportData['Duration_of_rainfall'] ?? reportData['rainfallDuration'] ?? '',
+      
+      // Impact/Damage data - handle both boolean and string formats
+      'peopleAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'People affected') || (reportData['peopleAffected'] == true),
+      'livestockAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Livestock affected') || (reportData['livestockAffected'] == true),
+      'housesBuildingAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Houses and buildings affected') || (reportData['housesBuildingAffected'] == true),
+      'roadsAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Roads affected') || (reportData['roadsAffected'] == true),
+      'roadsBlocked': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Roads blocked') || (reportData['roadsBlocked'] == true),
+      'railwayLineAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Railway line affected') || (reportData['railwayLineAffected'] == true),
+      'powerInfrastructureAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Power infrastructure') || (reportData['powerInfrastructureAffected'] == true),
+      'damagesToAgriculturalForestLand': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Agriculture') || (reportData['damagesToAgriculturalForestLand'] == true),
+      'other': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'Other') || (reportData['other'] == true),
+      'noDamages': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'No damages') || (reportData['noDamages'] == true),
+      'iDontKnow': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'I don\'t know') || (reportData['iDontKnow'] == true),
+      
+      // Damage details - map API keys to form keys with fallbacks, ensure string conversion
+      'peopleDead': (reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0').toString(),
+      'peopleInjured': (reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0').toString(),
+      'livestockDead': (reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0').toString(),
+      'livestockInjured': (reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0').toString(),
+      'housesFullyAffected': (reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0').toString(),
+      'housesPartiallyAffected': (reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0').toString(),
+      'housesFully': (reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? reportData['housesFully'] ?? '0').toString(),
+      'housesPartially': (reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? reportData['housesPartially'] ?? '0').toString(),
+      'damsName': reportData['DamsBarragesName'] ?? reportData['damsName'] ?? '',
+      'damsExtent': reportData['DamsBarragesExtentOfDamage'] ?? reportData['damsExtent'] ?? '',
+      'roadType': reportData['RoadsAffectedType'] ?? reportData['roadType'] ?? '',
+      'roadExtent': reportData['RoadsAffectedExtentOfDamage'] ?? reportData['roadExtent'] ?? '',
+      'railwayDetails': reportData['RailwayLineAffected'] ?? reportData['railwayDetails'] ?? '',
+      'otherDamageDetails': reportData['OthersAffected'] ?? reportData['otherDamageDetails'] ?? '',
+      
+      // Contact information - map both possible key formats, with profile fallback for expert forms
+      'username': await _getContactInfoController('username', reportData, formType),
+      'name': await _getContactInfoController('name', reportData, formType),
+      'email': await _getContactInfoController('email', reportData, formType),
+      'mobile': reportData['ContactMobile'] ?? reportData['mobile'] ?? '',
+      'affiliation': reportData['ContactAffiliation'] ?? reportData['affiliation'] ?? '',
+      'userType': reportData['UserType'] ?? reportData['userType'] ?? formType,
+      'formType': formType,
+      
+      // Images data - convert API image fields to form format
+      'images': _extractImagesFromReportData(reportData),
+      'imageCaptions': _extractImageCaptionsFromReportData(reportData),
+      'imageCount': _countImagesInData(reportData),
+      'hasImages': _countImagesInData(reportData) > 0,
+      
+      // Timestamps
+      'createdAt': reportData['createdAt'] ?? DateTime.now().toIso8601String(),
+      'updatedAt': reportData['updatedAt'] ?? DateTime.now().toIso8601String(),
+    };
+  }
+
+  // Helper method to extract images from synced report data
+  List<String> _extractImagesFromReportData(Map<String, dynamic> reportData) {
+    List<String> images = [];
+    
+    // Check for concatenated images field first
+    String? concatenatedImages = reportData['LandslidePhotographs']?.toString();
+    if (concatenatedImages != null && concatenatedImages.isNotEmpty) {
+      // Split by &&& separator
+      images.addAll(concatenatedImages.split('&&&').where((img) => img.isNotEmpty));
+    }
+    
+    // If no concatenated images, check individual image fields
+    if (images.isEmpty) {
+      List<String> imageFields = [
+        'LandslidePhotograph1',
+        'LandslidePhotograph2', 
+        'LandslidePhotograph3',
+        'LandslidePhotograph4'
+      ];
+      
+      for (String field in imageFields) {
+        String? imageData = reportData[field]?.toString();
+        if (imageData != null && imageData.isNotEmpty) {
+          images.add(imageData);
+        }
+      }
+    }
+    
+    return images;
+  }
+  
+  // Helper method to extract image captions from synced report data
+  List<String> _extractImageCaptionsFromReportData(Map<String, dynamic> reportData) {
+    List<String> captions = [];
+    
+    // Check for concatenated captions field first
+    String? concatenatedCaptions = reportData['ImageCaptions']?.toString();
+    if (concatenatedCaptions != null && concatenatedCaptions.isNotEmpty) {
+      // Split by &&& separator
+      captions.addAll(concatenatedCaptions.split('&&&').where((caption) => caption.isNotEmpty));
+    }
+    
+    // If no concatenated captions, check individual caption fields
+    if (captions.isEmpty) {
+      List<String> captionFields = [
+        'ImageCaption1',
+        'ImageCaption2',
+        'ImageCaption3', 
+        'ImageCaption4'
+      ];
+      
+      for (String field in captionFields) {
+        String? caption = reportData[field]?.toString();
+        if (caption != null && caption.isNotEmpty) {
+          captions.add(caption);
+        } else {
+          captions.add(''); // Add empty caption to maintain index alignment
+        }
+      }
+    }
+    
+    return captions;
   }
 
   @override

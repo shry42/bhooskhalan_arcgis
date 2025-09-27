@@ -1390,8 +1390,8 @@ class AppTranslations extends Translations {
   'recentered_to_current': 'Recentered to current location',
   'map_rotation_reset': 'Map rotation reset to north',
   'switched_to_osm': 'Switched to OpenStreetMap',
-  'switched_to_topographic': 'Switched to GSI Topographic view',
-  'switched_to_imagery': 'Switched to GSI Imagery view',
+  'switched_to_topographic': 'Switched to Topographic view',
+  'switched_to_imagery': 'Switched to Imagery view',
 
   // Error Messages
   'failed_to_load_layer': 'Failed to load @layer layer: @error',
@@ -1413,7 +1413,7 @@ class AppTranslations extends Translations {
   // Info Messages
   'location_selected': 'Location selected: @lat, @lng',
   'tap_to_select': 'Tap on map to select landslide location',
-  'map_configured': '✓ Map created with GSI Topographic view via portal',
+  'map_configured': '✓ Map created with Topographic view via portal',
   'api_key_configured': '✓ API key configured for ArcGIS Online services',
   'no_api_key': 'ℹ No API key - using free tier services only',
   'using_gsi_proxy': '✓ Using GSI proxy basemaps - no API key required',
@@ -2859,8 +2859,8 @@ class AppTranslations extends Translations {
   'recentered_to_current': 'वर्तमान स्थान पर पुनः केंद्रित',
   'map_rotation_reset': 'मैप रोटेशन उत्तर पर रीसेट',
   'switched_to_osm': 'ओपनस्ट्रीटमैप पर स्विच किया गया',
-  'switched_to_topographic': 'जीएसआई स्थलाकृतिक दृश्य पर स्विच किया गया',
-  'switched_to_imagery': 'जीएसआई चित्रण दृश्य पर स्विच किया गया',
+  'switched_to_topographic': 'स्थलाकृतिक दृश्य पर स्विच किया गया',
+  'switched_to_imagery': 'चित्रण दृश्य पर स्विच किया गया',
 
   // Error Messages
   'failed_to_load_layer': '@layer लेयर लोड करने में विफल: @error',
@@ -3088,8 +3088,8 @@ class AppTranslations extends Translations {
       'recentered_to_current': 'বর্তমান অবস্থানের কেন্দ্রে ফিরে যাওয়া হয়েছে',
       'map_rotation_reset': 'মানচিত্রের ঘূর্ণন উত্তরে রিসেট করা হয়েছে',
       'switched_to_osm': 'ওপেনস্ট্রিটম্যাপে পরিবর্তন করা হয়েছে',
-      'switched_to_topographic': 'জিএসআই ভূসংস্থানিক দৃশ্যে পরিবর্তন করা হয়েছে',
-      'switched_to_imagery': 'জিএসআই চিত্রাবলী দৃশ্যে পরিবর্তন করা হয়েছে',
+      'switched_to_topographic': 'ভূসংস্থানিক দৃশ্যে পরিবর্তন করা হয়েছে',
+      'switched_to_imagery': 'চিত্রাবলী দৃশ্যে পরিবর্তন করা হয়েছে',
 
       // Error Messages
       'failed_to_load_layer': '@layer লেয়ার লোড করতে ব্যর্থ: @error',

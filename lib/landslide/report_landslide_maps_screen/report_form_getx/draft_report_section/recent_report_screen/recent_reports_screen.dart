@@ -395,7 +395,7 @@ Widget build(BuildContext context) {
                     GestureDetector(
                       onTap: () {
                         // Navigate to the "To Be Synced" tab (index 1)
-                        DefaultTabController.of(context)?.animateTo(1);
+                        DefaultTabController.of(context)!.animateTo(1);
                         
                         // Optional: Show a snackbar to guide user
                         Get.snackbar(
@@ -493,7 +493,7 @@ Widget build(BuildContext context) {
         _showCleanupDialog(controller);
         break;
       case 'export':
-        _exportDrafts(controller);
+        _exportCurrentTabReports(controller);
         break;
     }
   }
@@ -631,6 +631,54 @@ Widget build(BuildContext context) {
       Get.snackbar(
         'export_failed'.tr,
         e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  void _exportCurrentTabReports(RecentReportsController controller) async {
+    try {
+      // Show loading indicator
+      Get.snackbar(
+        'generating_pdf'.tr,
+        'Please wait while generating PDF...',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+      
+      // Check which reports are available and export accordingly
+      final hasDrafts = controller.filteredDraftReports.isNotEmpty;
+      final hasToBeSynced = controller.filteredToBeSyncedReports.isNotEmpty;
+      final hasSynced = controller.filteredSyncedReports.isNotEmpty;
+      
+      if (hasDrafts) {
+        // Export drafts if available
+        await controller.exportDraftsAsPdf(userType: currentUserType);
+      } else if (hasSynced) {
+        // Export synced reports if no drafts but synced reports available
+        await controller.exportSyncedReportsAsPdf(userType: currentUserType);
+      } else if (hasToBeSynced) {
+        // Export pending reports if no drafts or synced reports
+        await controller.exportToBeSyncedReportsAsPdf(userType: currentUserType);
+      } else {
+        // No reports available
+        Get.snackbar(
+          'No Reports',
+          'No reports available to export',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+      
+    } catch (e) {
+      Get.snackbar(
+        'export_failed'.tr,
+        'Failed to export reports as PDF: $e',
         backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -2372,11 +2420,14 @@ class SyncedReportCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _onTapSyncedReport(context),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Row(
               children: [
                 Container(
@@ -2461,12 +2512,58 @@ class SyncedReportCard extends StatelessWidget {
             ),
           ],
         ),
+        ),
       ),
     );
   }
 
   Color _getUserTypeColor() {
     return userType == 'Public' ? Colors.blue : Colors.green;
+  }
+
+  void _onTapSyncedReport(BuildContext context) {
+    // Extract the submitted data from the synced report
+    final submittedData = report['submittedData'] ?? report['data'] ?? report;
+    final formType = report['formType'] ?? userType.toLowerCase();
+    
+    // Extract location data
+    final latitude = double.tryParse(submittedData['Latitude']?.toString() ?? 
+                                   submittedData['latitude']?.toString() ?? '0') ?? 0.0;
+    final longitude = double.tryParse(submittedData['Longitude']?.toString() ?? 
+                                    submittedData['longitude']?.toString() ?? '0') ?? 0.0;
+    
+    // Convert synced report data to form data format for editing
+    _convertSyncedToFormData(submittedData, formType).then((formData) {
+      final arguments = {
+        'draftId': report['id'],
+        'draftData': formData,
+        'latitude': latitude,
+        'longitude': longitude,
+        'isFromSyncedReport': true, // Flag to indicate this is from a synced report
+      };
+      
+      // Navigate based on the current user type
+      if (userType == 'Public') {
+        Get.to(() => PublicLandslideReportingScreen(
+          latitude: latitude,
+          longitude: longitude,
+        ), arguments: arguments);
+      } else {
+        Get.to(() => LandslideReportingScreen(
+          latitude: latitude,
+          longitude: longitude,
+        ), arguments: arguments);
+      }
+    }).catchError((error) {
+      print('Error converting synced report data: $error');
+      Get.snackbar(
+        'Error',
+        'Failed to load report for editing: $error',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    });
   }
 
   void _handleAction(String action, BuildContext context) async {
@@ -2497,7 +2594,7 @@ class SyncedReportCard extends StatelessWidget {
       print('🔍 Submitted data keys: ${submittedData.keys.toList()}');
       
       // Use the comprehensive data mapping with the actual submitted data
-      final mappedData = _convertSyncedToFormData(submittedData, formType);
+      final mappedData = await _convertSyncedToFormData(submittedData, formType);
       
       final pdfFile = await pdfService.generateDraftPdf(mappedData, formType);
       
@@ -2542,7 +2639,7 @@ class SyncedReportCard extends StatelessWidget {
   }
   
   // Comprehensive data mapping for synced reports (same as pending reports)
-  Map<String, dynamic> _convertSyncedToFormData(Map<String, dynamic> reportData, String formType) {
+  Future<Map<String, dynamic>> _convertSyncedToFormData(Map<String, dynamic> reportData, String formType) async {
     print('🔄 Converting synced report data to form data format');
     print('📊 Available fields: ${reportData.keys.toList()}');
     
@@ -2610,15 +2707,15 @@ class SyncedReportCard extends StatelessWidget {
       'noDamages': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'No damages') || (reportData['noDamages'] == true),
       'iDontKnow': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'I don\'t know') || (reportData['iDontKnow'] == true),
       
-      // Damage details - map API keys to form keys with fallbacks
-      'peopleDead': reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0',
-      'peopleInjured': reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0',
-      'livestockDead': reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0',
-      'livestockInjured': reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0',
-      'housesFullyAffected': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0',
-      'housesPartiallyAffected': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0',
-      'housesFully': reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? reportData['housesFully'] ?? '0',
-      'housesPartially': reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? reportData['housesPartially'] ?? '0',
+      // Damage details - map API keys to form keys with fallbacks, ensure string conversion
+      'peopleDead': (reportData['PeopleDead'] ?? reportData['peopleDead'] ?? '0').toString(),
+      'peopleInjured': (reportData['PeopleInjured'] ?? reportData['peopleInjured'] ?? '0').toString(),
+      'livestockDead': (reportData['LivestockDead'] ?? reportData['livestockDead'] ?? '0').toString(),
+      'livestockInjured': (reportData['LivestockInjured'] ?? reportData['livestockInjured'] ?? '0').toString(),
+      'housesFullyAffected': (reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? '0').toString(),
+      'housesPartiallyAffected': (reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? '0').toString(),
+      'housesFully': (reportData['HousesBuildingfullyaffected'] ?? reportData['housesFullyAffected'] ?? reportData['housesFully'] ?? '0').toString(),
+      'housesPartially': (reportData['HousesBuildingpartialaffected'] ?? reportData['housesPartiallyAffected'] ?? reportData['housesPartially'] ?? '0').toString(),
       'damsName': reportData['DamsBarragesName'] ?? reportData['damsName'] ?? '',
       'damsExtent': reportData['DamsBarragesExtentOfDamage'] ?? reportData['damsExtent'] ?? '',
       'roadType': reportData['RoadsAffectedType'] ?? reportData['roadType'] ?? '',
@@ -2626,16 +2723,18 @@ class SyncedReportCard extends StatelessWidget {
       'railwayDetails': reportData['RailwayLineAffected'] ?? reportData['railwayDetails'] ?? '',
       'otherDamageDetails': reportData['OthersAffected'] ?? reportData['otherDamageDetails'] ?? '',
       
-      // Contact information - map both possible key formats
-      'username': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
-      'name': reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '',
-      'email': reportData['ContactEmailId'] ?? reportData['email'] ?? '',
+      // Contact information - map both possible key formats, with profile fallback for expert forms
+      'username': await _getContactInfo('username', reportData, formType),
+      'name': await _getContactInfo('name', reportData, formType),
+      'email': await _getContactInfo('email', reportData, formType),
       'mobile': reportData['ContactMobile'] ?? reportData['mobile'] ?? '',
       'affiliation': reportData['ContactAffiliation'] ?? reportData['affiliation'] ?? '',
       'userType': reportData['UserType'] ?? reportData['userType'] ?? formType,
       'formType': formType,
       
-      // Images metadata
+      // Images data - convert API image fields to form format
+      'images': _extractImagesFromReportData(reportData),
+      'imageCaptions': _extractImageCaptionsFromReportData(reportData),
       'imageCount': _countImages(reportData),
       'hasImages': _countImages(reportData) > 0,
       
@@ -2672,6 +2771,114 @@ class SyncedReportCard extends StatelessWidget {
   bool _extractImpactValueFromString(dynamic impactString, String searchTerm) {
     if (impactString == null) return false;
     return impactString.toString().toLowerCase().contains(searchTerm.toLowerCase());
+  }
+
+  // Helper method to extract images from synced report data
+  List<String> _extractImagesFromReportData(Map<String, dynamic> reportData) {
+    List<String> images = [];
+    
+    // Check for concatenated images field first
+    String? concatenatedImages = reportData['LandslidePhotographs']?.toString();
+    if (concatenatedImages != null && concatenatedImages.isNotEmpty) {
+      // Split by &&& separator
+      images.addAll(concatenatedImages.split('&&&').where((img) => img.isNotEmpty));
+    }
+    
+    // If no concatenated images, check individual image fields
+    if (images.isEmpty) {
+      List<String> imageFields = [
+        'LandslidePhotograph1',
+        'LandslidePhotograph2', 
+        'LandslidePhotograph3',
+        'LandslidePhotograph4'
+      ];
+      
+      for (String field in imageFields) {
+        String? imageData = reportData[field]?.toString();
+        if (imageData != null && imageData.isNotEmpty) {
+          images.add(imageData);
+        }
+      }
+    }
+    
+    return images;
+  }
+  
+  // Helper method to extract image captions from synced report data
+  List<String> _extractImageCaptionsFromReportData(Map<String, dynamic> reportData) {
+    List<String> captions = [];
+    
+    // Check for concatenated captions field first
+    String? concatenatedCaptions = reportData['ImageCaptions']?.toString();
+    if (concatenatedCaptions != null && concatenatedCaptions.isNotEmpty) {
+      // Split by &&& separator
+      captions.addAll(concatenatedCaptions.split('&&&').where((caption) => caption.isNotEmpty));
+    }
+    
+    // If no concatenated captions, check individual caption fields
+    if (captions.isEmpty) {
+      List<String> captionFields = [
+        'ImageCaption1',
+        'ImageCaption2',
+        'ImageCaption3', 
+        'ImageCaption4'
+      ];
+      
+      for (String field in captionFields) {
+        String? caption = reportData[field]?.toString();
+        if (caption != null && caption.isNotEmpty) {
+          captions.add(caption);
+        } else {
+          captions.add(''); // Add empty caption to maintain index alignment
+        }
+      }
+    }
+    
+    return captions;
+  }
+
+  // Helper method to get contact information with profile fallback for expert forms
+  Future<String> _getContactInfo(String field, Map<String, dynamic> reportData, String formType) async {
+    // For expert forms, try to get from profile if not available in report data
+    if (formType.toLowerCase() == 'expert') {
+      // First check if data exists in the report
+      String? reportValue;
+      if (field == 'username' || field == 'name') {
+        reportValue = reportData['ContactName'] ?? reportData['username'] ?? reportData['name'];
+      } else if (field == 'email') {
+        reportValue = reportData['ContactEmailId'] ?? reportData['email'];
+      }
+      
+      // If not found in report data and it's an expert form, get from profile
+      if ((reportValue == null || reportValue.isEmpty)) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          if (field == 'username' || field == 'name') {
+            final profileUsername = prefs.getString('username');
+            if (profileUsername != null && profileUsername.isNotEmpty) {
+              return profileUsername;
+            }
+          } else if (field == 'email') {
+            final profileEmail = prefs.getString('email');
+            if (profileEmail != null && profileEmail.isNotEmpty) {
+              return profileEmail;
+            }
+          }
+        } catch (e) {
+          print('Error getting profile data for $field: $e');
+        }
+      }
+      
+      return reportValue ?? '';
+    } else {
+      // For public forms, use report data only
+      if (field == 'username' || field == 'name') {
+        return reportData['ContactName'] ?? reportData['username'] ?? reportData['name'] ?? '';
+      } else if (field == 'email') {
+        return reportData['ContactEmailId'] ?? reportData['email'] ?? '';
+      }
+      return '';
+    }
   }
 
 

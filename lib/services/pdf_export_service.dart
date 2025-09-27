@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
@@ -449,7 +448,15 @@ class PdfExportService {
   }
 
   // Build metadata row helper
-  pw.Widget _buildMetadataRow(String label, String value) {
+  pw.Widget _buildMetadataRow(String label, dynamic value) {
+    // Convert any value to string safely
+    String stringValue;
+    if (value == null) {
+      stringValue = 'N/A';
+    } else {
+      stringValue = value.toString();
+    }
+    
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 4),
       child: pw.Row(
@@ -467,7 +474,7 @@ class PdfExportService {
           ),
           pw.Expanded(
             child: pw.Text(
-              value,
+              stringValue,
               style: pw.TextStyle(fontSize: 11),
             ),
           ),
@@ -477,7 +484,15 @@ class PdfExportService {
   }
 
   // Build info row
-  pw.Widget _buildInfoRow(String label, String value) {
+  pw.Widget _buildInfoRow(String label, dynamic value) {
+    // Convert any value to string safely
+    String stringValue;
+    if (value == null) {
+      stringValue = 'N/A';
+    } else {
+      stringValue = value.toString();
+    }
+    
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 2),
       child: pw.Row(
@@ -494,7 +509,7 @@ class PdfExportService {
           ),
           pw.Expanded(
             child: pw.Text(
-              value,
+              stringValue,
               style: pw.TextStyle(fontSize: 12),
             ),
           ),

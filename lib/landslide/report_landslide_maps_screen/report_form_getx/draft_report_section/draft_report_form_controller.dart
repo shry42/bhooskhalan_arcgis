@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/services/api_service.dart';
+import 'package:bhooskhalann/services/toposheet_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'recent_report_screen/recent_reports_controller.dart';
 
@@ -268,7 +267,7 @@ final Map<String, List<String>> stateDistrictsMap = {
   final subdivisionController = TextEditingController();
   final villageController = TextEditingController();
   final locationDetailsController = TextEditingController();
-  final toposheetNoController = TextEditingController();
+  late TextEditingController toposheetNoController;
   
   // Form controllers - Dimensions
   final lengthController = TextEditingController();
@@ -514,6 +513,9 @@ void onInit() {
     );
     longitudeController = TextEditingController(
       text: args['longitude']?.toStringAsFixed(7) ?? '',
+    );
+    toposheetNoController = TextEditingController(
+      text: args['toposheetNumber']?.toString() ?? '',
     );
     
     // Check if this is a draft being loaded
@@ -3172,7 +3174,7 @@ void _showSuccessDialog({required bool isOnline}) {
       try {
         double lat = double.parse(latitudeController.text);
         double lon = double.parse(longitudeController.text);
-        String toposheetNo = generateToposheetNumber(lat, lon);
+        String toposheetNo = ToposheetService.getToposheetNumber(lat, lon);
         toposheetNoController.text = toposheetNo;
         print('Generated topsheet number: $toposheetNo for coordinates: $lat, $lon');
       } catch (e) {

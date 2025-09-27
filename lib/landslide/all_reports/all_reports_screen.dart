@@ -177,13 +177,14 @@ Future<void> _createMapWithStreetsView() async {
     
     // Create map from portal item
     _map = ArcGISMap.withItem(topographicItem);
-    print('✓ Map created with GSI Topographic view via portal');
+    print('✓ Map created with Topographic view via portal');
   } catch (e) {
-    print('Failed to create map with GSI Topographic view: $e');
+    print('Failed to create map with Topographic view: $e');
     // Fallback: create empty map with default basemap
     _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISTopographic));
   }
 }
+
 
   void _initCompass() {
     _compassSubscription = FlutterCompass.events?.listen((CompassEvent event) {
@@ -226,6 +227,8 @@ Future<void> _createMapWithStreetsView() async {
 
   Future<void> _onMapViewReady() async {
     try {
+      print('🗺️ All Reports Map view ready - configuring...');
+      
       // Configure the graphics overlay for markers
       _graphicsOverlay.renderer = SimpleRenderer(
         symbol: SimpleMarkerSymbol(
@@ -237,9 +240,12 @@ Future<void> _createMapWithStreetsView() async {
 
       // Add the graphics overlay to the map view
       _mapViewController.graphicsOverlays.add(_graphicsOverlay);
+      print('✅ Graphics overlay added');
 
       // Assign the map to the map view controller
+      print('🗺️ Assigning map to controller...');
       _mapViewController.arcGISMap = _map;
+      print('✅ Map assigned to controller successfully');
 
       // Set initial viewpoint to India
       _mapViewController.setViewpoint(
@@ -477,12 +483,30 @@ void _showBasemapGallery() {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.terrain),
+              title: const Text('Topographic'),
+              subtitle: const Text('Terrain and elevation'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await _setMapToTopographic();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.satellite),
+              title: const Text('Imagery'),
+              subtitle: const Text('Aerial imagery view'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await _setMapToImagery();
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.map),
               title: Text('openstreetmap'.tr),
               subtitle: Text('free_opensource_map'.tr),
-              onTap: () {
+              onTap: () async {
                 Navigator.of(context).pop();
-                _setMapToOpenStreetMap();
+                await _setMapToOpenStreetMap();
               },
             ),
           ],
@@ -1173,14 +1197,36 @@ Future<void> _loadSusceptibilityLayer() async {
   }
 
 
-  // Set map to OpenStreetMap
-  void _setMapToOpenStreetMap() {
+  // Set map to Topographic
+  Future<void> _setMapToTopographic() async {
     try {
-      // For OpenStreetMap, you might need to use a different approach
-      // This is a placeholder - implement according to your needs
-      _showError('switched_to'.trParams({'mapType': 'openstreetmap'.tr}));
+      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISTopographic));
+      _mapViewController.arcGISMap = _map;
+      _showError('switched_to_topographic'.tr);
     } catch (e) {
-      _showError('failed_to_change_map_type'.trParams({'error': e.toString()}));
+      _showError('Failed to switch to Topographic: $e');
+    }
+  }
+
+  // Set map to Imagery
+  Future<void> _setMapToImagery() async {
+    try {
+      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISImagery));
+      _mapViewController.arcGISMap = _map;
+      _showError('switched_to_imagery'.tr);
+    } catch (e) {
+      _showError('Failed to switch to Imagery: $e');
+    }
+  }
+
+  // Set map to OpenStreetMap
+  Future<void> _setMapToOpenStreetMap() async {
+    try {
+      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.osmStandard));
+      _mapViewController.arcGISMap = _map;
+      _showError('switched_to_openstreetmap'.tr);
+    } catch (e) {
+      _showError('Failed to switch to OpenStreetMap: $e');
     }
   }
 
