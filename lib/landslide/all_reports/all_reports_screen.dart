@@ -484,29 +484,20 @@ void _showBasemapGallery() {
           children: [
             ListTile(
               leading: const Icon(Icons.terrain),
-              title: const Text('Topographic'),
-              subtitle: const Text('Terrain and elevation'),
-              onTap: () async {
+              title: Text('topographic'.tr),
+              subtitle: Text('gsi_terrain_elevation'.tr),
+              onTap: () {
                 Navigator.of(context).pop();
-                await _setMapToTopographic();
+                _setMapType('topographic', 'topographic'.tr);
               },
             ),
             ListTile(
               leading: const Icon(Icons.satellite),
-              title: const Text('Imagery'),
-              subtitle: const Text('Aerial imagery view'),
-              onTap: () async {
+              title: Text('imagery'.tr),
+              subtitle: Text('gsi_aerial_imagery'.tr),
+              onTap: () {
                 Navigator.of(context).pop();
-                await _setMapToImagery();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.map),
-              title: Text('openstreetmap'.tr),
-              subtitle: Text('free_opensource_map'.tr),
-              onTap: () async {
-                Navigator.of(context).pop();
-                await _setMapToOpenStreetMap();
+                _setMapType('imagery', 'imagery'.tr);
               },
             ),
           ],
@@ -1197,36 +1188,45 @@ Future<void> _loadSusceptibilityLayer() async {
   }
 
 
-  // Set map to Topographic
-  Future<void> _setMapToTopographic() async {
+  // Set specific map type using GSI portal items
+  Future<void> _setMapType(String mapType, String typeName) async {
     try {
-      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISTopographic));
+      String itemId;
+      switch (mapType) {
+        case 'topographic':
+          itemId = '79873351c4c1462cba9af947be2fdf4c';
+          break;
+        case 'imagery':
+          itemId = '72d22cd267a141fba0e35f9913f34736';
+          break;
+        default:
+          _showError('Unknown map type: $mapType');
+          return;
+      }
+      
+      // Create portal pointing to GSI portal using the correct constructor
+      final gsiPortal = Portal(
+        Uri.parse('https://bhusanket.gsi.gov.in/gisportal/sharing/rest'),
+        connection: PortalConnection.authenticated
+      );
+      
+      // Create portal item using named parameters
+      final portalItem = PortalItem.withPortalAndItemId(
+        portal: gsiPortal, 
+        itemId: itemId
+      );
+      
+      // Create new map from portal item
+      _map = ArcGISMap.withItem(portalItem);
       _mapViewController.arcGISMap = _map;
-      _showError('switched_to_topographic'.tr);
+      
+      if (mapType == 'topographic') {
+        _showError('switched_to_topographic'.tr);
+      } else if (mapType == 'imagery') {
+        _showError('switched_to_imagery'.tr);
+      }
     } catch (e) {
-      _showError('Failed to switch to Topographic: $e');
-    }
-  }
-
-  // Set map to Imagery
-  Future<void> _setMapToImagery() async {
-    try {
-      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.arcGISImagery));
-      _mapViewController.arcGISMap = _map;
-      _showError('switched_to_imagery'.tr);
-    } catch (e) {
-      _showError('Failed to switch to Imagery: $e');
-    }
-  }
-
-  // Set map to OpenStreetMap
-  Future<void> _setMapToOpenStreetMap() async {
-    try {
-      _map = ArcGISMap.withBasemap(Basemap.withStyle(BasemapStyle.osmStandard));
-      _mapViewController.arcGISMap = _map;
-      _showError('switched_to_openstreetmap'.tr);
-    } catch (e) {
-      _showError('Failed to switch to OpenStreetMap: $e');
+      _showError('failed_to_change_map'.trParams({'error': e.toString()}));
     }
   }
 
