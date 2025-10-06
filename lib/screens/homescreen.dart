@@ -14,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class HomeScreen extends StatelessWidget {
    HomeScreen({super.key});
 
-ProfileController  profileController = Get.put(ProfileController());
+final ProfileController profileController = Get.put(ProfileController());
 
   @override
   Widget build(BuildContext context) {

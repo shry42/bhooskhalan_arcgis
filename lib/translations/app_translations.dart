@@ -1392,6 +1392,10 @@ class AppTranslations extends Translations {
   'switched_to_osm': 'Switched to OpenStreetMap',
   'switched_to_topographic': 'Switched to Topographic view',
   'switched_to_imagery': 'Switched to Imagery view',
+  'topographic': 'Topographic',
+  'imagery': 'Satellite',
+  'gsi_terrain_elevation': 'GSI Terrain and Elevation',
+  'gsi_aerial_imagery': 'GSI Aerial Imagery',
 
   // Error Messages
   'failed_to_load_layer': 'Failed to load @layer layer: @error',
@@ -2861,6 +2865,10 @@ class AppTranslations extends Translations {
   'switched_to_osm': 'ओपनस्ट्रीटमैप पर स्विच किया गया',
   'switched_to_topographic': 'स्थलाकृतिक दृश्य पर स्विच किया गया',
   'switched_to_imagery': 'चित्रण दृश्य पर स्विच किया गया',
+  'topographic': 'स्थलाकृतिक',
+  'imagery': 'उपग्रह',
+  'gsi_terrain_elevation': 'जीएसआई भूभाग और ऊंचाई',
+  'gsi_aerial_imagery': 'जीएसआई हवाई चित्र',
 
   // Error Messages
   'failed_to_load_layer': '@layer लेयर लोड करने में विफल: @error',
@@ -3090,6 +3098,10 @@ class AppTranslations extends Translations {
       'switched_to_osm': 'ওপেনস্ট্রিটম্যাপে পরিবর্তন করা হয়েছে',
       'switched_to_topographic': 'ভূসংস্থানিক দৃশ্যে পরিবর্তন করা হয়েছে',
       'switched_to_imagery': 'চিত্রাবলী দৃশ্যে পরিবর্তন করা হয়েছে',
+      'topographic': 'ভূসংস্থানিক',
+      'imagery': 'উপগ্রহ',
+      'gsi_terrain_elevation': 'জিএসআই ভূভাগ এবং উচ্চতা',
+      'gsi_aerial_imagery': 'জিএসআই আকাশচিত্র',
 
       // Error Messages
       'failed_to_load_layer': '@layer লেয়ার লোড করতে ব্যর্থ: @error',

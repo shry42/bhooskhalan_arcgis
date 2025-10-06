@@ -346,6 +346,8 @@ bool _hasImagesInData(Map<String, dynamic> reportData) {
     loadDraftReports();
     loadToBeSyncedReports();
     loadSyncedReports();
+    // Fix existing synced report titles
+    fixSyncedReportTitles();
   }
 
   // Set user type filter and update filtered lists
@@ -784,7 +786,7 @@ bool _hasImagesInData(Map<String, dynamic> reportData) {
         'syncedAt': DateTime.now().toIso8601String(),
         'submittedData': syncedData,
         'status': 'synced',
-        'title': DraftReport.generateTitle(syncedData),
+        'title': DraftReport.generateTitle({...syncedData, 'formType': formType}),
         'formType': formType, // Include formType in synced data
       };
       
@@ -1052,6 +1054,43 @@ String _generateTitleFromData(Map<String, dynamic> data) {
       );
     } catch (e) {
       print('Error clearing synced reports: $e');
+    }
+  }
+
+  // Fix existing synced reports with proper titles
+  Future<void> fixSyncedReportTitles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final reportsJson = prefs.getStringList(_syncedReportsKey) ?? [];
+      
+      bool hasChanges = false;
+      for (int i = 0; i < reportsJson.length; i++) {
+        try {
+          final report = Map<String, dynamic>.from(jsonDecode(reportsJson[i]));
+          final submittedData = report['submittedData'] ?? report['data'] ?? report;
+          
+          // Generate new title using the updated method with form type
+          final newTitle = DraftReport.generateTitle({...submittedData, 'formType': report['formType']});
+          
+          // Only update if title is different and not already proper
+          if (report['title'] != newTitle && newTitle != 'Untitled Draft') {
+            report['title'] = newTitle;
+            reportsJson[i] = jsonEncode(report);
+            hasChanges = true;
+            print('Updated title for report ${report['id']}: $newTitle');
+          }
+        } catch (e) {
+          print('Error fixing title for report $i: $e');
+        }
+      }
+      
+      if (hasChanges) {
+        await prefs.setStringList(_syncedReportsKey, reportsJson);
+        await loadSyncedReports(); // Reload to update UI
+        print('✅ Fixed synced report titles');
+      }
+    } catch (e) {
+      print('Error fixing synced report titles: $e');
     }
   }
 

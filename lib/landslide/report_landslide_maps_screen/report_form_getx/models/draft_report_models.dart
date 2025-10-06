@@ -152,48 +152,51 @@ class DraftReport {
   // Generate title from form data
   static String generateTitle(Map<String, dynamic> formData) {
     try {
-      String state = (formData['state'] ?? '').toString().trim();
-      String district = (formData['district'] ?? '').toString().trim();
-      String village = (formData['village'] ?? '').toString().trim();
+      // Handle both lowercase (form data) and uppercase (API data) field names
+      String state = (formData['state'] ?? formData['State'] ?? '').toString().trim();
+      String district = (formData['district'] ?? formData['District'] ?? '').toString().trim();
+      String village = (formData['village'] ?? formData['Village'] ?? '').toString().trim();
       
-      List<String> titleParts = [];
+      // Determine form type for proper title format
+      String formType = (formData['formType'] ?? formData['UserType'] ?? 'public').toString().toLowerCase();
+      String reportType = formType == 'expert' ? 'Expert Landslide Report' : 'Public Landslide Report';
       
-      if (village.isNotEmpty) {
-        titleParts.add(village);
+      List<String> locationParts = [];
+      
+      // For synced reports, show only district for cleaner display
+      if (district.isNotEmpty) {
+        locationParts.add(district);
+      } else if (village.isNotEmpty) {
+        locationParts.add(village);
+      } else if (state.isNotEmpty) {
+        // If only state is available, show it
+        locationParts.add(state);
       }
       
-      if (district.isNotEmpty && district != village) {
-        titleParts.add(district);
-      }
-      
-      if (state.isNotEmpty && state != district) {
-        titleParts.add(state);
-      }
-      
-      if (titleParts.isNotEmpty) {
-        String title = titleParts.join(', ');
-        // Limit title length
-        if (title.length > 50) {
-          return '${title.substring(0, 47)}...';
+      if (locationParts.isNotEmpty) {
+        String location = locationParts.join(', ');
+        // Limit location length to keep title clean
+        if (location.length > 30) {
+          location = '${location.substring(0, 27)}...';
         }
-        return title;
+        return '$reportType - $location';
       }
       
       // Fallback to coordinates if available
-      String latitude = (formData['latitude'] ?? '').toString().trim();
-      String longitude = (formData['longitude'] ?? '').toString().trim();
+      String latitude = (formData['latitude'] ?? formData['Latitude'] ?? '').toString().trim();
+      String longitude = (formData['longitude'] ?? formData['Longitude'] ?? '').toString().trim();
       
       if (latitude.isNotEmpty && longitude.isNotEmpty) {
         try {
           double lat = double.parse(latitude);
           double lng = double.parse(longitude);
-          return 'Location ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+          return '$reportType - Location ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
         } catch (e) {
           // Ignore parsing errors
         }
       }
       
-      return 'Untitled Draft';
+      return '$reportType - Unknown Location';
     } catch (e) {
       print('Error generating title: $e');
       return 'Untitled Draft';
@@ -206,26 +209,26 @@ class DraftReport {
       List<String> descriptionParts = [];
       
       // Add material type if available
-      String materialType = (formData['typeOfMaterial'] ?? '').toString().trim();
+      String materialType = (formData['typeOfMaterial'] ?? formData['MaterialInvolved'] ?? '').toString().trim();
       if (materialType.isNotEmpty) {
         descriptionParts.add('Material: $materialType');
       }
       
       // Add movement type if available
-      String movementType = (formData['typeOfMovement'] ?? '').toString().trim();
+      String movementType = (formData['typeOfMovement'] ?? formData['MovementType'] ?? '').toString().trim();
       if (movementType.isNotEmpty) {
         descriptionParts.add('Movement: $movementType');
       }
       
       // Add landslide size for public form
-      String landslideSize = (formData['landslideSize'] ?? '').toString().trim();
+      String landslideSize = (formData['landslideSize'] ?? formData['LandslideSize'] ?? '').toString().trim();
       if (landslideSize.isNotEmpty) {
         descriptionParts.add('Size: $landslideSize');
       }
       
       // Add dimensions for expert form if available
-      String length = (formData['length'] ?? '').toString().trim();
-      String width = (formData['width'] ?? '').toString().trim();
+      String length = (formData['length'] ?? formData['LengthInMeters'] ?? '').toString().trim();
+      String width = (formData['width'] ?? formData['WidthInMeters'] ?? '').toString().trim();
       if (length.isNotEmpty && width.isNotEmpty) {
         descriptionParts.add('Dimensions: ${length}m × ${width}m');
       }

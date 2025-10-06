@@ -11,6 +11,7 @@ import 'package:bhooskhalann/services/api_service.dart';
 import 'package:bhooskhalann/services/toposheet_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'recent_report_screen/recent_reports_controller.dart';
+import '../models/draft_report_models.dart';
 
 class LandslideReportController extends GetxController {
   final formKey = GlobalKey<FormState>();
@@ -2081,7 +2082,7 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
             'syncedAt': DateTime.now().toIso8601String(),
             'submittedData': payload,
             'status': 'synced',
-            'title': 'Expert Landslide Report - ${payload['District'] ?? payload['State'] ?? 'Unknown Location'}',
+            'title': DraftReport.generateTitle({...payload, 'formType': 'expert'}),
             'formType': 'expert',
           };
           
@@ -2301,7 +2302,7 @@ void _showSuccessDialog({required bool isOnline}) {
       "AreaInSqMeters": areaController.text.trim().isNotEmpty ? double.tryParse(areaController.text.trim()) : null,  //double 
       "DepthInMeters": depthController.text.trim().isNotEmpty ? double.tryParse(depthController.text.trim()) : null,  //double
       "VolumeInCubicMeters": volumeController.text.trim().isNotEmpty ? double.tryParse(volumeController.text.trim()) : null,  //double
-      "RunOutDistanceInMeters": runoutDistanceController.text.trim().isNotEmpty ? double.tryParse(runoutDistanceController.text.trim()) : null,  //double
+      "RunOutDistanceInMeters": runoutDistanceController.text.trim().isNotEmpty ? double.tryParse(runoutDistanceController.text.trim()) : 0.0,  //double
       "MovementRate": translateExpertValueToAPI(rateOfMovementValue.value, 'rateOfMovement') ?? "",  
       "Activity": translateExpertValueToAPI(activityValue.value, 'activity') ?? "",
       "Distribution": translateExpertValueToAPI(distributionValue.value, 'distribution') ?? "",

@@ -11,6 +11,7 @@ import 'package:bhooskhalann/services/api_service.dart';
 import 'package:bhooskhalann/services/toposheet_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'recent_report_screen/recent_reports_controller.dart';
+import '../models/draft_report_models.dart';
 
 class PublicLandslideReportController extends GetxController {
 
@@ -1646,7 +1647,7 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
         } else {
           // If this was a new submission, save it to draft section with submitted status
           final completeFormData = await _buildCompleteFormData();
-          completeFormData['title'] = 'Public Landslide Report - ${completeFormData['district'] ?? completeFormData['state'] ?? 'Unknown Location'}';
+          completeFormData['title'] = DraftReport.generateTitle({...completeFormData, 'formType': 'public'});
           completeFormData['submissionStatus'] = 'submitted';
           completeFormData['createdAt'] = DateTime.now().toIso8601String();
           completeFormData['updatedAt'] = DateTime.now().toIso8601String();
@@ -1666,7 +1667,7 @@ if (currentPendingReportId != null && isPendingEditMode.value) {
         } else {
           // If this was a new submission, save it to draft section with pending status
           final completeFormData = await _buildCompleteFormData();
-          completeFormData['title'] = 'Public Landslide Report - ${completeFormData['district'] ?? completeFormData['state'] ?? 'Unknown Location'}';
+          completeFormData['title'] = DraftReport.generateTitle({...completeFormData, 'formType': 'public'});
           completeFormData['submissionStatus'] = 'pending';
           completeFormData['createdAt'] = DateTime.now().toIso8601String();
           completeFormData['updatedAt'] = DateTime.now().toIso8601String();
@@ -1702,7 +1703,7 @@ Future<void> _handleOfflineSubmission(Map<String, dynamic> payload) async {
   
   // Add form type and title to payload
   payload['formType'] = 'public';
-  payload['title'] = 'Public Landslide Report - ${payload['District'] ?? payload['State'] ?? 'Unknown Location'}';
+  payload['title'] = DraftReport.generateTitle({...payload, 'formType': 'public'});
   
   // If this was a draft, update its status to pending instead of deleting
   if (currentDraftId != null) {
