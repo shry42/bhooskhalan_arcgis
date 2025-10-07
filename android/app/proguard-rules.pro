@@ -17,3 +17,11 @@
 
 # Keep feature delivery classes  
 -keep class com.google.android.play.core.splitcompat.** { *; }
+
+# 16 KB memory page size support - Keep native library classes
+-keep class com.esri.arcgisruntime.** { *; }
+-dontwarn com.esri.arcgisruntime.**
+
+# Keep Flutter native library classes
+-keep class io.flutter.plugins.** { *; }
+-dontwarn io.flutter.plugins.**

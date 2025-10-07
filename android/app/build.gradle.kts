@@ -43,6 +43,11 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         
+        // 16 KB memory page size support for Android 15+
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
+        
         // ABI filters handled by splits configuration
     }
 
@@ -90,6 +95,17 @@ android {
         }
         abi {
             enableSplit = true
+        }
+    }
+    
+    // 16 KB memory page size support configuration
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+        // Ensure native libraries are properly aligned for 16 KB pages
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
