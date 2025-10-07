@@ -44,6 +44,7 @@ final ProfileController pc = Get.put(ProfileController());
 // Add these after existing draft management properties
 String? currentPendingReportId;
 var isPendingEditMode = false.obs;
+var isSyncedReportMode = false.obs;
 
     // final rainfallAmountController = TextEditingController();
   // var rainfallDurationValue = Rxn<String>();
@@ -548,6 +549,12 @@ final Map<String, List<String>> stateDistrictsMap = {
       currentPendingReportId = args['pendingReportId']; // Add this property to controller
       isPendingEditMode.value = true; // Add this property to controller
       await loadDraftData(args['pendingReportData']); // Reuse the same loading method
+    }
+    // Check if this is a synced report being viewed
+    else if (args.containsKey('isFromSyncedReport') && args['isFromSyncedReport'] == true && args.containsKey('draftData')) {
+      currentDraftId = args['draftId'];
+      isSyncedReportMode.value = true; // Add this property to controller
+      await loadDraftData(args['draftData']);
     } else {
       // If not a draft/pending and we have coordinates, fetch location
       if (args['latitude'] != null && args['longitude'] != null) {

@@ -35,6 +35,7 @@ class LandslideReportController extends GetxController {
   // Add these after existing draft management properties
 String? currentPendingReportId;
 var isPendingEditMode = false.obs;
+var isSyncedReportMode = false.obs;
 
   var isLocationAutoPopulated = false.obs;
 var selectedStateFromDropdown = Rxn<String>();
@@ -519,10 +520,10 @@ void onInit() {
       text: args['toposheetNumber']?.toString() ?? '',
     );
     
-    // Check if this is a draft being loaded
-    if (args.containsKey('draftId') && args.containsKey('draftData')) {
+    // Check if this is a synced report being viewed (check this first)
+    if (args.containsKey('isFromSyncedReport') && args['isFromSyncedReport'] == true && args.containsKey('draftData')) {
       currentDraftId = args['draftId'];
-      isDraftMode.value = true;
+      isSyncedReportMode.value = true; // Add this property to controller
       loadDraftData(args['draftData']);
     }
     // Check if this is a pending report being edited
@@ -530,6 +531,12 @@ void onInit() {
       currentPendingReportId = args['pendingReportId']; // Add this property to controller
       isPendingEditMode.value = true; // Add this property to controller
       loadDraftData(args['pendingReportData']); // Reuse the same loading method
+    }
+    // Check if this is a draft being loaded
+    else if (args.containsKey('draftId') && args.containsKey('draftData')) {
+      currentDraftId = args['draftId'];
+      isDraftMode.value = true;
+      loadDraftData(args['draftData']);
     } else {
       // If not a draft/pending and we have coordinates, fetch location
       if (args['latitude'] != null && args['longitude'] != null) {

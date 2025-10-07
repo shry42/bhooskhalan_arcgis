@@ -136,6 +136,7 @@ class AppTranslations extends Translations {
       // Public Form Screen Titles
   'edit_draft_report': 'Edit Draft Report',
   'edit_pending_report': 'Edit Pending Report',
+  'submitted_report': 'Submitted Report',
   'report_landslide_public': 'Report Landslide (Public)',
   'update': 'UPDATE',
   'save': 'SAVE',
@@ -339,7 +340,8 @@ class AppTranslations extends Translations {
 
   // Expert Form Screen Titles
   'edit_draft_report_expert': 'Edit Draft Report',
-  'edit_pending_report_expert': 'Edit Pending Report', 
+  'edit_pending_report_expert': 'Edit Pending Report',
+  'submitted_report': 'Submitted Report',
   'report_landslide_expert': 'Report Landslide',
   'update': 'UPDATE',
   'save': 'SAVE',
@@ -1394,8 +1396,8 @@ class AppTranslations extends Translations {
   'switched_to_imagery': 'Switched to Imagery view',
   'topographic': 'Topographic',
   'imagery': 'Satellite',
-  'gsi_terrain_elevation': 'GSI Terrain and Elevation',
-  'gsi_aerial_imagery': 'GSI Aerial Imagery',
+  'gsi_terrain_elevation': 'Terrain and Elevation',
+  'gsi_aerial_imagery': 'Aerial Imagery',
 
   // Error Messages
   'failed_to_load_layer': 'Failed to load @layer layer: @error',
@@ -1580,6 +1582,7 @@ class AppTranslations extends Translations {
       // Public Form Screen Titles
   'edit_draft_report': 'ड्राफ्ट रिपोर्ट संपादित करें',
   'edit_pending_report': 'लंबित रिपोर्ट संपादित करें',
+  'submitted_report': 'जमा की गई रिपोर्ट',
   'report_landslide_public': 'भूस्खलन रिपोर्ट करें (सामान्य)',
   'update': 'अपडेट करें',
   'save': 'सेव करें',
@@ -1783,6 +1786,7 @@ class AppTranslations extends Translations {
   // Expert Form Screen Titles
   'edit_draft_report_expert': 'ड्राफ्ट रिपोर्ट संपादित करें',
   'edit_pending_report_expert': 'लंबित रिपोर्ट संपादित करें',
+  'submitted_report': 'जमा की गई रिपोर्ट',
   'report_landslide_expert': 'भूस्खलन रिपोर्ट करें',
   'update': 'अपडेट करें',
   'save': 'सेव करें',
@@ -2867,8 +2871,8 @@ class AppTranslations extends Translations {
   'switched_to_imagery': 'चित्रण दृश्य पर स्विच किया गया',
   'topographic': 'स्थलाकृतिक',
   'imagery': 'उपग्रह',
-  'gsi_terrain_elevation': 'जीएसआई भूभाग और ऊंचाई',
-  'gsi_aerial_imagery': 'जीएसआई हवाई चित्र',
+  'gsi_terrain_elevation': 'भूभाग और ऊंचाई',
+  'gsi_aerial_imagery': 'हवाई चित्र',
 
   // Error Messages
   'failed_to_load_layer': '@layer लेयर लोड करने में विफल: @error',
@@ -3100,8 +3104,8 @@ class AppTranslations extends Translations {
       'switched_to_imagery': 'চিত্রাবলী দৃশ্যে পরিবর্তন করা হয়েছে',
       'topographic': 'ভূসংস্থানিক',
       'imagery': 'উপগ্রহ',
-      'gsi_terrain_elevation': 'জিএসআই ভূভাগ এবং উচ্চতা',
-      'gsi_aerial_imagery': 'জিএসআই আকাশচিত্র',
+      'gsi_terrain_elevation': 'ভূভাগ এবং উচ্চতা',
+      'gsi_aerial_imagery': 'আকাশচিত্র',
 
       // Error Messages
       'failed_to_load_layer': '@layer লেয়ার লোড করতে ব্যর্থ: @error',
@@ -3523,6 +3527,7 @@ class AppTranslations extends Translations {
       // Expert Form Screen Titles
       'edit_draft_report_expert': 'খসড়া রিপোর্ট সম্পাদনা করুন',
       'edit_pending_report_expert': 'পেন্ডিং রিপোর্ট সম্পাদনা করুন',
+      'submitted_report': 'জমা দেওয়া রিপোর্ট',
       'report_landslide_expert': 'ভূমিধস রিপোর্ট করুন',
       'submitting_report': 'রিপোর্ট জমা দেওয়া হচ্ছে...',
       
@@ -4242,6 +4247,7 @@ class AppTranslations extends Translations {
       'report_landslide_public': 'ভূমিধসের রিপোর্ট (সাধারণ)',
       'edit_draft_report': 'খসড়া রিপোর্ট সম্পাদনা করুন',
       'edit_pending_report': 'অপেক্ষমান রিপোর্ট সম্পাদনা করুন',
+      'submitted_report': 'জমা দেওয়া রিপোর্ট',
       'submitting_report': 'রিপোর্ট জমা দেওয়া হচ্ছে...',
       
       // Location Information

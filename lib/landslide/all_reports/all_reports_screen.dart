@@ -132,8 +132,6 @@ class _AllReportsScreenArcGISState extends State<AllReportsScreenArcGIS>
 
 void _initializeArcGIS() {
   try {
-    setState(() => _isLoading = true);
-    
     // Set the license key to remove watermark
     ArcGISEnvironment.setLicenseUsingKey(_licenseKey);
     
@@ -151,6 +149,8 @@ void _initializeArcGIS() {
     
     // Initialize other components
     _initCompass();
+    
+    // Fetch reports in background without blocking map display
     _fetchReports();
     
   } catch (e) {
@@ -1278,14 +1278,14 @@ Future<void> _loadSusceptibilityLayer() async {
           ),
         ],
       ),
-      body: _isLoading || !_isArcGISInitialized
+      body: !_isArcGISInitialized
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Text(_isArcGISInitialized ? 'loading_reports'.tr : 'initializing_map'.tr),
+                  Text('initializing_map'.tr),
                 ],
               ),
             )
@@ -1400,6 +1400,52 @@ Future<void> _loadSusceptibilityLayer() async {
                   ),
                 ),
                 
+                // Loading indicator for data
+                if (_isLoading)
+                  Positioned(
+                    top: 20,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(25),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'loading_reports'.tr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Filter badge
                 Positioned(
                   top: 90,

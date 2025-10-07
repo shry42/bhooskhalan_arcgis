@@ -44,7 +44,9 @@ class LandslideReportingScreen extends StatelessWidget {
     ? 'edit_draft_report_expert'.tr 
     : controller.isPendingEditMode.value 
       ? 'edit_pending_report_expert'.tr
-      : 'report_landslide_expert'.tr,
+      : controller.isSyncedReportMode.value
+        ? 'submitted_report'.tr
+        : 'report_landslide_expert'.tr,
   style: const TextStyle(fontWeight: FontWeight.w600),
 )),
         actions: [

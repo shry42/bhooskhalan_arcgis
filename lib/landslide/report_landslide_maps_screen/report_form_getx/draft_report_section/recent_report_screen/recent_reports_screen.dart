@@ -1917,9 +1917,9 @@ class ToBeSyncedReportCard extends StatelessWidget {
       'geology': reportData['Geology'] ?? reportData['geology'],
       'geomorphology': reportData['Geomorphology'] ?? reportData['geomorphology'],
       
-      // Rainfall data - map both possible keys
-      'rainfallAmount': reportData['Amount_of_rainfall'] ?? reportData['rainfallAmount'],
-      'rainfallDuration': reportData['Duration_of_rainfall'] ?? reportData['rainfallDuration'],
+      // Rainfall data - map both possible keys and handle type conversion
+      'rainfallAmount': _convertRainfallAmount(reportData),
+      'rainfallDuration': _convertRainfallDuration(reportData),
       
       // Impact/Damage data - handle both boolean and string formats
       'peopleAffected': _extractImpactValue(reportData['ImpactOrDamage'], 'People affected') || (reportData['peopleAffected'] == true),
@@ -2396,6 +2396,59 @@ class ToBeSyncedReportCard extends StatelessWidget {
       ),
     );
   }
+
+  // Helper method to convert rainfall amount from API format to form format
+  String _convertRainfallAmount(Map<String, dynamic> reportData) {
+    // Try to get from Amount_of_rainfall (API field - integer)
+    final amountFromAPI = reportData['Amount_of_rainfall'];
+    print('🔍 Rainfall amount debug:');
+    print('  - Amount_from_API: $amountFromAPI (${amountFromAPI.runtimeType})');
+    
+    if (amountFromAPI != null) {
+      if (amountFromAPI is int) {
+        print('  - Converting int to string: ${amountFromAPI.toString()}');
+        return amountFromAPI.toString();
+      } else if (amountFromAPI is String) {
+        print('  - Using string as is: $amountFromAPI');
+        return amountFromAPI;
+      }
+    }
+    
+    // Fallback to rainfallAmount (form field - string)
+    final amountFromForm = reportData['rainfallAmount'];
+    print('  - Amount_from_form: $amountFromForm (${amountFromForm.runtimeType})');
+    if (amountFromForm != null) {
+      return amountFromForm.toString();
+    }
+    
+    print('  - No rainfall amount found, returning empty string');
+    return '';
+  }
+
+  // Helper method to convert rainfall duration from API format to form format
+  String _convertRainfallDuration(Map<String, dynamic> reportData) {
+    final durationFromAPI = reportData['Duration_of_rainfall'];
+    final durationFromForm = reportData['rainfallDuration'];
+    
+    print('🔍 Rainfall duration debug:');
+    print('  - Duration_from_API: $durationFromAPI (${durationFromAPI.runtimeType})');
+    print('  - Duration_from_form: $durationFromForm (${durationFromForm.runtimeType})');
+    
+    // Try API field first
+    if (durationFromAPI != null && durationFromAPI.toString().isNotEmpty) {
+      print('  - Using API duration: $durationFromAPI');
+      return durationFromAPI.toString();
+    }
+    
+    // Fallback to form field
+    if (durationFromForm != null && durationFromForm.toString().isNotEmpty) {
+      print('  - Using form duration: $durationFromForm');
+      return durationFromForm.toString();
+    }
+    
+    print('  - No rainfall duration found, returning empty string');
+    return '';
+  }
 }
 
 class SyncedReportCard extends StatelessWidget {
@@ -2642,6 +2695,15 @@ class SyncedReportCard extends StatelessWidget {
   Future<Map<String, dynamic>> _convertSyncedToFormData(Map<String, dynamic> reportData, String formType) async {
     print('🔄 Converting synced report data to form data format');
     print('📊 Available fields: ${reportData.keys.toList()}');
+    print('🔍 Geo-scientific causes data: ${reportData['GeoScientificCauses']}');
+    print('🔍 Geological causes data: ${reportData['GeologicalCauses']}');
+    print('🔍 Morphological causes data: ${reportData['MorphologicalCauses']}');
+    print('🔍 Human causes data: ${reportData['HumanCauses']}');
+    print('🔍 Remedial measures data: ${reportData['PreliminaryRemedialMeasures']}');
+    print('🔍 Slope geometry data: ${reportData['SlopeGeometry']}');
+    print('🔍 Drainage data: ${reportData['Drainage']}');
+    print('🔍 Retaining structures data: ${reportData['RetainingStructures']}');
+    print('🔍 Internal reinforcement data: ${reportData['InternalSlopeReinforcememt']}');
     
     // Helper function to get value with multiple fallbacks
     String getValue(String primaryKey, String fallbackKey, [String defaultValue = '']) {
@@ -2664,6 +2726,9 @@ class SyncedReportCard extends StatelessWidget {
       'time': _convertApiTimeToDisplayTime(getValue('LandslideTime', 'time')),
       'howDoYouKnow': getValue('ExactDateInfo', 'howDoYouKnow'),
       'occurrenceDateRange': getValue('Date_and_time_Range', 'occurrenceDateRange'),
+      
+      // Historical dates - handle both single date and multiple dates
+      'historyDates': _extractHistoryDates(reportData),
       
       // Basic landslide data - ensure proper mapping
       'whereDidLandslideOccur': getValue('LanduseOrLandcover', 'whereDidLandslideOccur'),
@@ -2690,9 +2755,100 @@ class SyncedReportCard extends StatelessWidget {
       'geology': getValue('Geology', 'geology'),
       'geomorphology': getValue('Geomorphology', 'geomorphology'),
       
-      // Rainfall data - map both possible keys
-      'rainfallAmount': reportData['Amount_of_rainfall'] ?? reportData['rainfallAmount'] ?? '',
-      'rainfallDuration': reportData['Duration_of_rainfall'] ?? reportData['rainfallDuration'] ?? '',
+      // Geo-Scientific Causes - parse from string format
+      'geologicalCauses': _extractGeoScientificCause(reportData, 'geological_causes'),
+      'morphologicalCauses': _extractGeoScientificCause(reportData, 'morphological_causes'),
+      'humanCauses': _extractGeoScientificCause(reportData, 'human_causes'),
+      'otherCauses': _extractGeoScientificCause(reportData, 'other_causes'),
+      
+      // Geological Causes sub-items - parse from GeologicalCauses field
+      'weakOrSensitiveMaterials': _extractGeologicalCause(reportData, 'weak_sensitive_materials'),
+      'contrastInPermeability': _extractGeologicalCause(reportData, 'contrast_in_permeability'),
+      'shearedJointedFissuredMaterials': _extractGeologicalCause(reportData, 'sheared_jointed_fissured_materials'),
+      'adverselyOrientedDiscontinuity': _extractGeologicalCause(reportData, 'adversely_oriented_discontinuity'),
+      'weatheredMaterials': _extractWeatheredMaterials(reportData),
+      'geologicalOther': _extractGeologicalOther(reportData),
+      
+      // Morphological Causes sub-items - parse from MorphologicalCauses field
+      'tectonicOrVolcanicUplift': _extractMorphologicalCause(reportData, 'Tectonic or volcanic uplift'),
+      'glacialRebound': _extractMorphologicalCause(reportData, 'Glacial rebound'),
+      'fluvialWaveGlacialErosion': _extractMorphologicalCause(reportData, 'Fluvial, wave, or glacial erosion'),
+      'subterraneanErosion': _extractMorphologicalCause(reportData, 'Subterranean erosion'),
+      'depositionLoading': _extractMorphologicalCause(reportData, 'Deposition loading'),
+      'vegetationRemoval': _extractMorphologicalCause(reportData, 'Vegetation removal'),
+      'thawing': _extractMorphologicalCause(reportData, 'Thawing'),
+      'freezeThawWeathering': _extractMorphologicalCause(reportData, 'Freeze-thaw weathering'),
+      'shrinkSwellWeathering': _extractMorphologicalCause(reportData, 'Shrink-swell weathering'),
+      'morphologicalOther': _extractMorphologicalOther(reportData),
+      
+      // Human Causes sub-items - parse from HumanCauses field
+      'excavationOfSlope': _extractHumanCause(reportData, 'Excavation of slope'),
+      'loadingOfSlope': _extractHumanCause(reportData, 'Loading of slope'),
+      'drawdown': _extractHumanCause(reportData, 'Drawdown'),
+      'deforestation': _extractHumanCause(reportData, 'Deforestation'),
+      'irrigation': _extractHumanCause(reportData, 'Irrigation'),
+      'mining': _extractHumanCause(reportData, 'Mining'),
+      'artificialVibration': _extractHumanCause(reportData, 'Artificial vibration'),
+      'waterLeakage': _extractHumanCause(reportData, 'Water leakage'),
+      'humanOther': _extractHumanOther(reportData),
+      'otherCausesText': getValue('CausesOtherInfo', 'otherCausesText'),
+      
+      // Remedial Measures - parse from string format
+      'modificationOfSlopeGeometry': _extractRemedialMeasure(reportData, 'modification_of_slope_geometry'),
+      'drainage': _extractRemedialMeasure(reportData, 'drainage'),
+      'retainingStructures': _extractRemedialMeasure(reportData, 'retaining_structures'),
+      'internalSlopeReinforcement': _extractRemedialMeasure(reportData, 'internal_slope_reinforcement'),
+      'remedialMeasuresNotRequired': _extractRemedialMeasure(reportData, 'remedial_measures_not_required'),
+      'remedialMeasuresNotAdequate': _extractRemedialMeasure(reportData, 'remedial_measures_not_adequately_safeguard'),
+      'otherInformationChecked': _extractRemedialMeasure(reportData, 'other_information'),
+      
+      // Slope Geometry sub-items - parse from SlopeGeometry field
+      'removingMaterial': _extractSlopeGeometryItem(reportData, 'Removing material'),
+      'addingMaterial': _extractSlopeGeometryItem(reportData, 'Adding material'),
+      'reducingGeneralSlopeAngle': _extractSlopeGeometryItem(reportData, 'Reducing general slope angle'),
+      'slopeGeometryOther': _extractSlopeGeometryOther(reportData),
+      
+      // Drainage sub-items - parse from Drainage field
+      'surfaceDrains': _extractDrainageItem(reportData, 'Surface drains'),
+      'shallowDeepTrenchDrains': _extractDrainageItem(reportData, 'Shallow or deep trench drains'),
+      'buttressCounterfortDrains': _extractDrainageItem(reportData, 'Buttress counterfort drains'),
+      'verticalSmallDiameterBoreholes': _extractDrainageItem(reportData, 'Vertical small diameter boreholes'),
+      'verticalLargeDiameterWells': _extractDrainageItem(reportData, 'Vertical (large diameter) wells with gravity draining'),
+      'subHorizontalBoreholes': _extractDrainageItem(reportData, 'Sub horizontal or sub vertical boreholes'),
+      'drainageTunnelsGalleries': _extractDrainageItem(reportData, 'Drainage tunnels, galleries or adits'),
+      'vacuumDewatering': _extractDrainageItem(reportData, 'Vacuum dewatering'),
+      'drainageBySiphoning': _extractDrainageItem(reportData, 'Drainage by siphoning'),
+      'electroosmoticDewatering': _extractDrainageItem(reportData, 'Electroosmotic dewatering'),
+      'vegetationPlantingHydrological': _extractDrainageItem(reportData, 'Vegetation planting (hydrological effect)'),
+      'drainageOther': _extractDrainageOther(reportData),
+      
+      // Retaining Structures sub-items - parse from RetainingStructures field
+      'gravityRetainingWalls': _extractRetainingItem(reportData, 'Gravity retaining walls'),
+      'cribBlockWalls': _extractRetainingItem(reportData, 'Crib-block walls'),
+      'gabionWalls': _extractRetainingItem(reportData, 'Gabion walls'),
+      'passivePilesPiers': _extractRetainingItem(reportData, 'Passive piles, piers and caissons'),
+      'reinforcedEarthRetaining': _extractRetainingItem(reportData, 'Reinforced earth retaining'),
+      'buttressCounterforts': _extractRetainingItem(reportData, 'Buttress counterforts'),
+      'retainingOther': _extractRetainingOther(reportData),
+      'retentionNets': _extractRetainingItem(reportData, 'Retention nets for rock slope faces'),
+      'rockfallAttenuationSystems': _extractRetainingItem(reportData, 'Rockfall attenuation or stopping systems'),
+      'protectiveRockBlocks': _extractRetainingItem(reportData, 'Protective rock/concrete blocks against erosion'),
+      
+      // Internal Slope Reinforcement sub-items - parse from InternalSlopeReinforcememt field
+      'rockBolts': _extractInternalReinforcementItem(reportData, 'Rock bolts'),
+      'micropiles': _extractInternalReinforcementItem(reportData, 'Micropiles'),
+      'soilNailing': _extractInternalReinforcementItem(reportData, 'Soil nailing'),
+      'anchors': _extractInternalReinforcementItem(reportData, 'Anchors'),
+      'grouting': _extractInternalReinforcementItem(reportData, 'Grouting'),
+      'stoneLimeCementColumns': _extractInternalReinforcementItem(reportData, 'Stone or lime/cement columns'),
+      'freezing': _extractInternalReinforcementItem(reportData, 'Freezing'),
+      'electroosmoticAnchors': _extractInternalReinforcementItem(reportData, 'Electroosmotic anchors'),
+      'vegetationPlantingMechanical': _extractInternalReinforcementItem(reportData, 'Vegetation planting (root strength mechanical effect)'),
+      'internalReinforcementOther': _extractInternalReinforcementOther(reportData),
+      
+      // Rainfall data - map both possible keys and handle type conversion
+      'rainfallAmount': _convertRainfallAmount(reportData),
+      'rainfallDuration': _convertRainfallDuration(reportData),
       
       // Impact/Damage data - handle both boolean and string formats
       'peopleAffected': _extractImpactValueFromString(reportData['ImpactOrDamage'], 'People affected') || (reportData['peopleAffected'] == true),
@@ -2879,6 +3035,447 @@ class SyncedReportCard extends StatelessWidget {
       }
       return '';
     }
+  }
+
+  // Helper method to extract boolean values from report data
+  bool _extractBooleanValue(Map<String, dynamic> reportData, String key) {
+    final value = reportData[key];
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is String) {
+      return value.toLowerCase() == 'true' || value == '1';
+    }
+    if (value is int) return value == 1;
+    return false;
+  }
+
+  // Helper method to extract geo-scientific causes from string format
+  bool _extractGeoScientificCause(Map<String, dynamic> reportData, String causeKey) {
+    final geoScientificCauses = reportData['GeoScientificCauses']?.toString() ?? '';
+    if (geoScientificCauses.isEmpty) return false;
+    
+    // Get the translated value for the cause key
+    final translatedValue = causeKey.tr;
+    
+    // Debug logging
+    print('🔍 Geo-scientific causes debug:');
+    print('  - Raw data: $geoScientificCauses');
+    print('  - Looking for key: $causeKey');
+    print('  - Translated value: $translatedValue');
+    print('  - Contains: ${geoScientificCauses.contains(translatedValue)}');
+    
+    // Check if the translated value is present in the comma-separated string
+    return geoScientificCauses.contains(translatedValue);
+  }
+
+  // Helper method to extract remedial measures from string format
+  bool _extractRemedialMeasure(Map<String, dynamic> reportData, String measureKey) {
+    final remedialMeasures = reportData['PreliminaryRemedialMeasures']?.toString() ?? '';
+    if (remedialMeasures.isEmpty) return false;
+    
+    // Get the translated value for the measure key
+    final translatedValue = measureKey.tr;
+    
+    // Debug logging
+    print('🔍 Remedial measures debug:');
+    print('  - Raw data: $remedialMeasures');
+    print('  - Looking for key: $measureKey');
+    print('  - Translated value: $translatedValue');
+    print('  - Contains: ${remedialMeasures.contains(translatedValue)}');
+    
+    // Check if the translated value is present in the comma-separated string
+    return remedialMeasures.contains(translatedValue);
+  }
+
+  // Helper method to extract geological causes sub-items
+  bool _extractGeologicalCause(Map<String, dynamic> reportData, String causeKey) {
+    final geologicalCauses = reportData['GeologicalCauses']?.toString() ?? '';
+    if (geologicalCauses.isEmpty) return false;
+    
+    // Get the translated value for the cause key
+    final translatedValue = causeKey.tr;
+    
+    // Check if the translated value is present in the comma-separated string
+    return geologicalCauses.contains(translatedValue);
+  }
+
+  // Helper method to extract morphological causes sub-items
+  bool _extractMorphologicalCause(Map<String, dynamic> reportData, String causeKey) {
+    final morphologicalCauses = reportData['MorphologicalCauses']?.toString() ?? '';
+    if (morphologicalCauses.isEmpty) return false;
+    
+    // Check if the cause key is present in the comma-separated string
+    return morphologicalCauses.contains(causeKey);
+  }
+
+  // Helper method to extract human causes sub-items
+  bool _extractHumanCause(Map<String, dynamic> reportData, String causeKey) {
+    final humanCauses = reportData['HumanCauses']?.toString() ?? '';
+    if (humanCauses.isEmpty) return false;
+    
+    // Check if the cause key is present in the comma-separated string
+    return humanCauses.contains(causeKey);
+  }
+
+  // Helper method to extract weathered materials value
+  String _extractWeatheredMaterials(Map<String, dynamic> reportData) {
+    final geologicalCauses = reportData['GeologicalCauses']?.toString() ?? '';
+    if (geologicalCauses.isEmpty) return '';
+    
+    // Look for pattern like "Weathered materials: [value]"
+    final pattern = RegExp(r'Weathered materials:\s*(.+)');
+    final match = pattern.firstMatch(geologicalCauses);
+    return match?.group(1)?.trim() ?? '';
+  }
+
+  // Helper method to extract geological other text
+  String _extractGeologicalOther(Map<String, dynamic> reportData) {
+    final geologicalCauses = reportData['GeologicalCauses']?.toString() ?? '';
+    if (geologicalCauses.isEmpty) return '';
+    
+    // Look for any text that doesn't match known patterns
+    final knownPatterns = [
+      'weak_sensitive_materials'.tr,
+      'weathered_materials'.tr,
+      'sheared_jointed_fissured_materials'.tr,
+      'adversely_oriented_discontinuity'.tr,
+      'contrast_in_permeability'.tr,
+    ];
+    
+    // Split by comma and find text that doesn't match known patterns
+    final parts = geologicalCauses.split(',').map((part) => part.trim());
+    for (final part in parts) {
+      bool isKnown = false;
+      for (final pattern in knownPatterns) {
+        if (part.contains(pattern)) {
+          isKnown = true;
+          break;
+        }
+      }
+      if (!isKnown && part.isNotEmpty) {
+        return part;
+      }
+    }
+    
+    return '';
+  }
+
+  // Helper method to extract morphological other text
+  String _extractMorphologicalOther(Map<String, dynamic> reportData) {
+    final morphologicalCauses = reportData['MorphologicalCauses']?.toString() ?? '';
+    if (morphologicalCauses.isEmpty) return '';
+    
+    // Look for any text that doesn't match known patterns
+    final knownPatterns = [
+      'Tectonic or volcanic uplift',
+      'Glacial rebound',
+      'Fluvial, wave, or glacial erosion',
+      'Subterranean erosion',
+      'Deposition loading',
+      'Vegetation removal',
+      'Thawing',
+      'Freeze-thaw weathering',
+      'Shrink-swell weathering',
+    ];
+    
+    // Split by comma and find text that doesn't match known patterns
+    final parts = morphologicalCauses.split(',').map((part) => part.trim());
+    for (final part in parts) {
+      bool isKnown = false;
+      for (final pattern in knownPatterns) {
+        if (part.contains(pattern)) {
+          isKnown = true;
+          break;
+        }
+      }
+      if (!isKnown && part.isNotEmpty) {
+        return part;
+      }
+    }
+    
+    return '';
+  }
+
+  // Helper method to extract human other text
+  String _extractHumanOther(Map<String, dynamic> reportData) {
+    final humanCauses = reportData['HumanCauses']?.toString() ?? '';
+    if (humanCauses.isEmpty) return '';
+    
+    // Look for any text that doesn't match known patterns
+    final knownPatterns = [
+      'Excavation of slope',
+      'Loading of slope',
+      'Drawdown',
+      'Deforestation',
+      'Irrigation',
+      'Mining',
+      'Artificial vibration',
+      'Water leakage',
+    ];
+    
+    // Split by comma and find text that doesn't match known patterns
+    final parts = humanCauses.split(',').map((part) => part.trim());
+    for (final part in parts) {
+      bool isKnown = false;
+      for (final pattern in knownPatterns) {
+        if (part.contains(pattern)) {
+          isKnown = true;
+          break;
+        }
+      }
+      if (!isKnown && part.isNotEmpty) {
+        return part;
+      }
+    }
+    
+    return '';
+  }
+
+  // Helper method to extract slope geometry items
+  bool _extractSlopeGeometryItem(Map<String, dynamic> reportData, String itemKey) {
+    final slopeGeometry = reportData['SlopeGeometry']?.toString() ?? '';
+    if (slopeGeometry.isEmpty) return false;
+    
+    return slopeGeometry.contains(itemKey);
+  }
+
+  // Helper method to extract slope geometry other text
+  String _extractSlopeGeometryOther(Map<String, dynamic> reportData) {
+    final slopeGeometry = reportData['SlopeGeometry']?.toString() ?? '';
+    if (slopeGeometry.isEmpty) return '';
+    
+    // Look for any text that doesn't match known patterns
+    final knownPatterns = [
+      'Removing material',
+      'Adding material',
+      'Reducing general slope angle',
+    ];
+    
+    // Split by comma and find text that doesn't match known patterns
+    final parts = slopeGeometry.split(',').map((part) => part.trim());
+    for (final part in parts) {
+      bool isKnown = false;
+      for (final pattern in knownPatterns) {
+        if (part.contains(pattern)) {
+          isKnown = true;
+          break;
+        }
+      }
+      if (!isKnown && part.isNotEmpty) {
+        return part;
+      }
+    }
+    
+    return '';
+  }
+
+  // Helper method to extract drainage items
+  bool _extractDrainageItem(Map<String, dynamic> reportData, String itemKey) {
+    final drainage = reportData['Drainage']?.toString() ?? '';
+    if (drainage.isEmpty) return false;
+    
+    return drainage.contains(itemKey);
+  }
+
+  // Helper method to extract drainage other text
+  String _extractDrainageOther(Map<String, dynamic> reportData) {
+    final drainage = reportData['Drainage']?.toString() ?? '';
+    if (drainage.isEmpty) return '';
+    
+    // Look for any text that doesn't match known patterns
+    final knownPatterns = [
+      'Surface drains',
+      'Shallow or deep trench drains',
+      'Buttress counterfort drains',
+      'Vertical small diameter boreholes',
+      'Vertical (large diameter) wells with gravity draining',
+      'Sub horizontal or sub vertical boreholes',
+      'Drainage tunnels, galleries or adits',
+      'Vacuum dewatering',
+      'Drainage by siphoning',
+      'Electroosmotic dewatering',
+      'Vegetation planting (hydrological effect)',
+    ];
+    
+    // Split by comma and find text that doesn't match known patterns
+    final parts = drainage.split(',').map((part) => part.trim());
+    for (final part in parts) {
+      bool isKnown = false;
+      for (final pattern in knownPatterns) {
+        if (part.contains(pattern)) {
+          isKnown = true;
+          break;
+        }
+      }
+      if (!isKnown && part.isNotEmpty) {
+        return part;
+      }
+    }
+    
+    return '';
+  }
+
+  // Helper method to extract retaining structures items
+  bool _extractRetainingItem(Map<String, dynamic> reportData, String itemKey) {
+    final retainingStructures = reportData['RetainingStructures']?.toString() ?? '';
+    if (retainingStructures.isEmpty) return false;
+    
+    return retainingStructures.contains(itemKey);
+  }
+
+  // Helper method to extract retaining structures other text
+  String _extractRetainingOther(Map<String, dynamic> reportData) {
+    final retainingStructures = reportData['RetainingStructures']?.toString() ?? '';
+    if (retainingStructures.isEmpty) return '';
+    
+    // Look for any text that doesn't match known patterns
+    final knownPatterns = [
+      'Gravity retaining walls',
+      'Crib-block walls',
+      'Gabion walls',
+      'Passive piles, piers and caissons',
+      'Reinforced earth retaining',
+      'Buttress counterforts',
+      'Retention nets for rock slope faces',
+      'Rockfall attenuation or stopping systems',
+      'Protective rock/concrete blocks against erosion',
+    ];
+    
+    // Split by comma and find text that doesn't match known patterns
+    final parts = retainingStructures.split(',').map((part) => part.trim());
+    for (final part in parts) {
+      bool isKnown = false;
+      for (final pattern in knownPatterns) {
+        if (part.contains(pattern)) {
+          isKnown = true;
+          break;
+        }
+      }
+      if (!isKnown && part.isNotEmpty) {
+        return part;
+      }
+    }
+    
+    return '';
+  }
+
+  // Helper method to extract internal reinforcement items
+  bool _extractInternalReinforcementItem(Map<String, dynamic> reportData, String itemKey) {
+    final internalReinforcement = reportData['InternalSlopeReinforcememt']?.toString() ?? '';
+    if (internalReinforcement.isEmpty) return false;
+    
+    return internalReinforcement.contains(itemKey);
+  }
+
+  // Helper method to extract internal reinforcement other text
+  String _extractInternalReinforcementOther(Map<String, dynamic> reportData) {
+    final internalReinforcement = reportData['InternalSlopeReinforcememt']?.toString() ?? '';
+    if (internalReinforcement.isEmpty) return '';
+    
+    // Look for any text that doesn't match known patterns
+    final knownPatterns = [
+      'Rock bolts',
+      'Micropiles',
+      'Soil nailing',
+      'Anchors',
+      'Grouting',
+      'Stone or lime/cement columns',
+      'Freezing',
+      'Electroosmotic anchors',
+      'Vegetation planting (root strength mechanical effect)',
+    ];
+    
+    // Split by comma and find text that doesn't match known patterns
+    final parts = internalReinforcement.split(',').map((part) => part.trim());
+    for (final part in parts) {
+      bool isKnown = false;
+      for (final pattern in knownPatterns) {
+        if (part.contains(pattern)) {
+          isKnown = true;
+          break;
+        }
+      }
+      if (!isKnown && part.isNotEmpty) {
+        return part;
+      }
+    }
+    
+    return '';
+  }
+
+  // Helper method to convert rainfall amount from API format to form format
+  String _convertRainfallAmount(Map<String, dynamic> reportData) {
+    // Try to get from Amount_of_rainfall (API field - integer)
+    final amountFromAPI = reportData['Amount_of_rainfall'];
+    print('🔍 Rainfall amount debug:');
+    print('  - Amount_from_API: $amountFromAPI (${amountFromAPI.runtimeType})');
+    
+    if (amountFromAPI != null) {
+      if (amountFromAPI is int) {
+        print('  - Converting int to string: ${amountFromAPI.toString()}');
+        return amountFromAPI.toString();
+      } else if (amountFromAPI is String) {
+        print('  - Using string as is: $amountFromAPI');
+        return amountFromAPI;
+      }
+    }
+    
+    // Fallback to rainfallAmount (form field - string)
+    final amountFromForm = reportData['rainfallAmount'];
+    print('  - Amount_from_form: $amountFromForm (${amountFromForm.runtimeType})');
+    if (amountFromForm != null) {
+      return amountFromForm.toString();
+    }
+    
+    print('  - No rainfall amount found, returning empty string');
+    return '';
+  }
+
+  // Helper method to convert rainfall duration from API format to form format
+  String _convertRainfallDuration(Map<String, dynamic> reportData) {
+    final durationFromAPI = reportData['Duration_of_rainfall'];
+    final durationFromForm = reportData['rainfallDuration'];
+    
+    print('🔍 Rainfall duration debug:');
+    print('  - Duration_from_API: $durationFromAPI (${durationFromAPI.runtimeType})');
+    print('  - Duration_from_form: $durationFromForm (${durationFromForm.runtimeType})');
+    
+    // Try API field first
+    if (durationFromAPI != null && durationFromAPI.toString().isNotEmpty) {
+      print('  - Using API duration: $durationFromAPI');
+      return durationFromAPI.toString();
+    }
+    
+    // Fallback to form field
+    if (durationFromForm != null && durationFromForm.toString().isNotEmpty) {
+      print('  - Using form duration: $durationFromForm');
+      return durationFromForm.toString();
+    }
+    
+    print('  - No rainfall duration found, returning empty string');
+    return '';
+  }
+
+  // Helper method to extract history dates from report data
+  List<String> _extractHistoryDates(Map<String, dynamic> reportData) {
+    List<String> dates = [];
+    
+    // Check for History_date field (comma-separated dates)
+    String? historyDateStr = reportData['History_date']?.toString();
+    if (historyDateStr != null && historyDateStr.isNotEmpty && historyDateStr != 'NaN-NaN-NaN') {
+      // Split by comma and clean up dates
+      dates.addAll(historyDateStr.split(',').map((date) => date.trim()).where((date) => date.isNotEmpty));
+    }
+    
+    // Also check for individual history date fields
+    for (int i = 1; i <= 5; i++) {
+      String? date = reportData['History_date_$i']?.toString();
+      if (date != null && date.isNotEmpty && date != 'NaN-NaN-NaN') {
+        dates.add(date.trim());
+      }
+    }
+    
+    return dates;
   }
 
 
