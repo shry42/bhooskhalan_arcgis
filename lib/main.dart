@@ -3,6 +3,7 @@ import 'package:bhooskhalann/services/api_service.dart';
 import 'package:bhooskhalann/services/native_in_app_update_service.dart';
 import 'package:bhooskhalann/translations/language_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/screens/homescreen.dart';
@@ -11,6 +12,16 @@ import 'package:bhooskhalann/translations/app_translations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configure system UI for edge-to-edge display
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 
   // Initialize services
   ApiService.initialize();
@@ -48,11 +59,20 @@ class MyApp extends StatelessWidget {
       translations: AppTranslations(),
       locale: Get.locale ?? const Locale('en', 'US'), // <-- Use loaded locale
       fallbackLocale: const Locale('en', 'US'),
-
+      
+      // Theme configuration for edge-to-edge support
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         fontFamily: 'Roboto',
+        appBarTheme: const AppBarTheme(
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          ),
+        ),
       ),
 
       home: isLoggedIn ? HomeScreen() : LoginRegisterScreen(),

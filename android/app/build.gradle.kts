@@ -11,6 +11,10 @@ dependencies {
     implementation("com.google.android.play:review:2.0.1")
     implementation("com.google.android.play:feature-delivery:2.1.0")
     implementation("com.google.android.gms:play-services-tasks:18.2.0")
+    
+    // Edge-to-edge support for Android 15+
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.activity:activity-ktx:1.8.2")
 }
 
 android {
