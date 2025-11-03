@@ -20,7 +20,7 @@ dependencies {
 android {
     namespace = "in.gov.gsi.bhooskhalan"
     compileSdk = 35  // ✅ Required by plugins for compatibility
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.0.12674087"  // ✅ Updated to r28+ for 16 KB page size support
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
