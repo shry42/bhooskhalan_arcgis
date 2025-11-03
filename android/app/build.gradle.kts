@@ -47,12 +47,11 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         
-        // 16 KB memory page size support for Android 15+
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
-        }
-        
-        // ABI filters handled by splits configuration
+        // ABI filters are handled automatically by Flutter split builds or can be set here for universal builds
+        // When using --split-per-abi flag, remove abiFilters to avoid conflicts
+        // ndk {
+        //     abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        // }
     }
 
     buildTypes {

@@ -15,9 +15,9 @@ class ApiService {
   static void initialize() {
     if (_initialized) return;
     
-    // Your certificate fingerprint
+    // Updated certificate fingerprint for FY25-26 SSL certificate
     List<String> certificateSHA256Fingerprints = [
-      '75:B6:CB:85:62:92:01:3A:68:3C:11:3D:07:FE:69:7D:C8:80:F5:FA:61:57:16:BD:B4:A1:C9:15:75:47:2C:E1'
+      '4D:BC:AE:4F:72:56:29:F7:62:3D:8D:DD:E8:68:01:1C:31:30:DD:F4:5F:FB:CC:94:E9:ED:77:F3:9B:3B:36:3E'
     ];
     
     _client = SecureHttpClient.build(certificateSHA256Fingerprints);
@@ -150,7 +150,7 @@ class ApiService {
       rethrow;
     }
   }
-
+ 
   /// Generic PUT request with SSL Pinning
   static Future<dynamic> put(String endpoint) async {
     _ensureInitialized();
