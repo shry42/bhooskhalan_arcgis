@@ -49,6 +49,7 @@ dependencies:
   flutter_compass: ^0.8.1
   syncfusion_flutter_pdfviewer: ^29.2.8
   image_picker: ^1.1.2
+  gal: ^1.0.0
   arcgis_maps: ^200.7.0+4560
   http_certificate_pinning: ^3.0.1
   geocoding: ^4.0.0

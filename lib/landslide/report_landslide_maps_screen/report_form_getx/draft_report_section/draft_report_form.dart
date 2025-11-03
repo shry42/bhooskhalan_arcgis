@@ -347,28 +347,28 @@ _buildLocationModeSwitch(controller, primaryColor),
                               ),
                             ],
                           );
-                       } else if (controller.landslideOccurrenceValue.value == 'I know the APPROXIMATE occurrence date') {
-  return Column(
-    children: [
-      const SizedBox(height: 16),
-      _labelText('occurrence_date_range_required'.tr, textColor),
-      _buildDropdown(
-        hint: 'select_occurrence_option'.tr,
-        value: controller.occurrenceDateRange.value.isEmpty ? null : controller.occurrenceDateRange.value,
-        items: [
-          'last_3_days'.tr,
-          'last_week'.tr, 
-          'last_month'.tr,
-          'last_3_months'.tr,
-          'last_year'.tr,
-          'older_than_year'.tr,                        
-        ],
-        onChanged: (value) => controller.occurrenceDateRange.value = value ?? '',
-        icon: Icons.date_range,
-      ),
-    ],
-  );
-}
+                       } else if (controller.landslideOccurrenceValue.value == 'approximate_occurrence_date') {
+                          return Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              _labelText('occurrence_date_range_required'.tr, textColor),
+                              _buildDropdown(
+                                hint: 'select_occurrence_option'.tr,
+                                value: controller.occurrenceDateRange.value.isEmpty ? null : controller.occurrenceDateRange.value,
+                                items: [
+                                  'last_3_days'.tr,
+                                  'last_week'.tr, 
+                                  'last_month'.tr,
+                                  'last_3_months'.tr,
+                                  'last_year'.tr,
+                                  'older_than_year'.tr,                        
+                                ],
+                                onChanged: (value) => controller.occurrenceDateRange.value = value ?? '',
+                                icon: Icons.date_range,
+                              ),
+                            ],
+                          );
+                        }
                         
                         return const SizedBox.shrink();
                       }),           

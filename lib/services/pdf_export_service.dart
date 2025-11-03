@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,10 +19,12 @@ class PdfExportService {
     try {
       final pdf = pw.Document();
       
-      // Add title page
+      // Add title page and content
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          maxPages: 500, // Increase page limit
           build: (context) => [
             _buildTitlePage(draftData, formType),
             _buildReportContent(draftData, formType),
@@ -52,15 +56,27 @@ class PdfExportService {
     try {
       final pdf = pw.Document();
       
-      pdf.addPage(
-        pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
-          build: (context) => [
-            _buildDraftsTitlePage(formType, draftsData.length),
-            ...draftsData.map((draft) => _buildReportContent(draft, formType)).toList(),
-          ],
-        ),
-      );
+      // Split into multiple pages if too many drafts to avoid TooManyPagesException
+      const int maxReportsPerPage = 3; // Limit reports per MultiPage to prevent overflow
+      
+      for (int i = 0; i < draftsData.length; i += maxReportsPerPage) {
+        final batch = draftsData.sublist(
+          i, 
+          (i + maxReportsPerPage > draftsData.length) ? draftsData.length : i + maxReportsPerPage
+        );
+        
+        pdf.addPage(
+          pw.MultiPage(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.all(40),
+            maxPages: 500, // Increase page limit per batch
+            build: (context) => [
+              if (i == 0) _buildDraftsTitlePage(formType, draftsData.length),
+              ...batch.map((draft) => _buildReportContent(draft, formType)).toList(),
+            ],
+          ),
+        );
+      }
 
       // Get downloads directory
       final directory = await _getDownloadsDirectory();
@@ -239,6 +255,14 @@ class PdfExportService {
           pw.SizedBox(height: 15),
           _buildImpactInfo(draftData),
           pw.SizedBox(height: 30),
+          
+          // Images Section (if available)
+          if (_hasImages(draftData)) ...[
+            _buildSectionHeader('LANDSLIDE PHOTOGRAPHS', PdfColors.blue),
+            pw.SizedBox(height: 15),
+            _buildImagesSection(draftData),
+            pw.SizedBox(height: 30),
+          ],
           
           // Contact Information
           _buildSectionHeader('REPORTER INFORMATION', PdfColors.blue),
@@ -563,6 +587,145 @@ class PdfExportService {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Check if draft data has images
+  bool _hasImages(Map<String, dynamic> draftData) {
+    final images = draftData['images'];
+    if (images == null) return false;
+    if (images is List && images.isNotEmpty) {
+      // Check if any image in the list is non-empty
+      return images.any((img) => img != null && img.toString().isNotEmpty);
+    }
+    return false;
+  }
+
+  // Build images section with photographs
+  pw.Widget _buildImagesSection(Map<String, dynamic> draftData) {
+    final imagesData = draftData['images'];
+    final captionsData = draftData['imageCaptions'];
+    List<pw.Widget> imageWidgets = [];
+
+    // Limit images to prevent PDF overflow (max 10 images per report)
+    const int maxImagesPerReport = 10;
+    
+    if (imagesData != null && imagesData is List) {
+      final imageCount = imagesData.length > maxImagesPerReport ? maxImagesPerReport : imagesData.length;
+      for (int i = 0; i < imageCount; i++) {
+        try {
+          String? imageData = imagesData[i]?.toString();
+          if (imageData == null || imageData.isEmpty) continue;
+
+          // Decode base64 image
+          Uint8List? imageBytes;
+          try {
+            // Clean base64 string (remove data:image prefix if present)
+            String cleanBase64 = imageData;
+            if (cleanBase64.contains(',')) {
+              cleanBase64 = cleanBase64.split(',').last;
+            }
+            imageBytes = base64Decode(cleanBase64);
+          } catch (e) {
+            print('Error decoding image $i: $e');
+            continue;
+          }
+
+          if (imageBytes.isEmpty) continue;
+
+          // Convert to PDF image
+          final pdfImage = pw.MemoryImage(imageBytes);
+
+          // Get caption if available
+          String caption = '';
+          if (captionsData != null && 
+              captionsData is List && 
+              i < captionsData.length &&
+              captionsData[i] != null) {
+            caption = captionsData[i].toString().trim();
+          }
+
+          // Build image widget with caption - more compact
+          imageWidgets.add(
+            pw.Container(
+              margin: const pw.EdgeInsets.only(bottom: 15),
+              padding: const pw.EdgeInsets.all(8),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey, width: 1),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  // Image - reduced size to fit more per page
+                  pw.Center(
+                    child: pw.Image(
+                      pdfImage,
+                      fit: pw.BoxFit.contain,
+                      width: 400, // Reduced width
+                      height: 250, // Reduced height - fits 2 images per page better
+                    ),
+                  ),
+                  // Caption if available
+                  if (caption.isNotEmpty) ...[
+                    pw.SizedBox(height: 8),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(8),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.grey,
+                        borderRadius: pw.BorderRadius.circular(4),
+                      ),
+                      child: pw.Text(
+                        'Image ${i + 1}: $caption',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          fontStyle: pw.FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    pw.SizedBox(height: 8),
+                    pw.Text(
+                      'Image ${i + 1}',
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        } catch (e) {
+          print('Error processing image $i for PDF: $e');
+          // Continue with next image
+          continue;
+        }
+      }
+    }
+
+    if (imageWidgets.isEmpty) {
+      return pw.Container(
+        padding: const pw.EdgeInsets.all(15),
+        child: pw.Text(
+          'No images available',
+          style: pw.TextStyle(
+            fontSize: 12,
+            color: PdfColors.grey,
+            fontStyle: pw.FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(10),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: imageWidgets,
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bhooskhalann/services/api_service.dart';
 import 'package:bhooskhalann/services/toposheet_service.dart';
+import 'package:bhooskhalann/services/image_gallery_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'recent_report_screen/recent_reports_controller.dart';
 import '../models/draft_report_models.dart';
@@ -1118,9 +1119,15 @@ Future<void> openCamera() async {
     );
     
     if (photo != null) {
-      selectedImages.add(File(photo.path));
+      final imageFile = File(photo.path);
+      selectedImages.add(imageFile);
       imageCaptions.add(TextEditingController());
       _validateImages();
+      
+      // Auto-save captured image to device gallery
+      final galleryService = ImageGalleryService();
+      await galleryService.saveImageToGallerySilently(imageFile);
+      
       Get.snackbar(
         'success'.tr,
         '${'photo_captured'.tr} ${selectedImages.length}',
